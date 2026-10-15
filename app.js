@@ -12,7 +12,7 @@
  */
 
 const INITIAL_APP_VERSION = "v1.3.0";
-const CURRENT_APP_VERSION = "1.3.6";
+const CURRENT_APP_VERSION = "1.3.7";
 let hasShownUpdateNotice = false;
 const VAPID_PUBLIC_KEY = "BJIJfCBiDwya3clZOWS08EDxfuN18xtfJGTX0n_apWBTEW7-kO_FGKNy5VDRvUsMgc46IP5oxLlIHqgrDo-JTkE";
 const STORAGE_KEY_STATE = "dizsan_ziyaret_shared_state_v1";
@@ -1140,7 +1140,7 @@ function renderDashboard() {
     if (elTasks) elTasks.textContent = pendingTasks.toLocaleString('tr-TR');
     if (elRev) elRev.textContent = '₺' + (totalRev / 1000000).toFixed(1) + 'M';
 
-    const p1Vip = customers.filter(c => (c.priority || '').includes('VIP')).length;
+    const p1Vip = customers.filter(c => (c.priority || '').includes('VIP') || Number(c.totalRevenue || 0) >= 1000000).length;
     const p1Churn = customers.filter(c => (c.priority || '').includes('Acil Churn')).length;
     const p1Vefa = customers.filter(c => (c.priority || '').includes('Vefa')).length;
 
@@ -1414,6 +1414,20 @@ function handleCityFilterChange() {
 
 function filterLegacyByPriority(priorityText) {
     switchTab('legacy-tab');
+    
+    // Önceki arama veya filtre kalıntılarını temizle (Kullanıcının tıkladığı grubun tümünü görebilmesi için)
+    const sInput = document.getElementById('legacy-search');
+    if (sInput) sInput.value = '';
+    const citySel = document.getElementById('legacy-filter-city');
+    if (citySel) citySel.value = '';
+    const distSel = document.getElementById('legacy-filter-district');
+    if (distSel) distSel.value = '';
+    const rutSel = document.getElementById('legacy-filter-rut');
+    if (rutSel) rutSel.value = '';
+    const balSel = document.getElementById('legacy-filter-balance');
+    if (balSel) balSel.value = '';
+    legacyPage = 1;
+
     const sel = document.getElementById('legacy-filter-priority');
     if (sel) {
         sel.value = priorityText;
@@ -1446,7 +1460,13 @@ function renderLegacyCustomers() {
         }
         if (district && c.district !== district) return false;
         if (rut && c.rut !== rut) return false;
-        if (priority && !(c.priority || '').includes(priority)) return false;
+        if (priority) {
+            if (priority.includes('VIP')) {
+                if (!((c.priority || '').includes('VIP') || Number(c.totalRevenue || 0) >= 1000000)) return false;
+            } else if (!(c.priority || '').includes(priority)) {
+                return false;
+            }
+        }
         if (balance && c.balanceStatus !== balance) return false;
 
         if (search) {
@@ -3778,7 +3798,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     // Service Worker Kaydı & Canlı Güncelleme Dinleyicisi (v1.3.0)
     if ('serviceWorker' in navigator) {
-        navigator.serviceWorker.register('sw.js?v=1.3.6').then(reg => {
+        navigator.serviceWorker.register('sw.js?v=1.3.7').then(reg => {
             reg.update();
             reg.addEventListener('updatefound', () => {
                 const newWorker = reg.installing;
