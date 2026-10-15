@@ -2,11 +2,22 @@
   "name": "DİZSAN Müşteri Ziyaret & Saha Takip Sistemi",
   "short_name": "Dizsan Ziyaret",
   "description": "DİZSAN Müşteri Ziyaret, Telefon Görüşme, Saha Raporlama ve Kayıp Müşteri Kazanım Sistemi",
+  "id": "dizsan_ziyaret_pwa_app",
   "start_url": "./index.html",
+  "scope": "./",
   "display": "standalone",
+  "display_override": [
+    "standalone",
+    "fullscreen",
+    "window-controls-overlay"
+  ],
   "background_color": "#0b0f19",
   "theme_color": "#0284c7",
   "orientation": "any",
+  "categories": [
+    "business",
+    "productivity"
+  ],
   "icons": [
     {
       "src": "icon-192.png",
@@ -21,10 +32,39 @@
       "purpose": "any maskable"
     },
     {
+      "src": "apple-touch-icon.png",
+      "sizes": "180x180",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
       "src": "dizsan_logo.jpg",
       "sizes": "300x300",
       "type": "image/jpeg",
       "purpose": "any"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Yeni Ziyaret Ekle",
+      "short_name": "Ziyaret Ekle",
+      "description": "Hızlıca yeni saha ziyareti veya telefon görüşmesi kaydet",
+      "url": "./index.html?action=new-visit",
+      "icons": [{ "src": "icon-192.png", "sizes": "192x192" }]
+    },
+    {
+      "name": "VIP Kritik Filolar",
+      "short_name": "VIP Filolar",
+      "description": "31 VIP Filo ve yüksek cirolu müşterileri listele",
+      "url": "./index.html?action=vip-filo",
+      "icons": [{ "src": "icon-192.png", "sizes": "192x192" }]
+    },
+    {
+      "name": "Müşteri Ara",
+      "short_name": "Müşteriler",
+      "description": "2.682 cari müşteri veritabanında arama yap",
+      "url": "./index.html?action=customers",
+      "icons": [{ "src": "icon-192.png", "sizes": "192x192" }]
     }
   ]
 }

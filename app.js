@@ -12,7 +12,7 @@
  */
 
 const INITIAL_APP_VERSION = "v1.3.0";
-const CURRENT_APP_VERSION = "1.3.7";
+const CURRENT_APP_VERSION = "1.3.8";
 let hasShownUpdateNotice = false;
 const VAPID_PUBLIC_KEY = "BJIJfCBiDwya3clZOWS08EDxfuN18xtfJGTX0n_apWBTEW7-kO_FGKNy5VDRvUsMgc46IP5oxLlIHqgrDo-JTkE";
 const STORAGE_KEY_STATE = "dizsan_ziyaret_shared_state_v1";
@@ -3616,6 +3616,86 @@ function shareAppOnWhatsApp() {
     window.open(`https://wa.me/?text=${encodeURIComponent(msg)}`, '_blank');
 }
 
+let deferredPwaPrompt = null;
+
+// PWA Kurulum İstemi Dinleyicisi
+window.addEventListener('beforeinstallprompt', (e) => {
+    e.preventDefault();
+    deferredPwaPrompt = e;
+    
+    // Doğrudan kur butonunu göster
+    const directBox = document.getElementById('pwa-direct-install-box');
+    if (directBox) directBox.style.display = 'block';
+
+    // Standalone değilse ve mobildeyse bannerı göster
+    checkPwaInstallState();
+});
+
+window.addEventListener('appinstalled', () => {
+    deferredPwaPrompt = null;
+    const banner = document.getElementById('mobile-pwa-install-banner');
+    if (banner) banner.style.display = 'none';
+    const chips = document.querySelectorAll('.mobile-app-install-chip');
+    chips.forEach(c => c.style.display = 'none');
+    console.log('[Dizsan PWA] Uygulama başarıyla cihaza yüklendi.');
+});
+
+function isAppRunningStandalone() {
+    return (window.matchMedia && window.matchMedia('(display-mode: standalone)').matches) ||
+           (window.navigator.standalone === true) ||
+           document.referrer.includes('android-app://');
+}
+
+function checkPwaInstallState() {
+    if (isAppRunningStandalone()) {
+        const banner = document.getElementById('mobile-pwa-install-banner');
+        if (banner) banner.style.display = 'none';
+        const chips = document.querySelectorAll('.mobile-app-install-chip');
+        chips.forEach(c => c.style.display = 'none');
+        return;
+    }
+
+    // Mobil cihazda ve kullanıcı bu oturumda kapatmadıysa bannerı göster
+    const isMobile = window.innerWidth <= 768 || /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+    const dismissed = sessionStorage.getItem('dizsan_pwa_banner_dismissed') === '1';
+    const banner = document.getElementById('mobile-pwa-install-banner');
+    if (isMobile && !dismissed && banner) {
+        banner.style.display = 'block';
+    }
+}
+
+function dismissPwaBanner() {
+    sessionStorage.setItem('dizsan_pwa_banner_dismissed', '1');
+    const banner = document.getElementById('mobile-pwa-install-banner');
+    if (banner) banner.style.display = 'none';
+}
+
+function triggerPwaPrompt() {
+    if (deferredPwaPrompt) {
+        deferredPwaPrompt.prompt();
+        deferredPwaPrompt.userChoice.then((choiceResult) => {
+            if (choiceResult.outcome === 'accepted') {
+                console.log('[Dizsan PWA] Kullanıcı kurulumu onayladı.');
+                dismissPwaBanner();
+                closeInstallGuideModal();
+            }
+            deferredPwaPrompt = null;
+        });
+    } else {
+        alert('Cihazınızda doğrudan kurulum tetiklenemedi. Lütfen menüdeki (3 nokta) "Uygulamayı Yükle" veya "Ana Ekrana Ekle" adımını uygulayın.');
+    }
+}
+
+function switchInstallTab(platform) {
+    const tabs = ['android', 'ios', 'qr'];
+    tabs.forEach(p => {
+        const btn = document.getElementById(`tab-btn-${p}`);
+        const content = document.getElementById(`install-content-${p}`);
+        if (btn) btn.classList.toggle('active', p === platform);
+        if (content) content.style.display = (p === platform) ? 'block' : 'none';
+    });
+}
+
 function openInstallGuideModal() {
     const m = document.getElementById('install-guide-modal');
     if (!m) return;
@@ -3624,6 +3704,21 @@ function openInstallGuideModal() {
     if (img) {
         img.src = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&margin=4&data=${encodeURIComponent(qrUrl)}`;
     }
+
+    // Otomatik platform seçimi
+    const ua = navigator.userAgent || '';
+    if (/iPhone|iPad|iPod/i.test(ua)) {
+        switchInstallTab('ios');
+    } else if (/Android/i.test(ua)) {
+        switchInstallTab('android');
+        const directBox = document.getElementById('pwa-direct-install-box');
+        if (directBox && deferredPwaPrompt) {
+            directBox.style.display = 'block';
+        }
+    } else {
+        switchInstallTab('qr');
+    }
+
     m.classList.add('open');
     m.classList.add('active');
     m.style.display = 'flex';
@@ -3640,6 +3735,11 @@ function closeInstallGuideModal() {
 
 window.openInstallGuideModal = openInstallGuideModal;
 window.closeInstallGuideModal = closeInstallGuideModal;
+window.switchInstallTab = switchInstallTab;
+window.triggerPwaPrompt = triggerPwaPrompt;
+window.dismissPwaBanner = dismissPwaBanner;
+window.checkPwaInstallState = checkPwaInstallState;
+window.isAppRunningStandalone = isAppRunningStandalone;
 window.shareAppOnWhatsApp = shareAppOnWhatsApp;
 
 // ==========================================================================
@@ -3654,6 +3754,7 @@ function renderAll() {
     renderDistrictStrategies();
     renderLogs();
     runAiDeduplicationAnalysis();
+    checkPwaInstallState();
 }
 
 document.addEventListener('DOMContentLoaded', async () => {
@@ -3798,7 +3899,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     // Service Worker Kaydı & Canlı Güncelleme Dinleyicisi (v1.3.0)
     if ('serviceWorker' in navigator) {
-        navigator.serviceWorker.register('sw.js?v=1.3.7').then(reg => {
+        navigator.serviceWorker.register('sw.js?v=1.3.8').then(reg => {
             reg.update();
             reg.addEventListener('updatefound', () => {
                 const newWorker = reg.installing;

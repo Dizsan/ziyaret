@@ -2,14 +2,17 @@
 <html lang="tr">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>DİZSAN Müşteri Ziyaret, Telefon &amp; Saha Takip Sistemi</title>
     
     <!-- PWA & Mobile Web App Meta Tags -->
     <meta name="theme-color" content="#0284c7">
+    <meta name="mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="Dizsan Ziyaret">
+    <meta name="apple-touch-fullscreen" content="yes">
+    <meta name="format-detection" content="telephone=no">
     <link rel="manifest" href="manifest.json">
     <link rel="icon" type="image/jpeg" href="dizsan_logo.jpg">
     <link rel="apple-touch-icon" href="apple-touch-icon.png">
@@ -20,7 +23,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Outfit:wght@600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     
-    <link rel="stylesheet" href="style.css?v=1.3.7">
+    <link rel="stylesheet" href="style.css?v=1.3.8">
 </head>
 <body>
 
@@ -175,48 +178,72 @@
             <!-- ÜST BİLGİ VE AKSİYON ÇUBUĞU (TOP NAVBAR) -->
             <header class="top-navbar">
                 <div class="navbar-left">
-                    <button class="mobile-menu-btn" onclick="toggleMobileSidebar()">
+                    <button type="button" class="dizsan-global-back-btn" id="dizsan-global-back-btn" onclick="DizsanBackNav.handleInAppBack()" title="Geri Dön">
+                        <i class="fa-solid fa-arrow-left"></i> <span>Geri</span>
+                    </button>
+                    <button class="mobile-menu-btn" onclick="toggleMobileSidebar()" title="Menü">
                         <i class="fa-solid fa-bars"></i>
                     </button>
                     <h1 id="page-title" class="page-title">
-                        <i class="fa-solid fa-chart-pie" style="color:var(--dizsan-light);"></i> Genel Bakış &amp; Kokpit
+                        <i class="fa-solid fa-chart-pie" style="color:var(--dizsan-light);"></i> <span>Genel Bakış &amp; Kokpit</span>
                     </h1>
                 </div>
 
                 <div class="navbar-right">
                     <button type="button" class="btn btn-secondary btn-sm app-version-chip" id="app-version-badge" onclick="openVersionModal()" title="Sürüm ve Cihaz Güncelleme Merkezi">
-                        <i class="fa-solid fa-code-branch" style="color:#38bdf8;"></i> <span id="app-current-version-text">v1.3.7</span>
+                        <i class="fa-solid fa-code-branch" style="color:#38bdf8;"></i> <span id="app-current-version-text">v1.3.8</span>
                     </button>
 
-                    <span id="sync-status-badge" class="status-chip online hide-on-sm" onclick="forceRefreshFromGitHub()" style="cursor:pointer;" title="GitHub'dan Canlı Logo ERP Verilerini Yenile">
-                        <i class="fa-solid fa-arrows-rotate" id="navbar-refresh-icon"></i> <span id="sync-status-text">Logo ERP Canlı: 15.10.2026 22:45</span>
-                    </span>
+                    <button type="button" class="btn btn-secondary btn-sm" onclick="forceRefreshFromGitHub()" id="btn-navbar-refresh" title="Logo ERP Verilerini Yenile">
+                        <i class="fa-solid fa-arrows-rotate" id="navbar-refresh-icon"></i> <span class="hide-on-sm" id="sync-status-text">Logo Canlı</span>
+                    </button>
 
-                    <button type="button" class="btn btn-secondary btn-sm" onclick="openPushTestCenterModal()">
+                    <button type="button" class="btn btn-primary btn-sm hide-on-desktop mobile-app-install-chip" onclick="openInstallGuideModal()" title="Uygulamayı Telefona Yükle">
+                        <i class="fa-solid fa-mobile-screen-button"></i> <span>Uygulamayı Kur</span>
+                    </button>
+
+                    <button type="button" class="btn btn-secondary btn-sm hide-on-mobile" onclick="openPushTestCenterModal()">
                         <i class="fa-solid fa-satellite-dish" style="color:#38bdf8;"></i> <span class="hide-on-sm">Web Push &amp; Test</span>
                     </button>
 
-                    <button type="button" class="btn btn-primary btn-sm" onclick="openVisitModal()">
+                    <button type="button" class="btn btn-primary btn-sm hide-on-mobile" onclick="openVisitModal()">
                         <i class="fa-solid fa-plus"></i> <span>Görüşme / Ziyaret Ekle</span>
                     </button>
 
-                    <button type="button" class="btn btn-success btn-sm hide-on-sm" onclick="openCustomerModal()">
+                    <button type="button" class="btn btn-success btn-sm hide-on-mobile" onclick="openCustomerModal()">
                         <i class="fa-solid fa-user-plus"></i> <span>Yeni Müşteri</span>
                     </button>
 
-                    <button type="button" class="btn btn-secondary btn-sm" title="Şifre Değiştir" onclick="openChangePasswordModal()">
+                    <button type="button" class="btn btn-secondary btn-sm hide-on-mobile" title="Şifre Değiştir" onclick="openChangePasswordModal()">
                         <i class="fa-solid fa-key" style="color:#fbbf24;"></i> <span class="hide-on-sm">Şifre Değiştir</span>
                     </button>
 
-                    <button type="button" class="btn btn-secondary btn-sm" title="WhatsApp Paylaş" onclick="shareAppOnWhatsApp()">
+                    <button type="button" class="btn btn-secondary btn-sm hide-on-mobile" title="WhatsApp Paylaş" onclick="shareAppOnWhatsApp()">
                         <i class="fa-brands fa-whatsapp" style="color:#25d366; font-size:1.1rem;"></i>
                     </button>
 
-                    <button type="button" class="btn btn-secondary btn-sm" title="Cihaza Yükle" onclick="openInstallGuideModal()">
+                    <button type="button" class="btn btn-secondary btn-sm hide-on-mobile" title="Mobil Uygulama Olarak Yükle" onclick="openInstallGuideModal()">
                         <i class="fa-solid fa-qrcode"></i>
                     </button>
                 </div>
             </header>
+
+            <!-- MOBİL AKILLI UYGULAMA KURULUM BANNERI -->
+            <div id="mobile-pwa-install-banner" class="mobile-pwa-banner" style="display:none;">
+                <div class="pwa-banner-card">
+                    <img src="dizsan_logo.jpg" alt="Dizsan" class="pwa-banner-icon">
+                    <div class="pwa-banner-info">
+                        <strong>📱 Tam Ekran Mobil Uygulama Modu</strong>
+                        <p>Tarayıcı ve adres çubuklarını kaldırıp %100 mobil uygulama gibi açmak için Ana Ekrana Ekleyin.</p>
+                    </div>
+                    <div class="pwa-banner-buttons">
+                        <button type="button" class="btn btn-primary btn-sm" onclick="openInstallGuideModal()">
+                            <i class="fa-solid fa-download"></i> Hemen Kur
+                        </button>
+                        <button type="button" class="pwa-close-btn" onclick="dismissPwaBanner()">&times;</button>
+                    </div>
+                </div>
+            </div>
 
             <!-- İÇERİK GÖVDESİ -->
             <main class="content-body">
@@ -644,27 +671,27 @@
         </div>
     </div>
 
-    <!-- MOBİL ALT NAVİGASYON (BOTTOM BAR) -->
-    <nav class="mobile-nav-bar">
+    <!-- MOBİL ALT NAVİGASYON (NATIVE APP TAB BAR) -->
+    <nav class="mobile-nav-bar" id="mobile-nav-bar">
         <div class="mobile-nav-item active" data-tab="dashboard-tab" onclick="switchTab('dashboard-tab')">
             <i class="fa-solid fa-chart-pie"></i>
             <span>Kokpit</span>
         </div>
         <div class="mobile-nav-item" data-tab="legacy-tab" onclick="switchTab('legacy-tab')">
-            <i class="fa-solid fa-database"></i>
-            <span>Arşiv</span>
+            <i class="fa-solid fa-users"></i>
+            <span>Müşteriler</span>
+        </div>
+        <div class="mobile-nav-fab" onclick="openVisitModal()" title="Yeni Görüşme / Ziyaret Ekle">
+            <i class="fa-solid fa-plus"></i>
+            <span>Ekle</span>
         </div>
         <div class="mobile-nav-item" data-tab="active-tab" onclick="switchTab('active-tab')">
             <i class="fa-solid fa-car-side"></i>
             <span>Saha</span>
         </div>
-        <div class="mobile-nav-item" data-tab="ai-match-tab" onclick="switchTab('ai-match-tab')">
-            <i class="fa-solid fa-brain"></i>
-            <span>AI Tekleştir</span>
-        </div>
-        <div class="mobile-nav-item" data-tab="tasks-tab" onclick="switchTab('tasks-tab')">
-            <i class="fa-solid fa-list-check"></i>
-            <span>Görevler</span>
+        <div class="mobile-nav-item" onclick="toggleMobileSidebar()" title="Diğer Menüler">
+            <i class="fa-solid fa-bars"></i>
+            <span>Menü</span>
         </div>
     </nav>
 
@@ -965,17 +992,103 @@
          MODAL 5: QR KODLU KURULUM & REHBER
          ========================================================================== -->
     <div id="install-guide-modal" class="modal-backdrop">
-        <div class="modal-box" style="max-width:560px;">
+        <div class="modal-box" style="max-width:580px;">
             <div class="modal-header">
-                <h3><i class="fa-solid fa-mobile-screen" style="color:#34d399;"></i> Telefon ve Tablete Kurulum</h3>
+                <button type="button" class="dizsan-modal-back-btn" onclick="closeInstallGuideModal()"><i class="fa-solid fa-arrow-left"></i> Geri</button>
+                <div style="flex:1;">
+                    <h3 style="margin-bottom:2px;"><i class="fa-solid fa-mobile-screen-button" style="color:#38bdf8;"></i> Mobil Uygulama Olarak Yükleyin</h3>
+                    <div style="font-size:0.75rem; color:var(--text-sec);">Tarayıcı çubukları olmadan %100 tam ekran mobil deneyim</div>
+                </div>
                 <button class="modal-close" onclick="closeInstallGuideModal()">&times;</button>
             </div>
-            <div class="modal-body" style="text-align:center;">
-                <p style="font-size:0.85rem; color:var(--text-sec); margin-bottom:1rem;">Telefonunuzun veya tabletinizin kamerasından QR kodu okutarak uygulamayı anında açabilirsiniz:</p>
-                <img id="install-qr-img" src="" alt="QR Kod" style="width:190px; height:190px; background:#fff; padding:10px; border-radius:14px; margin-bottom:1rem;">
-                <div style="background:rgba(255,255,255,0.04); border:1px solid var(--border-color); border-radius:12px; padding:0.85rem; font-size:0.82rem; text-align:left; color:#cbd5e1; line-height:1.5;">
-                    • <strong>Apple iPhone / iPad:</strong> Safari'de açtıktan sonra alt ortadaki <strong>Paylaş (⬆️)</strong> butonuna dokunup <strong>"Ana Ekrana Ekle"</strong> seçin.<br>
-                    • <strong>Android Telefon / Tablet:</strong> Chrome veya Samsung Internet sağ üst menüsünden <strong>"Uygulamayı Yükle"</strong> seçeneğine dokunun.
+            <div class="modal-body">
+                <!-- Platform Tab Seçicisi -->
+                <div class="install-tabs">
+                    <button type="button" class="install-tab-btn active" id="tab-btn-android" onclick="switchInstallTab('android')">
+                        <i class="fa-brands fa-android" style="color:#34d399; font-size:1.1rem;"></i> Android (Samsung / Chrome)
+                    </button>
+                    <button type="button" class="install-tab-btn" id="tab-btn-ios" onclick="switchInstallTab('ios')">
+                        <i class="fa-brands fa-apple" style="font-size:1.1rem;"></i> iPhone / iPad (Safari)
+                    </button>
+                    <button type="button" class="install-tab-btn" id="tab-btn-qr" onclick="switchInstallTab('qr')">
+                        <i class="fa-solid fa-qrcode" style="font-size:1.1rem;"></i> QR Kod
+                    </button>
+                </div>
+
+                <!-- ANDROID TAB -->
+                <div id="install-content-android" class="install-content-pane">
+                    <div id="pwa-direct-install-box" style="display:none; margin-bottom:1rem;">
+                        <button type="button" class="btn btn-primary btn-block" style="padding:0.85rem; font-size:0.95rem; box-shadow:0 0 20px rgba(2,132,199,0.5);" onclick="triggerPwaPrompt()">
+                            <i class="fa-solid fa-download"></i> 📲 Uygulamayı Telefona Hemen Yükle
+                        </button>
+                        <div style="font-size:0.75rem; color:#94a3b8; text-align:center; margin-top:0.35rem;">Tek dokunuşla cihazınıza doğrudan kurulur.</div>
+                    </div>
+
+                    <div class="install-step-card">
+                        <div class="install-step-num">1</div>
+                        <div class="install-step-body">
+                            <div class="install-step-title">Tarayıcı Menüsüne Dokunun</div>
+                            <div class="install-step-desc">Samsung Internet veya Chrome'da sağ alttaki ya da sağ üstteki <span class="install-badge-chip"><i class="fa-solid fa-ellipsis-vertical"></i> Menü (3 Nokta)</span> veya adres çubuğundaki <span class="install-badge-chip"><i class="fa-solid fa-download"></i> İndir</span> simgesine dokunun.</div>
+                        </div>
+                    </div>
+
+                    <div class="install-step-card">
+                        <div class="install-step-num">2</div>
+                        <div class="install-step-body">
+                            <div class="install-step-title">"Uygulamayı Yükle" veya "Ana Ekrana Ekle"yi Seçin</div>
+                            <div class="install-step-desc">Açılan menüden <span class="install-badge-chip">📲 Uygulamayı Yükle</span> veya <span class="install-badge-chip">➕ Ana Ekrana Ekle</span> seçeneğine dokunun.</div>
+                        </div>
+                    </div>
+
+                    <div class="install-step-card">
+                        <div class="install-step-num">3</div>
+                        <div class="install-step-body">
+                            <div class="install-step-title">"Yükle" Onayı Verin</div>
+                            <div class="install-step-desc">Gelen onay penceresinde <strong>"Yükle"</strong> butonuna dokunun. Birkaç saniye içinde telefonunuzun ana ekranında ve uygulamalar çekmecesinde <strong>Dizsan Ziyaret</strong> ikonu belirecektir.</div>
+                        </div>
+                    </div>
+
+                    <div style="background:rgba(16,185,129,0.1); border:1px solid rgba(16,185,129,0.3); border-radius:10px; padding:0.75rem; font-size:0.8rem; color:#a7f3d0; margin-top:0.75rem;">
+                        <i class="fa-solid fa-circle-check" style="color:#10b981;"></i> <strong>Uygulama Modu Avantajı:</strong> Ana ekrandaki ikondan açtığınızda üstteki web adresi ve alttaki tarayıcı butonları tamamen kaybolur; tam ekran, internet olmasa da çalışan gerçek bir mobil uygulama olarak açılır!
+                    </div>
+                </div>
+
+                <!-- IOS TAB -->
+                <div id="install-content-ios" class="install-content-pane" style="display:none;">
+                    <div class="install-step-card">
+                        <div class="install-step-num">1</div>
+                        <div class="install-step-body">
+                            <div class="install-step-title">Safari'de Paylaş Simgesine Dokunun</div>
+                            <div class="install-step-desc">iPhone Safari ekranının en alt ortasında yer alan <span class="install-badge-chip"><i class="fa-solid fa-arrow-up-from-bracket"></i> Paylaş</span> (kare içinde yukarı ok) butonuna dokunun.</div>
+                        </div>
+                    </div>
+
+                    <div class="install-step-card">
+                        <div class="install-step-num">2</div>
+                        <div class="install-step-body">
+                            <div class="install-step-title">"Ana Ekrana Ekle"yi Seçin</div>
+                            <div class="install-step-desc">Açılan paylaşım sayfasını biraz aşağı kaydırarak <span class="install-badge-chip"><i class="fa-solid fa-square-plus"></i> Ana Ekrana Ekle</span> seçeneğine dokunun.</div>
+                        </div>
+                    </div>
+
+                    <div class="install-step-card">
+                        <div class="install-step-num">3</div>
+                        <div class="install-step-body">
+                            <div class="install-step-title">Sağ Üstteki "Ekle" Yazısına Dokunun</div>
+                            <div class="install-step-desc">Başlık olarak <strong>Dizsan Ziyaret</strong> görünecektir. Sağ üst köşedeki <strong>Ekle</strong> butonuna dokunarak kurulumu tamamlayın.</div>
+                        </div>
+                    </div>
+
+                    <div style="background:rgba(16,185,129,0.1); border:1px solid rgba(16,185,129,0.3); border-radius:10px; padding:0.75rem; font-size:0.8rem; color:#a7f3d0; margin-top:0.75rem;">
+                        <i class="fa-solid fa-circle-check" style="color:#10b981;"></i> <strong>Tam Ekran iOS Deneyimi:</strong> Ana ekrandaki Dizsan ikonuna dokunduğunuzda Safari sekmeleri veya adres çubuğu görünmez; Dynamic Island ve çentik arkasına taşan %100 akıcı mobil uygulama açılır.
+                    </div>
+                </div>
+
+                <!-- QR CODE TAB -->
+                <div id="install-content-qr" class="install-content-pane" style="display:none; text-align:center;">
+                    <p style="font-size:0.82rem; color:var(--text-sec); margin-bottom:0.75rem;">Telefon veya tablet kameranızla okutarak uygulamayı doğrudan açabilirsiniz:</p>
+                    <img id="install-qr-img" src="" alt="QR Kod" style="width:180px; height:180px; background:#fff; padding:8px; border-radius:12px; margin-bottom:0.75rem; box-shadow:0 8px 25px rgba(0,0,0,0.5);">
+                    <div style="font-size:0.76rem; color:#cbd5e1;">Bağlantı: <code style="color:#38bdf8;">https://dizsan.github.io/ziyaret/</code></div>
                 </div>
             </div>
             <div class="modal-footer">
@@ -1063,7 +1176,7 @@
                 <div style="background:rgba(15,23,42,0.8); border:1px solid var(--border-color); border-radius:12px; padding:1rem; margin-bottom:1rem;">
                     <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.75rem;">
                         <span style="font-size:0.85rem; color:var(--text-muted);">Bu Cihazdaki Aktif Sürüm:</span>
-                        <span class="badge badge-success" style="font-size:0.88rem; padding:4px 10px;" id="modal-device-version">v1.3.7</span>
+                        <span class="badge badge-success" style="font-size:0.88rem; padding:4px 10px;" id="modal-device-version">v1.3.8</span>
                     </div>
                     <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.75rem;">
                         <span style="font-size:0.85rem; color:var(--text-muted);">Buluttaki En Güncel Sürüm:</span>
@@ -1198,7 +1311,9 @@
     <div id="print-report-area"></div>
 
     <!-- Scripts -->
+    <script src="dizsan-back-navigation.js?v=1.3.8"></script>
+    <script src="dizsan-auto-updater.js?v=1.3.8"></script>
     <script src="auto-date-helper.js"></script>
-    <script src="app.js?v=1.3.7"></script>
+    <script src="app.js?v=1.3.8"></script>
 </body>
 </html>
