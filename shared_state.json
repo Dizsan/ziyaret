@@ -192996,7 +192996,7 @@
   "unifiedMasterCustomers": [],
   "pushSubscriptions": [
     {
-      "id": "SUB-1792094925203",
+      "id": "SUB-1792094936918",
       "username": "ömer",
       "userFullName": "ÖMER EREN",
       "endpoint": "https://web.push.apple.com/QM2M6wdNFb8BjM8fIfWIUC42gLbkK-hf-FK9r0CAK1LKa-TdQkore47FEV_Yh1wEGV72LL9wLNKvDB9A0l-Wcbnvki1g-dJwNIQsht7e0wc2bdCsURxRaomEdZnpuJiLi0r7NEaicGuHq3ErqDkzXRI_JtGRHUaTNetAvBR93YA",
@@ -193004,7 +193004,7 @@
       "auth": "YL0EX4tbvhQFoBfymVzwkg",
       "browser": "Apple Safari",
       "platform": "macOS",
-      "updatedAt": "15.10.2026 23:08:45"
+      "updatedAt": "15.10.2026 23:08:56"
     }
   ],
   "pushTestRequests": [],
@@ -193019,8 +193019,8 @@
       "platform": "macOS / Masaüstü"
     }
   ],
-  "updatedAt": "2026-10-15T20:08:45.203Z",
-  "stateRevision": 29,
+  "updatedAt": "2026-10-15T20:08:56.918Z",
+  "stateRevision": 30,
   "cities": [
     "Adana",
     "Adıyaman",
