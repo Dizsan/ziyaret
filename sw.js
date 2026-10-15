@@ -1,12 +1,11 @@
-// DİZSAN Müşteri Ziyaret & Saha Takip Service Worker (v1.3.8)
-const CACHE_NAME = 'dizsan-ziyaret-v1.3.9';
+// DİZSAN Müşteri Ziyaret & Saha Takip Service Worker (v1.4.0)
+const CACHE_NAME = 'dizsan-ziyaret-v1.4.0';
 const ASSETS = [
   './',
   './index.html',
   './style.css',
   './app.js',
   './dizsan-back-navigation.js',
-  './dizsan-auto-updater.js',
   './customer_database.json',
   './alarm-worker.js',
   './auto-date-helper.js',
