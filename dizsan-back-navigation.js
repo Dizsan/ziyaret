@@ -1,33 +1,35 @@
 /**
  * ============================================================================
  * DİZSAN EVRENSEL GERİ TUŞU & ÇIKIŞ ÖNLEME MOTORU (dizsan-back-navigation.js)
- * Antigravity AI - Dizsan Ekosistemi v1.1.0 (Performans & Sıfır Donma Garantili)
+ * Antigravity AI - Dizsan Ekosistemi v2.0.0
  * 
  * Özellikler:
  * 1. Telefon donanım / kaydırma geri tuşu (Android Back / iOS swipe) basıldığında
  *    uygulamadan komple çıkmayı %100 engeller.
- * 2. Açık modal (müşteri detayı, ziyaret ekle, şifre vb.) varsa önce modalı kapatır.
- * 3. Açık mobil yan menü/sidebar varsa önce menüyü kapatır.
- * 4. Alt sekmedeyse (Müşteriler, Saha, Arşiv vb.) ana sekmeye (Kokpit/Dashboard) döner.
- * 5. Ana ekrandayken çıkmak için 2 saniye içinde çift basma (Double-Back) ister.
+ * 2. Gerçek LIFO Navigasyon Yığını (Tab History Stack):
+ *    Sayfalar arası gezinti geçmişini hatırlar ve her geri basışta bir önceki sayfaya döner.
+ * 3. Açık modal (ziyaret, toplantı, aksiyon, müşteri detayı vb.) varsa önce modalı kapatır.
+ * 4. Açık mobil yan menü/sidebar varsa önce menüyü kapatır.
+ * 5. Ana ekrandayken (Kokpit) geri tuşuna basıldığında uygulamadan atmaz;
+ *    "DİZSAN Ana Sayfasındasınız" uyarısı verir ve ekranda kalır.
  * 6. Tüm uygulamaların üst çubuğuna (navbar) ve tüm modal başlıklarına şık, 
  *    dokunmatik dostu "← Geri" butonu ekler.
- * 7. %100 Hafiftir; ana iş parçacığını (UI thread) asla kilitlemez veya dondurmaz.
  * ============================================================================
  */
 
 (function () {
     'use strict';
 
-    if (window.DizsanBackNav) {
-        return; // Zaten yüklü
+    if (window.DizsanBackNav && window.DizsanBackNav.version === '2.0.0') {
+        return;
     }
 
-    let lastBackPressTime = 0;
-    let isHandlingPopState = false;
+    const tabHistoryStack = [];
+    let isInternalTabSwitch = false;
     let visibilityCheckTimer = null;
+    let toastTimer = null;
 
-    // 1. Gerekli CSS Stillerini Dinamik Olarak Ekle
+    // 1. Gerekli CSS Stilleri
     function injectStyles() {
         if (document.getElementById('dizsan-back-nav-styles')) return;
         const style = document.createElement('style');
@@ -39,15 +41,15 @@
                 align-items: center;
                 gap: 6px;
                 background: rgba(255, 255, 255, 0.08);
-                border: 1px solid rgba(255, 255, 255, 0.15);
+                border: 1px solid rgba(255, 255, 255, 0.16);
                 color: #ffffff;
-                padding: 0.35rem 0.65rem;
-                border-radius: 8px;
-                font-size: 0.78rem;
+                padding: 0.38rem 0.72rem;
+                border-radius: 9px;
+                font-size: 0.82rem;
                 font-weight: 700;
                 cursor: pointer;
                 transition: background 0.15s ease, transform 0.1s ease;
-                margin-right: 0.35rem;
+                margin-right: 0.45rem;
                 flex-shrink: 0;
                 -webkit-tap-highlight-color: transparent;
                 user-select: none;
@@ -70,7 +72,7 @@
                 border: 1px solid rgba(255, 255, 255, 0.18);
                 color: #e2e8f0;
                 padding: 0.32rem 0.65rem;
-                border-radius: 7px;
+                border-radius: 8px;
                 font-size: 0.78rem;
                 font-weight: 600;
                 cursor: pointer;
@@ -84,20 +86,20 @@
                 transform: scale(0.92);
             }
 
-            /* Çift Basma Bilgilendirme Toastı */
+            /* Bilgilendirme Toastı */
             #dizsan-back-toast {
                 position: fixed;
                 bottom: 85px;
                 left: 50%;
                 transform: translateX(-50%) translateY(30px);
-                background: rgba(15, 23, 42, 0.95);
-                border: 1px solid rgba(56, 189, 248, 0.4);
+                background: rgba(15, 23, 42, 0.96);
+                border: 1px solid rgba(56, 189, 248, 0.45);
                 color: #f8fafc;
                 padding: 0.65rem 1.25rem;
                 border-radius: 25px;
                 font-size: 0.82rem;
                 font-weight: 600;
-                box-shadow: 0 10px 30px rgba(0, 0, 0, 0.7);
+                box-shadow: 0 10px 30px rgba(0, 0, 0, 0.75);
                 z-index: 100000;
                 opacity: 0;
                 pointer-events: none;
@@ -114,7 +116,7 @@
         document.head.appendChild(style);
     }
 
-    // 2. Çift Basış Toast Bildirimi
+    // 2. Toast Bildirimi
     function showBackToast(text) {
         let toast = document.getElementById('dizsan-back-toast');
         if (!toast) {
@@ -124,12 +126,14 @@
         }
         toast.innerHTML = `<i class="fa-solid fa-arrow-left" style="color:#38bdf8; margin-right:6px;"></i> ${text}`;
         toast.classList.add('show');
-        setTimeout(() => {
+        if (toastTimer) clearTimeout(toastTimer);
+        toastTimer = setTimeout(() => {
             toast.classList.remove('show');
-        }, 2000);
+            toastTimer = null;
+        }, 1800);
     }
 
-    // 3. Açık Modal Tespiti (Reflow / Donma Yapmayan Hızlı Kontrol)
+    // 3. Açık Modal Tespiti
     function isModalElementOpen(el) {
         if (!el) return false;
         if (el.classList.contains('open') || el.classList.contains('active')) return true;
@@ -138,78 +142,74 @@
     }
 
     function getActiveModal() {
-        const modalIds = [
-            'customer-detail-modal',
+        const modalOrder = [
+            'approval-request-modal',
+            'task-action-modal',
+            'manager-approval-modal',
+            'urgent-departure-modal',
+            'attachment-preview-modal',
+            'meeting-modal',
+            'action-modal',
+            'announcement-modal',
             'visit-modal',
-            'task-modal',
+            'customer-detail-modal',
             'customer-modal',
+            'task-modal',
+            'user-modal',
             'version-modal',
             'push-test-modal',
             'install-guide-modal',
             'change-password-modal',
             'forgot-password-modal',
-            'meeting-modal',
-            'action-modal',
             'new-card-modal',
             'new-payment-modal'
         ];
 
-        for (const id of modalIds) {
+        for (const id of modalOrder) {
             const el = document.getElementById(id);
             if (el && isModalElementOpen(el)) return el;
         }
 
         const openBackdrops = document.querySelectorAll('.modal-backdrop.open, .modal-backdrop.active, .modal.open, .modal.active');
-        for (const m of openBackdrops) {
-            if (isModalElementOpen(m)) return m;
+        if (openBackdrops.length > 0) {
+            return openBackdrops[openBackdrops.length - 1];
         }
 
         return null;
     }
 
-    // 4. Açık Modalı Kapatma
+    // 4. Modalı Kapatma
     function closeModal(modalEl) {
         if (!modalEl) return false;
-
         const id = modalEl.id;
-        if (id === 'customer-detail-modal' && typeof window.closeCustomerDetailModal === 'function') {
-            window.closeCustomerDetailModal();
-            return true;
-        }
-        if (id === 'visit-modal' && typeof window.closeVisitModal === 'function') {
-            window.closeVisitModal();
-            return true;
-        }
-        if (id === 'task-modal' && typeof window.closeTaskModal === 'function') {
-            window.closeTaskModal();
-            return true;
-        }
-        if (id === 'customer-modal' && typeof window.closeCustomerModal === 'function') {
-            window.closeCustomerModal();
-            return true;
-        }
-        if (id === 'version-modal' && typeof window.closeVersionModal === 'function') {
-            window.closeVersionModal();
-            return true;
-        }
-        if (id === 'push-test-modal' && typeof window.closePushTestCenterModal === 'function') {
-            window.closePushTestCenterModal();
-            return true;
-        }
-        if (id === 'install-guide-modal' && typeof window.closeInstallGuideModal === 'function') {
-            window.closeInstallGuideModal();
-            return true;
-        }
-        if (id === 'change-password-modal' && typeof window.closeChangePasswordModal === 'function') {
-            window.closeChangePasswordModal();
-            return true;
-        }
-        if (id === 'forgot-password-modal' && typeof window.closeForgotPasswordModal === 'function') {
-            window.closeForgotPasswordModal();
+
+        const closeFnMap = {
+            'approval-request-modal': 'closeApprovalRequestModal',
+            'task-action-modal': 'closeTaskActionModal',
+            'manager-approval-modal': 'closeApprovalCenterModal',
+            'urgent-departure-modal': 'closeUrgentDepartureModal',
+            'attachment-preview-modal': 'closeAttachmentPreviewModal',
+            'meeting-modal': 'closeMeetingModal',
+            'action-modal': 'closeActionModal',
+            'announcement-modal': 'closeAnnouncementModal',
+            'visit-modal': 'closeVisitModal',
+            'customer-detail-modal': 'closeCustomerDetailModal',
+            'customer-modal': 'closeCustomerModal',
+            'task-modal': 'closeTaskModal',
+            'user-modal': 'closeUserModal',
+            'version-modal': 'closeVersionModal',
+            'push-test-modal': 'closePushTestCenterModal',
+            'install-guide-modal': 'closeInstallGuideModal',
+            'change-password-modal': 'closeChangePasswordModal',
+            'forgot-password-modal': 'closeForgotPasswordModal'
+        };
+
+        const fnName = closeFnMap[id];
+        if (fnName && typeof window[fnName] === 'function') {
+            window[fnName]();
             return true;
         }
 
-        // Genel kapatma butonlarını tıkla
         const closeBtn = modalEl.querySelector('.modal-close, .close, [data-dismiss="modal"], button.btn-secondary');
         if (closeBtn && typeof closeBtn.click === 'function') {
             closeBtn.click();
@@ -221,10 +221,10 @@
         return true;
     }
 
-    // 5. Açık Mobil Yan Menü Kontrolü
+    // 5. Mobil Yan Menü Kontrolü
     function getActiveSidebar() {
         const sidebar = document.querySelector('.sidebar.mobile-open, .sidebar.active, .mobile-sidebar.open');
-        return (sidebar && sidebar.classList.contains('mobile-open')) ? sidebar : null;
+        return (sidebar && (sidebar.classList.contains('mobile-open') || sidebar.classList.contains('active') || sidebar.classList.contains('open'))) ? sidebar : null;
     }
 
     function closeSidebar(sidebarEl) {
@@ -253,7 +253,7 @@
         return homeIds.includes(tabId);
     }
 
-    // 7. Geri Tuşu Karar Motoru
+    // 7. Geri Tuşu Karar Motoru (Hierarchical Navigation)
     function handleBackNavigation() {
         // 1. Aşama: Açık modal var mı?
         const modal = getActiveModal();
@@ -271,57 +271,67 @@
             return true;
         }
 
-        // 3. Aşama: Alt bir sekmede miyiz?
+        // 3. Aşama: Sekme geçmişinde bir önceki sayfa var mı?
+        while (tabHistoryStack.length > 0) {
+            const prevTab = tabHistoryStack.pop();
+            const curTab = getActiveTabId();
+            if (prevTab && prevTab !== curTab && document.getElementById(prevTab)) {
+                isInternalTabSwitch = true;
+                if (typeof window.switchTab === 'function') {
+                    window.switchTab(prevTab);
+                } else {
+                    const btn = document.querySelector(`[data-tab="${prevTab}"], [onclick*="${prevTab}"]`);
+                    if (btn) btn.click();
+                }
+                isInternalTabSwitch = false;
+                scheduleVisibilityCheck();
+                return true;
+            }
+        }
+
+        // 4. Aşama: Eğer geçmiş boş ama ana sekmede değilsek, ana sekmeye dön
         const curTab = getActiveTabId();
         if (curTab && !isHomeTab(curTab)) {
+            isInternalTabSwitch = true;
             if (typeof window.switchTab === 'function') {
                 window.switchTab('dashboard-tab');
             } else {
                 const homeBtn = document.querySelector('[data-tab="dashboard-tab"], [onclick*="dashboard-tab"]');
                 if (homeBtn) homeBtn.click();
             }
+            isInternalTabSwitch = false;
             scheduleVisibilityCheck();
             return true;
         }
 
+        // 5. Aşama: Zaten ana sekmedeyiz. Uygulamadan ASLA çıkma!
+        showBackToast('DİZSAN Ana Sayfasındasınız');
+        scheduleVisibilityCheck();
         return false;
     }
 
     // 8. Uygulama İçi "← Geri" Butonuna Basıldığında
     function handleInAppBack() {
-        const handled = handleBackNavigation();
-        if (!handled) {
-            showBackToast('Zaten ana ekrandasınız.');
-        }
+        handleBackNavigation();
     }
 
-    // 9. Donanım / Tarayıcı Popstate Dinleyicisi
-    function initPopStateListener() {
+    // 9. Donanım / Tarayıcı Popstate Kalkanı (Anti-Exit Guard)
+    function pushGuard() {
         try {
-            history.replaceState({ dizsanRoot: true }, '', location.href);
-            history.pushState({ dizsanGuard: true }, '', location.href);
+            history.pushState({ dizsanGuard: true, timestamp: Date.now() }, '', location.href);
         } catch (e) {}
+    }
 
-        window.addEventListener('popstate', function () {
-            if (isHandlingPopState) return;
+    function initPopStateGuard() {
+        pushGuard();
+        pushGuard();
 
-            const handled = handleBackNavigation();
-            if (handled) {
-                try {
-                    history.pushState({ dizsanGuard: true }, '', location.href);
-                } catch (e) {}
-            } else {
-                const now = Date.now();
-                if (now - lastBackPressTime < 2000) {
-                    history.back();
-                } else {
-                    lastBackPressTime = now;
-                    try {
-                        history.pushState({ dizsanGuard: true }, '', location.href);
-                    } catch (e) {}
-                    showBackToast('Çıkmak için tekrar basın');
-                }
-            }
+        window.addEventListener('popstate', function (e) {
+            // Tarayıcı geri tuşuna basıldığında geçmiş havuzunu anında tekrar doldur
+            pushGuard();
+
+            // Uygulama içi önceki sayfaya veya modala dön
+            handleBackNavigation();
         });
     }
 
@@ -361,15 +371,17 @@
         });
     }
 
-    // 11. Geri Butonunun Görünürlüğünü Güncelle (Throttled & Non-blocking)
+    // 11. Geri Butonunun Görünürlüğünü Güncelle
     function updateBackButtonVisibility() {
         const btn = document.getElementById('dizsan-global-back-btn');
         if (!btn) return;
 
         const hasModal = !!getActiveModal();
+        const hasSidebar = !!getActiveSidebar();
         const curTab = getActiveTabId();
+        const hasHistory = tabHistoryStack.length > 0;
         const isNotHome = curTab && !isHomeTab(curTab);
-        const shouldBeVisible = !!(hasModal || isNotHome);
+        const shouldBeVisible = !!(hasModal || hasSidebar || hasHistory || isNotHome);
 
         if (btn.classList.contains('visible') !== shouldBeVisible) {
             btn.classList.toggle('visible', shouldBeVisible);
@@ -381,36 +393,58 @@
         visibilityCheckTimer = setTimeout(() => {
             visibilityCheckTimer = null;
             updateBackButtonVisibility();
-        }, 120);
+        }, 100);
     }
 
-    // 12. Global API Tanımlaması
+    // 12. Sekme Değişikliklerini İzleme (Tab History Tracking)
+    function trackTabSwitch(newTabId) {
+        if (isInternalTabSwitch || !newTabId) return;
+        const curTab = getActiveTabId();
+        if (curTab && curTab !== newTabId) {
+            if (tabHistoryStack.length === 0 || tabHistoryStack[tabHistoryStack.length - 1] !== curTab) {
+                tabHistoryStack.push(curTab);
+                if (tabHistoryStack.length > 30) {
+                    tabHistoryStack.shift();
+                }
+            }
+        }
+        scheduleVisibilityCheck();
+    }
+
+    // 13. Global API Tanımlaması
     window.DizsanBackNav = {
+        version: '2.0.0',
         handleInAppBack: handleInAppBack,
         getActiveModal: getActiveModal,
         updateBackButtonVisibility: updateBackButtonVisibility,
-        showToast: showBackToast
+        showToast: showBackToast,
+        pushGuard: pushGuard
     };
 
-    // 13. Başlatıcı
+    // 14. Başlatıcı
     function init() {
         injectStyles();
-        initPopStateListener();
+        initPopStateGuard();
         injectTopNavbarBackButton();
         injectModalBackButtons();
 
         // switchTab kancası
         if (typeof window.switchTab === 'function') {
             const originalSwitchTab = window.switchTab;
-            window.switchTab = function () {
+            window.switchTab = function (tabId) {
+                trackTabSwitch(tabId);
                 const res = originalSwitchTab.apply(this, arguments);
                 scheduleVisibilityCheck();
                 return res;
             };
         }
 
-        // Tıklamaları dinleyerek görünürlüğü güncelle (Hafif ve asenkron)
-        document.addEventListener('click', scheduleVisibilityCheck, { passive: true });
+        // Tıklamaları dinle ve görünürlüğü güncelle
+        document.addEventListener('click', function (e) {
+            scheduleVisibilityCheck();
+            // Herhangi bir kullanıcı etkileşiminde geçmiş kalkanını tazele
+            pushGuard();
+        }, { passive: true });
     }
 
     if (document.readyState === 'loading') {

@@ -1,7 +1,7 @@
 {
-  "version": "1.5.0",
-  "build": 150,
-  "releasedAt": "2026-10-15 23:57:38",
-  "releaseNotes": "Mobil app tam ekran tasarımı, açılır pencere kaydırma düzeltmesi, personel görevlendirme, iki yönlü anlık bildirim ve Yönetici Ömer Eren Onay Kalkanı tamamlandı",
+  "version": "1.5.1",
+  "build": 151,
+  "releasedAt": "2026-10-16 00:15:01",
+  "releaseNotes": "Telefon geri tuşu navigasyon kalkanı v2.0.0 eklendi, uygulamadan çıkış engellendi, önceki sayfaya dönme motoru aktif edildi",
   "author": "Ömer Eren & DİZSAN"
 }
