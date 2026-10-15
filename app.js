@@ -12,7 +12,7 @@
  */
 
 const INITIAL_APP_VERSION = "v1.3.0";
-const CURRENT_APP_VERSION = "1.4.0";
+const CURRENT_APP_VERSION = "1.4.1";
 let hasShownUpdateNotice = false;
 const VAPID_PUBLIC_KEY = "BJIJfCBiDwya3clZOWS08EDxfuN18xtfJGTX0n_apWBTEW7-kO_FGKNy5VDRvUsMgc46IP5oxLlIHqgrDo-JTkE";
 const STORAGE_KEY_STATE = "dizsan_ziyaret_shared_state_v1";
@@ -3635,8 +3635,6 @@ function shareAppOnWhatsApp() {
     window.open(`https://wa.me/?text=${encodeURIComponent(msg)}`, '_blank');
 }
 
-let deferredPwaPrompt = null;
-
 // PWA Kurulum İstemi Dinleyicisi
 window.addEventListener('beforeinstallprompt', (e) => {
     e.preventDefault();
@@ -3918,7 +3916,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     // Service Worker Kaydı & Canlı Güncelleme Dinleyicisi (v1.3.0)
     if ('serviceWorker' in navigator) {
-        navigator.serviceWorker.register('sw.js?v=1.4.0').then(reg => {
+        navigator.serviceWorker.register('sw.js?v=1.4.1').then(reg => {
             reg.update();
             reg.addEventListener('updatefound', () => {
                 const newWorker = reg.installing;

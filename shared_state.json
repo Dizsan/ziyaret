@@ -1,5 +1,5 @@
 {
-  "version": "v1.4.0",
+  "version": "v1.4.1",
   "users": [
     {
       "order": 0,
@@ -193019,15 +193019,15 @@
       "platform": "Android / Mobil"
     }
   ],
-  "updatedAt": "2026-10-15T20:34:29.018Z",
-  "stateRevision": 22,
-  "appVersion": "1.4.0",
-  "versionUpdatedAt": "2026-10-15 23:34:28",
-  "versionReleaseNotes": "Mobil tarayici donma ve yanit vermiyor hatasi giderildi, sifir gecikmeli hafif geri tusu motoru yayinlandi",
+  "updatedAt": "2026-10-15T20:37:53.240Z",
+  "stateRevision": 23,
+  "appVersion": "1.4.1",
+  "versionUpdatedAt": "2026-10-15 23:37:53",
+  "versionReleaseNotes": "Kritik JavaScript parse hatasi (duplicate let) cozuldu, Safari ve Chrome tam yukleme saglandi",
   "latestVersion": {
-    "version": "1.4.0",
-    "releaseNotes": "Mobil tarayici donma ve yanit vermiyor hatasi giderildi, sifir gecikmeli hafif geri tusu motoru yayinlandi",
-    "releasedAt": "2026-10-15 23:34:28"
+    "version": "1.4.1",
+    "releaseNotes": "Kritik JavaScript parse hatasi (duplicate let) cozuldu, Safari ve Chrome tam yukleme saglandi",
+    "releasedAt": "2026-10-15 23:37:53"
   },
   "logoMetadata": {
     "queryTimestamp": "2026-10-15T23:13:46+03:00",

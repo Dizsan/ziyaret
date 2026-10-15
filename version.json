@@ -1,9 +1,9 @@
 {
   "appId": "ziyaret",
   "appName": "Dizsan Müşteri Ziyaret & Saha Takip",
-  "version": "1.4.0",
-  "build": 140,
-  "releasedAt": "2026-10-15 23:34:28",
-  "releaseNotes": "Mobil tarayici donma ve yanit vermiyor hatasi giderildi, sifir gecikmeli hafif geri tusu motoru yayinlandi",
+  "version": "1.4.1",
+  "build": 141,
+  "releasedAt": "2026-10-15 23:37:53",
+  "releaseNotes": "Kritik JavaScript parse hatasi (duplicate let) cozuldu, Safari ve Chrome tam yukleme saglandi",
   "author": "Ömer Eren & DİZSAN"
 }
