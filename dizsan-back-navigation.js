@@ -143,6 +143,7 @@
 
     function getActiveModal() {
         const modalOrder = [
+            'mobile-pwa-prompt-modal',
             'approval-request-modal',
             'task-action-modal',
             'manager-approval-modal',
@@ -184,6 +185,7 @@
         const id = modalEl.id;
 
         const closeFnMap = {
+            'mobile-pwa-prompt-modal': 'closePwaPromptModal',
             'approval-request-modal': 'closeApprovalRequestModal',
             'task-action-modal': 'closeTaskActionModal',
             'manager-approval-modal': 'closeApprovalCenterModal',
