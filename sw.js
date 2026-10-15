@@ -1,5 +1,5 @@
 // DİZSAN Müşteri Ziyaret & Saha Takip Service Worker (v1.3.8)
-const CACHE_NAME = 'dizsan-ziyaret-v1.3.8';
+const CACHE_NAME = 'dizsan-ziyaret-v1.3.9';
 const ASSETS = [
   './',
   './index.html',
@@ -92,30 +92,48 @@ self.addEventListener('push', (e) => {
     try {
       data = e.data.json();
     } catch (err) {
-      data = { title: 'DİZSAN Ziyaret Hatırlatıcısı', body: e.data.text() };
+      try {
+        data = { title: 'DİZSAN Saha Ziyaret Hatırlatıcısı', body: e.data.text() };
+      } catch (e2) {
+        data = {};
+      }
     }
   } else {
     data = { title: 'DİZSAN Saha Ziyaret Bildirimi', body: 'Yeni bir ziyaret veya görüşme hatırlatmanız bulunmaktadır.' };
   }
 
-  const title = data.title || 'DİZSAN Müşteri Ziyaret & Saha Bildirimi';
+  const title = data.title || '🔔 DİZSAN Müşteri Ziyaret & Saha Bildirimi';
+  const body = data.body || 'Yeni bir ziyaret veya görev bildiriminiz var.';
+  const scope = self.registration ? self.registration.scope : './';
+  const iconUrl = new URL('icon-192.png', scope).href;
+  const targetUrl = data.url || './?tab=active-tab';
+
   const options = {
-    body: data.body || '',
-    icon: './icon-192.png',
-    badge: './icon-192.png',
-    vibrate: [300, 100, 300, 100, 400],
-    data: {
-      url: data.url || './?tab=active-tab',
-      id: data.id || ('push-' + Date.now())
-    },
+    body: body,
+    icon: iconUrl,
+    badge: iconUrl,
+    vibrate: [500, 150, 500, 150, 600],
+    tag: data.tag || ('dizsan-push-' + Date.now()),
+    renotify: true,
     requireInteraction: true,
-    actions: [
-      { action: 'open', title: '🔍 Uygulamayı Aç' },
-      { action: 'close', title: 'Kapat' }
-    ]
+    silent: false,
+    data: {
+      url: targetUrl,
+      id: data.id || ('push-' + Date.now()),
+      timestamp: Date.now()
+    }
   };
 
-  e.waitUntil(self.registration.showNotification(title, options));
+  const showPromise = self.registration.showNotification(title, options)
+    .catch((err) => {
+      console.warn('[SW Push] Detaylı bildirim başarısız, standart bildirim gösteriliyor:', err);
+      return self.registration.showNotification(title, {
+        body: body,
+        icon: iconUrl
+      });
+    });
+
+  e.waitUntil(showPromise);
 });
 
 // Bildirime Dokunulduğunda İlgili Ekrana / Müşteriye Doğrudan Yönlendirme (Deep-Link)

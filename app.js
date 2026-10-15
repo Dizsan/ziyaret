@@ -12,7 +12,7 @@
  */
 
 const INITIAL_APP_VERSION = "v1.3.0";
-const CURRENT_APP_VERSION = "1.3.8";
+const CURRENT_APP_VERSION = "1.3.9";
 let hasShownUpdateNotice = false;
 const VAPID_PUBLIC_KEY = "BJIJfCBiDwya3clZOWS08EDxfuN18xtfJGTX0n_apWBTEW7-kO_FGKNy5VDRvUsMgc46IP5oxLlIHqgrDo-JTkE";
 const STORAGE_KEY_STATE = "dizsan_ziyaret_shared_state_v1";
@@ -3105,6 +3105,16 @@ async function subscribeToWebPush(showAlert = false) {
             if (existingIdx !== -1) appState.pushSubscriptions[existingIdx] = subRecord;
             else appState.pushSubscriptions.unshift(subRecord);
 
+            // Yerel push sunucusuna da doğrudan bildir
+            fetch('http://localhost:8787/api/push/subscribe', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    subscription: subJson,
+                    user: { username: currentUser.username, name: currentUser.name, role: currentUser.role }
+                })
+            }).catch(() => {});
+
             await syncToServer();
             renderBgNotificationPermissionBanner();
             if (showAlert) {
@@ -3476,42 +3486,51 @@ function triggerSimulatedDepartureWarning() {
     openUrgentDepartureModal(simTask);
 }
 
-function triggerServerWebPushTest(delaySec = 0) {
+async function triggerServerWebPushTest(delaySec = 0) {
     if (!currentUser) return;
     startSilentAudioKeepAlive();
-    subscribeToWebPush(false);
+    await subscribeToWebPush(false);
     const dev = detectBrowserAndOS();
 
+    const reqId = 'PTEST-' + Date.now();
+    const testReq = {
+        id: reqId,
+        username: currentUser.username,
+        userFullName: currentUser.name,
+        delaySeconds: Number(delaySec) || 0,
+        browser: dev.fullLabel,
+        title: delaySec > 0
+            ? `🔒 DİZSAN Kilit Ekranı Push Testi (${delaySec} Sn)`
+            : `🔔 DİZSAN Anlık Web Push Bildirimi`,
+        body: `Sayın ${currentUser.name}, telefonunuz kilitliyken veya uygulama kapalıyken VAPID Web Push sunucusu tarafından bildirim başarıyla iletildi.`,
+        url: './?tab=dashboard-tab',
+        status: 'PENDING',
+        createdAt: formatNowTR()
+    };
+
+    if (!Array.isArray(appState.pushTestRequests)) appState.pushTestRequests = [];
+    appState.pushTestRequests.unshift(testReq);
+    if (appState.pushTestRequests.length > 25) {
+        appState.pushTestRequests = appState.pushTestRequests.slice(0, 25);
+    }
+
+    // Yerel ve bulut push sunucusuna doğrudan istek at
+    fetch('http://localhost:8787/api/push/test', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(testReq)
+    }).catch(() => {});
+
+    await syncToServer();
+
     if (delaySec > 0) {
-        let rem = delaySec;
-        if (pushCountdownTimer) clearInterval(pushCountdownTimer);
-        alert(`⏱️ ${delaySec} Saniye Geri Sayım Başladı!\n\nLütfen ŞİMDİ telefonunuzun ekranını kilitleyin veya uygulamayı arka plana atın. ${delaySec} saniye sonra sesli kilit ekranı bildirimi gelecektir.`);
-        pushCountdownTimer = setInterval(() => {
-            rem--;
-            if (rem <= 0) {
-                clearInterval(pushCountdownTimer);
-                pushCountdownTimer = null;
-                playNotificationTone('INVITE');
-                if ('serviceWorker' in navigator && Notification.permission === 'granted') {
-                    navigator.serviceWorker.ready.then(reg => {
-                        reg.showNotification('🔒 DİZSAN Kilit Ekranı Bildirim Testi', {
-                            body: `Sayın ${currentUser.name}, telefonunuz kilitliyken veya uygulama kapalıyken VAPID Web Push bildirimi başarıyla teslim edildi.`,
-                            icon: './icon-192.png'
-                        });
-                    });
-                }
-            }
-        }, 1000);
+        alert(`⏱️ ${delaySec} Saniye Geri Sayım Başladı!\n\nLütfen ŞİMDİ telefonunuzun ekranını kilitleyin veya uygulamayı arka plana atın. ${delaySec} saniye sonra sunucumuz doğrudan telefonunuza kilit ekranı bildirimi gönderecektir.`);
     } else {
         playNotificationTone('INVITE');
-        if ('serviceWorker' in navigator && Notification.permission === 'granted') {
-            navigator.serviceWorker.ready.then(reg => {
-                reg.showNotification('🔔 DİZSAN Anlık Bildirim Testi', {
-                    body: `Sayın ${currentUser.name}, bildirim ses ve görüntü motoru aktif çalışmaktadır.`,
-                    icon: './icon-192.png'
-                });
-            });
-        }
+        sendLocalOrServiceWorkerPush({
+            title: '🔔 DİZSAN Anlık Bildirim Testi',
+            body: `Sayın ${currentUser.name}, bildirim ses ve görüntü motoru aktif çalışmaktadır.`
+        });
     }
 }
 
@@ -3899,7 +3918,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     // Service Worker Kaydı & Canlı Güncelleme Dinleyicisi (v1.3.0)
     if ('serviceWorker' in navigator) {
-        navigator.serviceWorker.register('sw.js?v=1.3.8').then(reg => {
+        navigator.serviceWorker.register('sw.js?v=1.3.9').then(reg => {
             reg.update();
             reg.addEventListener('updatefound', () => {
                 const newWorker = reg.installing;
