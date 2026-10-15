@@ -1,5 +1,5 @@
 {
-  "version": "v1.0.0",
+  "version": "v1.3.0",
   "users": [
     {
       "order": 0,
@@ -192997,31 +192997,31 @@
   "unifiedMasterCustomers": [],
   "pushSubscriptions": [
     {
-      "id": "SUB-1792098966400",
+      "id": "SUB-1792100969888",
       "username": "ömer",
       "userFullName": "ÖMER EREN",
-      "endpoint": "https://web.push.apple.com/QM2M6wdNFb8BjM8fIfWIUC42gLbkK-hf-FK9r0CAK1LKa-TdQkore47FEV_Yh1wEGV72LL9wLNKvDB9A0l-Wcbnvki1g-dJwNIQsht7e0wc2bdCsURxRaomEdZnpuJiLi0r7NEaicGuHq3ErqDkzXRI_JtGRHUaTNetAvBR93YA",
-      "p256dh": "BBlsUZOfmxoHzynLdyBcVl2G1vXUoFayGRnCVE0-EQZttnBDykGfnisy8MuTvi1hoTPXvA4-oQrradtuUnEzASA",
-      "auth": "YL0EX4tbvhQFoBfymVzwkg",
-      "browser": "Apple Safari",
-      "platform": "macOS",
-      "updatedAt": "16.10.2026 00:16:06"
+      "endpoint": "https://fcm.googleapis.com/fcm/send/fDM8-8-4jns:APA91bHflWu4hcMZvyYw9kAgFedqT8frDAT7Da3M_Gr7CX4rZ9jgqBeWE521YhfX4UISAyUW3iH3xL7Hf0VKjt4-0fisMsQCQ-nD6_u60leJnYsEZN7LU8zeaoYY7Nok6EX3e42L6bTV",
+      "p256dh": "BPPEPD4zDYWx1A-dQoybjvOh0ybEOnbsd8rdq6cN7iFtoHh4SiQ7PQwJnfEn72Q0LuNO8BiunqwqLaT37c2lVjM",
+      "auth": "BbImkhD_b2UX0hkltpaNUA",
+      "browser": "Samsung Internet",
+      "platform": "Android",
+      "updatedAt": "16.10.2026 00:49:29"
     }
   ],
   "pushTestRequests": [],
   "pushNotificationLogs": [],
   "logs": [
     {
-      "id": "LOG-1792088155140",
-      "timestamp": "15.10.2026 21:15:55",
+      "id": "LOG-1792092499836",
+      "timestamp": "15.10.2026 22:28:19",
       "user": "ÖMER EREN",
       "category": "GİRİŞ / ÇIKIŞ",
       "detail": "ÖMER EREN (Yönetim Kurulu / Sistem Yöneticisi) sisteme giriş yaptı.",
-      "platform": "macOS / Masaüstü"
+      "platform": "Android / Mobil"
     }
   ],
-  "updatedAt": "2026-10-15T21:16:06.400Z",
-  "stateRevision": 37,
+  "updatedAt": "2026-10-15T21:49:29.888Z",
+  "stateRevision": 34,
   "cities": [
     "Adana",
     "Adıyaman",
