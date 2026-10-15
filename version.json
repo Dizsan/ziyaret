@@ -1,9 +1,7 @@
 {
-  "appId": "ziyaret",
-  "appName": "Dizsan Müşteri Ziyaret & Saha Takip",
-  "version": "1.4.1",
-  "build": 141,
-  "releasedAt": "2026-10-15 23:37:53",
-  "releaseNotes": "Kritik JavaScript parse hatasi (duplicate let) cozuldu, Safari ve Chrome tam yukleme saglandi",
+  "version": "1.5.0",
+  "build": 150,
+  "releasedAt": "2026-10-15 23:57:38",
+  "releaseNotes": "Mobil app tam ekran tasarımı, açılır pencere kaydırma düzeltmesi, personel görevlendirme, iki yönlü anlık bildirim ve Yönetici Ömer Eren Onay Kalkanı tamamlandı",
   "author": "Ömer Eren & DİZSAN"
 }

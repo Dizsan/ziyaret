@@ -12,7 +12,7 @@
  */
 
 const INITIAL_APP_VERSION = "v1.3.0";
-const CURRENT_APP_VERSION = "1.4.1";
+const CURRENT_APP_VERSION = "1.5.0";
 let hasShownUpdateNotice = false;
 const VAPID_PUBLIC_KEY = "BJIJfCBiDwya3clZOWS08EDxfuN18xtfJGTX0n_apWBTEW7-kO_FGKNy5VDRvUsMgc46IP5oxLlIHqgrDo-JTkE";
 const STORAGE_KEY_STATE = "dizsan_ziyaret_shared_state_v1";
@@ -178,6 +178,7 @@ let appState = {
     districtStrategies: {},
     visits: [],
     tasks: [],
+    approvalRequests: [],
     unifiedMasterCustomers: [],
     pushSubscriptions: [],
     pushTestRequests: [],
@@ -1227,6 +1228,7 @@ function populateFilterOptions() {
 
     // Modal Personel Seçenekleri
     const visitPersonnel = document.getElementById('visit-personnel-select');
+    const visitAssignedTo = document.getElementById('visit-assigned-to');
     const taskAssignee = document.getElementById('task-assignee');
     const taskManager = document.getElementById('task-manager');
 
@@ -1240,6 +1242,7 @@ function populateFilterOptions() {
         });
     };
     fillSelect(visitPersonnel);
+    fillSelect(visitAssignedTo);
     fillSelect(taskAssignee);
     fillSelect(taskManager);
 
@@ -2195,7 +2198,7 @@ function updateVisitTravelCalculation() {
     fetchLiveGoogleDistance(loc);
 }
 
-function openVisitModal(prefill = null) {
+function openVisitModal(prefill = null, editId = null) {
     const modal = document.getElementById('visit-modal');
     if (!modal) return;
     document.getElementById('visit-form').reset();
@@ -2213,25 +2216,133 @@ function openVisitModal(prefill = null) {
     const fields = document.getElementById('visit-task-fields');
     const dateIn = document.getElementById('visit-task-date');
     const timeIn = document.getElementById('visit-task-time');
+    
+    // Görevlendirme elemanları
+    const assignedToSelect = document.getElementById('visit-assigned-to');
+    const assignedByIn = document.getElementById('visit-assigned-by');
+    const dueDateIn = document.getElementById('visit-due-date');
+    const dueTimeIn = document.getElementById('visit-due-time');
+    const prioritySelect = document.getElementById('visit-priority');
+    const taskInstrIn = document.getElementById('visit-task-instructions');
+    const editReasonBox = document.getElementById('visit-edit-reason-container');
+    const editReasonIn = document.getElementById('visit-edit-reason');
+    const modalTitleEl = document.getElementById('visit-modal-title');
+    const submitBtn = document.getElementById('visit-submit-btn');
+    const visitIdIn = document.getElementById('visit-id');
+    const visitModeIn = document.getElementById('visit-mode');
 
-    if (currentUser && persSelect) {
-        persSelect.value = currentUser.name;
+    // Personel listelerini doldur
+    if (assignedToSelect) {
+        assignedToSelect.innerHTML = '';
+        (appState.users || []).forEach(u => {
+            const opt = document.createElement('option');
+            opt.value = u.name;
+            opt.textContent = `${u.name} (${u.dept})`;
+            assignedToSelect.appendChild(opt);
+        });
+    }
+    if (persSelect) {
+        if (persSelect.options.length === 0) {
+            (appState.users || []).forEach(u => {
+                const opt = document.createElement('option');
+                opt.value = u.name;
+                opt.textContent = `${u.name} (${u.dept})`;
+                persSelect.appendChild(opt);
+            });
+        }
+        if (currentUser) {
+            persSelect.value = currentUser.name;
+        }
     }
 
+    if (assignedByIn) {
+        assignedByIn.value = currentUser ? currentUser.name : 'ÖMER EREN';
+    }
+
+    const tomorrow = new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString().slice(0, 10);
+    if (dueDateIn) dueDateIn.value = tomorrow;
+    if (dueTimeIn) dueTimeIn.value = '10:00';
+    if (prioritySelect) prioritySelect.value = 'Normal';
+    if (taskInstrIn) taskInstrIn.value = '';
+    if (dateIn) dateIn.value = tomorrow;
+    if (timeIn) timeIn.value = '10:00';
     if (cb) cb.checked = false;
     if (fields) fields.style.display = 'none';
-    if (dateIn) {
-        const tomorrow = new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString().slice(0, 10);
-        dateIn.value = tomorrow;
-    }
-    if (timeIn) timeIn.value = '10:00';
 
-    if (prefill) {
-        if (titleIn) titleIn.value = prefill.title || '';
-        if (contactIn) contactIn.value = prefill.authorized || '';
-        if (phoneIn) phoneIn.value = prefill.phone || '';
-        if (locIn) locIn.value = `${prefill.city || ''} / ${prefill.district || ''}`;
-        if (plateIn) plateIn.value = prefill.plates || '';
+    // DÜZENLEME MODU (EDIT)
+    if (editId) {
+        const v = (appState.visits || []).find(x => x.id === editId);
+        if (v) {
+            if (visitIdIn) visitIdIn.value = editId;
+            if (visitModeIn) visitModeIn.value = 'EDIT';
+            if (titleIn) titleIn.value = v.customerTitle || '';
+            if (contactIn) contactIn.value = v.contactPerson || '';
+            if (phoneIn) phoneIn.value = v.phone || '';
+            if (locIn) locIn.value = v.location || '';
+            if (plateIn) plateIn.value = v.plate || '';
+            if (persSelect && v.personnel) persSelect.value = v.personnel;
+            if (resSelect && v.result) resSelect.value = v.result;
+            const typeSelect = document.getElementById('visit-type-select');
+            if (typeSelect && v.type) typeSelect.value = v.type;
+            const notesIn = document.getElementById('visit-notes');
+            if (notesIn) notesIn.value = v.notes || '';
+
+            // Görevlendirme alanları
+            if (assignedToSelect && v.assignedTo) assignedToSelect.value = v.assignedTo;
+            if (assignedByIn) assignedByIn.value = v.assignedBy || (currentUser ? currentUser.name : 'ÖMER EREN');
+            if (dueDateIn && v.dueDate) dueDateIn.value = v.dueDate;
+            if (dueTimeIn && v.dueTime) dueTimeIn.value = v.dueTime;
+            if (prioritySelect && v.priority) prioritySelect.value = v.priority;
+            if (taskInstrIn) taskInstrIn.value = v.taskInstructions || v.taskNote || '';
+
+            if (Array.isArray(v.attachments)) {
+                currentDraftAttachments = [...v.attachments];
+                renderVisitFilePreview();
+            }
+
+            if (modalTitleEl) {
+                modalTitleEl.innerHTML = `<i class="fa-solid fa-pen-to-square" style="color:#fbbf24;"></i> Görüşme &amp; Görev Düzenle (${v.customerTitle})`;
+            }
+
+            // Gerekçe kutusu
+            if (editReasonBox) editReasonBox.style.display = 'block';
+            if (editReasonIn) {
+                editReasonIn.value = '';
+                editReasonIn.required = !isOmerEren(currentUser);
+            }
+
+            // Yetki kontrolü (Ömer Eren doğrudan kaydeder, personel onay talebi gönderir)
+            if (submitBtn) {
+                if (isOmerEren(currentUser)) {
+                    submitBtn.className = 'btn btn-primary';
+                    submitBtn.innerHTML = `<i class="fa-solid fa-shield-check"></i> Değişikliği Doğrudan Kaydet (Yönetici)`;
+                } else {
+                    submitBtn.className = 'btn btn-warning';
+                    submitBtn.innerHTML = `<i class="fa-solid fa-paper-plane"></i> Değişikliği Yönetici Onayına Gönder (Ömer Eren)`;
+                }
+            }
+        }
+    } else {
+        // YENİ GÖRÜŞME & GÖREVLENDİRME MODU (NEW)
+        if (visitIdIn) visitIdIn.value = '';
+        if (visitModeIn) visitModeIn.value = 'NEW';
+        if (modalTitleEl) {
+            modalTitleEl.innerHTML = `<i class="fa-solid fa-phone-volume" style="color:var(--dizsan-light);"></i> Ziyaret, Görüşme &amp; Personel Görevlendirmesi`;
+        }
+        if (editReasonBox) editReasonBox.style.display = 'none';
+        if (editReasonIn) editReasonIn.required = false;
+        if (submitBtn) {
+            submitBtn.className = 'btn btn-primary';
+            submitBtn.innerHTML = `<i class="fa-solid fa-check"></i> Kaydet &amp; Senkronize Et`;
+        }
+
+        if (prefill) {
+            if (titleIn) titleIn.value = prefill.title || '';
+            if (contactIn) contactIn.value = prefill.authorized || '';
+            if (phoneIn) phoneIn.value = prefill.phone || '';
+            if (locIn) locIn.value = `${prefill.city || ''} / ${prefill.district || ''}`;
+            if (plateIn) plateIn.value = prefill.plates || '';
+        }
     }
 
     // Doğrudan olay dinleyicilerini bağla (Safari/Chrome/PWA tüm cihazlarda garantili tetikleme)
@@ -2260,7 +2371,6 @@ function openVisitModal(prefill = null) {
         };
     }
 
-    // Varsayılan takip türü
     const parentVisitType = typeSelect ? typeSelect.value : 'TELEFON';
     setFollowupActionType(parentVisitType === 'ZİYARET' ? 'ZİYARET' : 'TELEFON');
 
@@ -2442,6 +2552,125 @@ function saveVisitRecord(event) {
     const personnel = document.getElementById('visit-personnel-select').value;
     const notes = document.getElementById('visit-notes').value.trim();
 
+    // Görevlendirme ve Onay alanları
+    const editId = document.getElementById('visit-id')?.value;
+    const mode = document.getElementById('visit-mode')?.value || 'NEW';
+    const assignedTo = document.getElementById('visit-assigned-to')?.value || personnel;
+    const assignedBy = document.getElementById('visit-assigned-by')?.value || (currentUser ? currentUser.name : 'ÖMER EREN');
+    const dueDate = document.getElementById('visit-due-date')?.value || new Date().toISOString().slice(0, 10);
+    const dueTime = document.getElementById('visit-due-time')?.value || '10:00';
+    const priority = document.getElementById('visit-priority')?.value || 'Normal';
+    const taskInstructions = document.getElementById('visit-task-instructions')?.value.trim() || '';
+    const editReason = document.getElementById('visit-edit-reason')?.value.trim() || '';
+
+    // =========================================================================
+    // DÜZENLEME DURUMU (EDIT MODE) - YÖNETİCİ ONAY KALKANI
+    // =========================================================================
+    if (mode === 'EDIT' && editId) {
+        const idx = (appState.visits || []).findIndex(v => v.id === editId);
+        if (idx === -1) {
+            alert("Düzenlenecek kayıt bulunamadı!");
+            return;
+        }
+
+        // 1. Durum: Yönetici ÖMER EREN doğrudan düzenler
+        if (isOmerEren(currentUser)) {
+            appState.visits[idx] = {
+                ...appState.visits[idx],
+                type,
+                result,
+                customerTitle,
+                contactPerson,
+                phone,
+                location,
+                plate,
+                personnel,
+                notes,
+                attachments: [...currentDraftAttachments],
+                assignedTo,
+                assignedBy,
+                dueDate,
+                dueTime,
+                priority,
+                taskInstructions,
+                approvalStatus: 'Onaylandı',
+                approvedBy: 'ÖMER EREN',
+                approvedAt: formatNowTR()
+            };
+
+            addAuditLog("ZİYARET DÜZENLEME", `${customerTitle} kaydı Yönetici ÖMER EREN tarafından güncellendi.`);
+            syncToServer();
+            closeVisitModal();
+            renderAll();
+            playNotificationTone('INVITE');
+            showToast(`✅ '${customerTitle}' kaydı Yönetici Ömer Eren yetkisiyle güncellendi.`, 'success');
+            alert(`✅ Kayıt Yönetici ÖMER EREN yetkisiyle başarıyla güncellendi!`);
+            return;
+        }
+
+        // 2. Durum: Personeller için YÖNETİCİ ONAY KALKANI (Kayıt doğrudan değişmez, onaya düşer)
+        if (!editReason) {
+            alert("⚠️ Yönetici Ömer Eren onayı için lütfen değişiklik gerekçenizi yazınız!");
+            const erIn = document.getElementById('visit-edit-reason');
+            if (erIn) erIn.focus();
+            return;
+        }
+
+        if (!Array.isArray(appState.approvalRequests)) appState.approvalRequests = [];
+        const reqId = 'ONAY-ZIY-' + Date.now();
+        const existingVisit = { ...appState.visits[idx] };
+
+        appState.approvalRequests.unshift({
+            id: reqId,
+            type: 'EDIT_VISIT',
+            status: 'PENDING',
+            targetId: editId,
+            targetTitle: customerTitle,
+            customerTitle: customerTitle,
+            requestedBy: currentUser ? currentUser.name : 'Personel',
+            requestedAt: formatNowTR(),
+            reason: editReason,
+            currentData: existingVisit,
+            proposedData: {
+                type,
+                result,
+                customerTitle,
+                contactPerson,
+                phone,
+                location,
+                plate,
+                personnel,
+                notes,
+                attachments: [...currentDraftAttachments],
+                assignedTo,
+                assignedBy,
+                dueDate,
+                dueTime,
+                priority,
+                taskInstructions
+            }
+        });
+
+        // Yönetici Ömer Eren'e anlık Web Push ve sistem bildirimi
+        dispatchApprovalPushToManager({
+            id: reqId,
+            title: `🛡️ Yönetici Onayı Bekleniyor (Değişiklik)`,
+            body: `${currentUser ? currentUser.name : 'Personel'}, '${customerTitle}' kaydında DEĞİŞİKLİK onayı talep etti. Gerekçe: ${editReason}`
+        });
+
+        addAuditLog("ONAY TALEBİ", `${currentUser ? currentUser.name : 'Personel'}, ${editId} kodlu '${customerTitle}' kaydı için DEĞİŞİKLİK ONAY TALEBİ gönderdi (Yönetici Ömer Eren onayı bekleniyor).`);
+        syncToServer();
+        closeVisitModal();
+        renderAll();
+        playNotificationTone('APPROVAL');
+
+        alert(`🛡️ Değişiklik Talebi Yönetici ÖMER EREN Onayına Gönderildi!\n\n'${customerTitle}' kaydında yaptığınız değişiklikler ekranın üstündeki "🛡️ ÖMER EREN YÖNETİCİ ONAY MERKEZİ"ne düşmüştür.\n\nÖmer Eren "✅ Değişikliği Onayla & Uygula" butonuna bastığında değişiklikler otomatik olarak geçerli olacaktır.`);
+        return;
+    }
+
+    // =========================================================================
+    // YENİ GÖRÜŞME & GÖREVLENDİRME KAYDI (NEW MODE)
+    // =========================================================================
     const visitId = 'VIS-' + Date.now();
     const newVisit = {
         id: visitId,
@@ -2455,90 +2684,98 @@ function saveVisitRecord(event) {
         personnel,
         notes,
         attachments: [...currentDraftAttachments],
+        assignedTo,
+        assignedBy,
+        dueDate,
+        dueTime,
+        priority,
+        taskInstructions,
+        taskStatus: 'Bekliyor',
         date: formatDateTR(new Date().toISOString().slice(0, 10)),
         time: new Date().toTimeString().slice(0, 5),
         createdAt: formatNowTR(),
-        createdBy: currentUser ? currentUser.name : personnel
+        createdBy: currentUser ? currentUser.name : personnel,
+        approvalStatus: isOmerEren(currentUser) ? 'Onaylandı' : 'Kayıt Yapıldı',
+        actionLogs: []
     };
 
     if (!Array.isArray(appState.visits)) appState.visits = [];
     appState.visits.unshift(newVisit);
 
-    // Eğer takip görevi oluştur seçilmişse VEYA sonuç 'Takip Edilecek' / 'Randevu Alındı' ise
-    const taskCb = document.getElementById('visit-create-task-cb')?.checked;
-    const isAutoFollowUp = (result === 'Takip Edilecek' || result === 'Randevu Alındı');
+    // Otomatik Takip / Görev Kaydı
+    const calc = calculateVisitTravelTime(location, dueTime);
+    const appDt = new Date(`${dueDate}T${dueTime}:00`);
+    const phoneAlertDt = new Date(appDt.getTime() - 60 * 60 * 1000);
+    const prevDay = new Date(appDt.getTime() - 24 * 60 * 60 * 1000);
+    const prevDayStr = prevDay.toISOString().slice(0, 10);
+    const visitDayBefore14Dt = new Date(`${prevDayStr}T14:00:00`);
+    const visitDepWarningDt = new Date(`${dueDate}T${calc.departureTime}:00`);
 
-    if (taskCb || isAutoFollowUp) {
-        let tDate = document.getElementById('visit-task-date')?.value;
-        const tTime = document.getElementById('visit-task-time')?.value || '10:00';
-        if (!tDate) {
-            tDate = new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString().slice(0, 10);
-        }
+    const newTask = {
+        id: 'TSK-' + Date.now(),
+        linkedVisitId: visitId,
+        title: `${type === 'ZİYARET' ? '🚗 Saha Ziyareti' : '📞 Telefon Görüşmesi'} Görevi: ${customerTitle}`,
+        customerTitle,
+        type,
+        contactPerson,
+        phone,
+        location,
+        plate,
+        assignee: assignedTo,
+        assignedBy: assignedBy,
+        manager: 'ÖMER EREN',
+        priority,
+        dueDate,
+        dueTime,
+        status: 'Bekliyor',
+        note: `Talimat: ${taskInstructions || notes}. Görüşme Sonucu: ${result}.`,
+        distanceKm: type === 'ZİYARET' ? calc.km : null,
+        driveMinutes: type === 'ZİYARET' ? calc.driveMins : null,
+        marginMinutes: type === 'ZİYARET' ? calc.marginMins : null,
+        totalLeadMinutes: type === 'ZİYARET' ? calc.totalLeadMins : null,
+        departureTime: type === 'ZİYARET' ? calc.departureTime : null,
+        oneHourBeforeTime: calc.oneHourBeforeStr,
+        phoneAlertScheduled: phoneAlertDt.toISOString(),
+        visitDayBefore14Scheduled: visitDayBefore14Dt.toISOString(),
+        visitDepartureWarningScheduled: visitDepWarningDt.toISOString(),
+        phoneAlertFired: false,
+        visitDayBeforeFired: false,
+        departureWarningFired: false,
+        actionLogs: [],
+        createdAt: formatNowTR()
+    };
 
-        const followupType = document.getElementById('visit-followup-type')?.value || (type === 'ZİYARET' ? 'ZİYARET' : 'TELEFON');
-        const calc = calculateVisitTravelTime(location, tTime);
+    if (!Array.isArray(appState.tasks)) appState.tasks = [];
+    appState.tasks.unshift(newTask);
 
-        // Randevu ve hatırlatıcı zamanları
-        const appDt = new Date(`${tDate}T${tTime}:00`);
-        const phoneAlertDt = new Date(appDt.getTime() - 60 * 60 * 1000);
-        const prevDay = new Date(appDt.getTime() - 24 * 60 * 60 * 1000);
-        const prevDayStr = prevDay.toISOString().slice(0, 10);
-        const visitDayBefore14Dt = new Date(`${prevDayStr}T14:00:00`);
-        const visitDepWarningDt = new Date(`${tDate}T${calc.departureTime}:00`);
-
-        const newTask = {
-            id: 'TSK-' + Date.now(),
-            title: `${followupType === 'ZİYARET' ? '🚗 Saha Ziyareti' : '📞 Telefon Görüşmesi'} Takibi: ${customerTitle}`,
-            customerTitle,
-            type: followupType,
-            contactPerson,
-            phone,
-            location,
-            plate,
-            assignee: personnel,
-            manager: 'ÖMER EREN',
-            dueDate: tDate,
-            dueTime: tTime,
-            status: 'Bekliyor',
-            note: `Görüşme Sonucu: ${result}. Takip Eylemi: ${followupType === 'ZİYARET' ? 'Yüz Yüze Saha Ziyareti' : 'Telefonla Arama'}. Önceki Not: ${notes}`,
-            // Mesafe ve Seyahat Bilgileri (Sadece Ziyaret ise)
-            distanceKm: followupType === 'ZİYARET' ? calc.km : null,
-            driveMinutes: followupType === 'ZİYARET' ? calc.driveMins : null,
-            marginMinutes: followupType === 'ZİYARET' ? calc.marginMins : null,
-            totalLeadMinutes: followupType === 'ZİYARET' ? calc.totalLeadMins : null,
-            departureTime: followupType === 'ZİYARET' ? calc.departureTime : null,
-            oneHourBeforeTime: calc.oneHourBeforeStr,
-            // Zamanlanmış tarihler
-            phoneAlertScheduled: phoneAlertDt.toISOString(),
-            visitDayBefore14Scheduled: visitDayBefore14Dt.toISOString(),
-            visitDepartureWarningScheduled: visitDepWarningDt.toISOString(),
-            // Tetiklenme bayrakları
-            phoneAlertFired: false,
-            visitDayBeforeFired: false,
-            departureWarningFired: false,
-            createdAt: formatNowTR()
-        };
-
-        if (!Array.isArray(appState.tasks)) appState.tasks = [];
-        appState.tasks.unshift(newTask);
-
-        addAuditLog("GÖREV / HATIRLATICI", `${customerTitle} için otomatik takip görevi oluşturuldu (Tür: ${type}, Randevu: ${formatDateTR(tDate)} ${tTime}, Çıkış: ${calc.departureTime}).`);
+    // =========================================================================
+    // İKİ YÖNLÜ BİLDİRİM (Direction 1: Görevlendirilen Personele Bildirim)
+    // =========================================================================
+    if (assignedTo && assignedTo !== (currentUser ? currentUser.name : '')) {
+        dispatchDelegationNotification({
+            assignedTo: assignedTo,
+            assignedBy: assignedBy,
+            customerTitle: customerTitle,
+            actionType: type,
+            dueDate: dueDate,
+            dueTime: dueTime,
+            priority: priority,
+            instructions: taskInstructions || notes,
+            targetId: visitId
+        });
     }
 
-    addAuditLog("SAHA ZİYARETİ", `${personnel}, '${customerTitle}' için yeni ${type} kaydetti (Sonuç: ${result}).`);
+    addAuditLog("GÖREVLENDİRME & ZİYARET", `${assignedBy}, '${customerTitle}' için ${assignedTo} personelini görevlendirdi (Termin: ${formatDateTR(dueDate)} ${dueTime} [${priority}]).`);
     syncToServer();
     closeVisitModal();
     renderAll();
     playNotificationTone('INVITE');
-    
-    let alertMsg = `✅ Ziyaret / Görüşme kaydı başarıyla sisteme işlendi!`;
-    if (taskCb || isAutoFollowUp) {
-        alertMsg += `\n\n🔔 OTOMATİK HATIRLATICI OLUŞTURULDU:`;
-        if (type === 'TELEFON') {
-            alertMsg += `\n• Telefon görüşmesine 1 saat kala sesli alarm ve bildirim gönderilecektir.`;
-        } else {
-            alertMsg += `\n• 1 gün önce saat 14:00'da hazırlık uyarısı.\n• Randevu günü mesafe + 1 saat yanılma payı ile çıkış saatinde acil hareket uyarısı verilecektir.`;
-        }
+
+    let alertMsg = `✅ Görüşme kaydı ve personel görevlendirmesi başarıyla sisteme işlendi!\n\n`;
+    alertMsg += `👤 Görevlendirilen Personel: ${assignedTo}\n`;
+    alertMsg += `📅 Termin: ${formatDateTR(dueDate)} Saat ${dueTime} [${priority}]\n`;
+    if (assignedTo !== (currentUser ? currentUser.name : '')) {
+        alertMsg += `⚡ ${assignedTo} personeline anlık kilit ekranı bildirimi ve görev ataması gönderildi.`;
     }
     alert(alertMsg);
 }
@@ -2578,19 +2815,41 @@ function renderActiveVisits() {
     container.innerHTML = list.map(v => {
         const isVisit = v.type === 'ZİYARET';
         const isSuccess = v.result === 'Olumlu' || v.result === 'Randevu Alındı';
+        const isPendingApproval = (appState.approvalRequests || []).some(r => r.targetId === v.id && r.status === 'PENDING');
+        const hasAssignment = Boolean(v.assignedTo);
 
         return `
-            <div class="visit-card">
+            <div class="visit-card" style="${isPendingApproval ? 'border-color:#f59e0b; box-shadow:0 0 16px rgba(245,158,11,0.25);' : ''}">
                 <div class="visit-card-header">
                     <div>
-                        <div style="display:flex; align-items:center; gap:0.5rem; flex-wrap:wrap;">
+                        <div style="display:flex; align-items:center; gap:0.45rem; flex-wrap:wrap;">
                             <span class="badge ${isVisit ? 'badge-p3' : 'badge-p2'}">
                                 ${isVisit ? '🚗 SAHA ZİYARETİ' : '📞 TELEFON GÖRÜŞMESİ'}
                             </span>
                             <span class="badge ${isSuccess ? 'badge-success' : 'badge-secondary'}">${v.result}</span>
+                            ${hasAssignment ? `
+                                <span class="badge" style="background:#2563eb; color:#fff; font-weight:700;">
+                                    <i class="fa-solid fa-user-check"></i> Görevli: ${v.assignedTo}
+                                </span>
+                            ` : ''}
+                            ${v.dueDate ? `
+                                <span class="badge" style="background:#059669; color:#fff;">
+                                    <i class="fa-solid fa-calendar-check"></i> Termin: ${formatDateTR(v.dueDate)} ${v.dueTime || ''}
+                                </span>
+                            ` : ''}
+                            ${v.priority && v.priority !== 'Normal' ? `
+                                <span class="badge ${v.priority === 'Kritik' ? 'badge-critical' : 'badge-high'}">
+                                    ${v.priority}
+                                </span>
+                            ` : ''}
+                            ${isPendingApproval ? `
+                                <span class="badge badge-warning" style="background:#f59e0b; color:#000; font-weight:800;">
+                                    <i class="fa-solid fa-hourglass-half fa-spin"></i> Yönetici Onayı Bekliyor
+                                </span>
+                            ` : ''}
                             <span style="font-size:0.75rem; color:var(--text-muted);">${v.date} ${v.time}</span>
                         </div>
-                        <div class="visit-customer-title" style="margin-top:4px;">${v.customerTitle}</div>
+                        <div class="visit-customer-title" style="margin-top:6px;">${v.customerTitle}</div>
                     </div>
                     <div style="text-align:right;">
                         <span style="font-size:0.78rem; font-weight:700; color:#fff;">👤 ${v.personnel}</span>
@@ -2602,11 +2861,29 @@ function renderActiveVisits() {
                     ${v.contactPerson ? `<span><i class="fa-solid fa-user-tie"></i> ${v.contactPerson}</span>` : ''}
                     ${v.phone ? `<span><i class="fa-solid fa-phone"></i> <a href="tel:${v.phone}" style="color:#38bdf8; text-decoration:none;">${v.phone}</a></span>` : ''}
                     ${v.plate ? `<span><i class="fa-solid fa-truck"></i> ${v.plate}</span>` : ''}
+                    ${v.assignedBy ? `<span><i class="fa-solid fa-user-gear"></i> Görevi Veren: <strong>${v.assignedBy}</strong></span>` : ''}
                 </div>
 
                 <div class="visit-notes">
                     ${v.notes}
                 </div>
+
+                ${v.taskInstructions ? `
+                    <div style="background:rgba(2,132,199,0.12); border-left:3px solid #38bdf8; padding:0.45rem 0.65rem; border-radius:6px; margin-top:0.45rem; font-size:0.78rem; color:#bae6fd;">
+                        <strong><i class="fa-solid fa-bullhorn"></i> Görev Talimatı:</strong> ${v.taskInstructions}
+                    </div>
+                ` : ''}
+
+                ${Array.isArray(v.actionLogs) && v.actionLogs.length > 0 ? `
+                    <div style="background:rgba(16,185,129,0.1); border:1px solid rgba(16,185,129,0.3); border-radius:8px; padding:0.5rem 0.75rem; margin-top:0.5rem; font-size:0.76rem;">
+                        <span style="color:#34d399; font-weight:700;"><i class="fa-solid fa-clock-rotate-left"></i> Yapılan İşlem Geçmişi (${v.actionLogs.length}):</span>
+                        ${v.actionLogs.slice(0, 2).map(al => `
+                            <div style="margin-top:2px; color:#cbd5e1;">
+                                • <strong>${al.user}</strong> [${al.status}]: ${al.note} <span style="color:var(--text-muted); font-size:0.7rem;">(${al.timestamp})</span>
+                            </div>
+                        `).join('')}
+                    </div>
+                ` : ''}
 
                 ${(v.attachments || []).length > 0 ? `
                     <div class="visit-attachments">
@@ -2617,6 +2894,19 @@ function renderActiveVisits() {
                         `).join('')}
                     </div>
                 ` : ''}
+
+                <!-- AKSİYON BUTONLARI (DÜZENLE, SİL & İŞLEM YAP) -->
+                <div class="visit-actions-bar">
+                    <button type="button" class="btn btn-secondary btn-sm" onclick="openVisitModal(null, '${v.id}')" title="Görüşmeyi / Görevi Düzenle">
+                        <i class="fa-solid fa-pen-to-square"></i> Düzenle
+                    </button>
+                    <button type="button" class="btn btn-danger btn-sm" onclick="requestDeleteVisit('${v.id}')" title="Kaydı Sil (Yönetici Onaylı)">
+                        <i class="fa-solid fa-trash"></i> Sil
+                    </button>
+                    <button type="button" class="btn btn-success btn-sm" onclick="openTaskActionModal('${v.id}', 'VISIT')" title="İşlem Yap &amp; Raporla">
+                        <i class="fa-solid fa-clipboard-check"></i> İşlem Yap &amp; Raporla
+                    </button>
+                </div>
             </div>
         `;
     }).join('');
@@ -2636,6 +2926,525 @@ function previewAttachment(visitId, attIdx) {
             </body></html>
         `);
     }
+}
+
+// ==========================================================================
+// 7. YÖNETİCİ ONAY KALKANI, GÖREVLENDİRME & İKİ YÖNLÜ BİLDİRİM MOTORU
+// (YÖNETİCİ ÖMER EREN HARİCİNDE KİMSE DEĞİŞTİREMEZ VEYA SİLEMEZ)
+// ==========================================================================
+function requestDeleteVisit(visitId) {
+    const v = (appState.visits || []).find(x => x.id === visitId);
+    if (!v) return;
+
+    if (isOmerEren(currentUser)) {
+        if (!confirm(`'${v.customerTitle}' ziyaret / görüşme kaydını silmek istediğinize emin misiniz? (Yönetici Yetkisi)`)) return;
+        appState.visits = (appState.visits || []).filter(x => x.id !== visitId);
+        addAuditLog("ZİYARET SİLME", `${v.customerTitle} kaydı Yönetici ÖMER EREN tarafından silindi.`);
+        syncToServer();
+        renderAll();
+        showToast(`🗑️ '${v.customerTitle}' kaydı silindi.`, 'success');
+        return;
+    }
+
+    // Personeller için YÖNETİCİ ONAY KALKANI
+    openApprovalRequestModal('DELETE_VISIT', visitId, v.customerTitle);
+}
+
+function requestDeleteTask(taskId) {
+    const t = (appState.tasks || []).find(x => x.id === taskId);
+    if (!t) return;
+
+    if (isOmerEren(currentUser)) {
+        if (!confirm(`'${t.title}' görev kaydını silmek istediğinize emin misiniz? (Yönetici Yetkisi)`)) return;
+        appState.tasks = (appState.tasks || []).filter(x => x.id !== taskId);
+        addAuditLog("GÖREV SİLME", `${t.title} görevi Yönetici ÖMER EREN tarafından silindi.`);
+        syncToServer();
+        renderAll();
+        showToast(`🗑️ '${t.title}' görevi silindi.`, 'success');
+        return;
+    }
+
+    // Personeller için YÖNETİCİ ONAY KALKANI
+    openApprovalRequestModal('DELETE_TASK', taskId, t.title);
+}
+
+function openApprovalRequestModal(type, targetId, targetTitle) {
+    const modal = document.getElementById('approval-request-modal');
+    if (!modal) return;
+
+    document.getElementById('arm-type').value = type;
+    document.getElementById('arm-target-id').value = targetId;
+    document.getElementById('arm-target-title').value = targetTitle;
+    document.getElementById('arm-reason').value = '';
+
+    const titleEl = document.getElementById('arm-title');
+    if (titleEl) {
+        titleEl.innerHTML = `<i class="fa-solid fa-user-shield" style="color:#f59e0b;"></i> Yönetici (Ömer Eren) Onayı Gerekiyor (${type.includes('DELETE') ? 'Silme' : 'Değiştirme'})`;
+    }
+
+    modal.classList.add('open');
+}
+
+function closeApprovalRequestModal() {
+    const modal = document.getElementById('approval-request-modal');
+    if (modal) modal.classList.remove('open');
+}
+
+function handleApprovalRequestSubmit(event) {
+    event.preventDefault();
+    const type = document.getElementById('arm-type').value;
+    const targetId = document.getElementById('arm-target-id').value;
+    const targetTitle = document.getElementById('arm-target-title').value;
+    const reason = document.getElementById('arm-reason').value.trim();
+
+    if (!reason) {
+        alert("Lütfen bir gerekçe açıklayınız.");
+        return;
+    }
+
+    const reqId = 'ONAY-DEL-' + Date.now();
+    if (!Array.isArray(appState.approvalRequests)) appState.approvalRequests = [];
+
+    appState.approvalRequests.unshift({
+        id: reqId,
+        type: type,
+        status: 'PENDING',
+        targetId: targetId,
+        targetTitle: targetTitle,
+        customerTitle: targetTitle,
+        requestedBy: currentUser ? currentUser.name : 'Personel',
+        requestedAt: formatNowTR(),
+        reason: reason
+    });
+
+    dispatchApprovalPushToManager({
+        id: reqId,
+        title: `🛡️ Yönetici Onayı Bekleniyor (${type.includes('DELETE') ? 'Silme' : 'Değişiklik'})`,
+        body: `${currentUser ? currentUser.name : 'Personel'}, '${targetTitle}' kaydı için ${type.includes('DELETE') ? 'SİLME' : 'DÜZENLEME'} onayı talep etti. Gerekçe: ${reason}`
+    });
+
+    addAuditLog("ONAY TALEBİ", `${currentUser ? currentUser.name : 'Personel'}, '${targetTitle}' kaydı için onay talebi oluşturdu (Yönetici Ömer Eren bekleniyor).`);
+    syncToServer();
+    closeApprovalRequestModal();
+    renderAll();
+    playNotificationTone('APPROVAL');
+
+    alert(`🛡️ Silme Talebi Yönetici ÖMER EREN Onayına Gönderildi!\n\n'${targetTitle}' kaydının silinmesi için yöneticimiz Ömer Eren'in telefonuna anlık bildirim gönderilmiştir. Ömer Eren onayladığında kayıt sistemden kaldırılacaktır.`);
+}
+
+function openTaskActionModal(targetId, targetType = 'VISIT') {
+    const modal = document.getElementById('task-action-modal');
+    if (!modal) return;
+
+    let targetTitle = '';
+    if (targetType === 'VISIT') {
+        const v = (appState.visits || []).find(x => x.id === targetId);
+        if (v) targetTitle = v.customerTitle;
+    } else {
+        const t = (appState.tasks || []).find(x => x.id === targetId);
+        if (t) targetTitle = t.title;
+    }
+
+    document.getElementById('ta-target-id').value = targetId;
+    document.getElementById('ta-target-type').value = targetType;
+    document.getElementById('ta-customer-title').value = targetTitle || 'Müşteri';
+    document.getElementById('ta-status').value = 'İşlem Yapıldı';
+    document.getElementById('ta-notes').value = '';
+
+    modal.classList.add('open');
+}
+
+function closeTaskActionModal() {
+    const modal = document.getElementById('task-action-modal');
+    if (modal) modal.classList.remove('open');
+}
+
+function handleTaskActionSubmit(event) {
+    event.preventDefault();
+    const targetId = document.getElementById('ta-target-id').value;
+    const targetType = document.getElementById('ta-target-type').value;
+    const customerTitle = document.getElementById('ta-customer-title').value;
+    const status = document.getElementById('ta-status').value;
+    const notes = document.getElementById('ta-notes').value.trim();
+
+    let assignedBy = 'ÖMER EREN';
+
+    if (targetType === 'VISIT') {
+        const v = (appState.visits || []).find(x => x.id === targetId);
+        if (v) {
+            assignedBy = v.assignedBy || 'ÖMER EREN';
+            v.taskStatus = status;
+            if (!Array.isArray(v.actionLogs)) v.actionLogs = [];
+            v.actionLogs.unshift({
+                id: 'ACT-' + Date.now(),
+                user: currentUser ? currentUser.name : 'Personel',
+                status: status,
+                note: notes,
+                timestamp: formatNowTR()
+            });
+            if (status === 'Tamamlandı') {
+                v.completedAt = formatNowTR();
+            }
+        }
+    } else {
+        const t = (appState.tasks || []).find(x => x.id === targetId);
+        if (t) {
+            assignedBy = t.assignedBy || t.manager || 'ÖMER EREN';
+            t.status = status;
+            if (!Array.isArray(t.actionLogs)) t.actionLogs = [];
+            t.actionLogs.unshift({
+                id: 'ACT-' + Date.now(),
+                user: currentUser ? currentUser.name : 'Personel',
+                status: status,
+                note: notes,
+                timestamp: formatNowTR()
+            });
+            if (status === 'Tamamlandı') {
+                t.completedAt = formatNowTR();
+            }
+        }
+    }
+
+    // İKİ YÖNLÜ BİLDİRİM (Direction 2): Görevli personelin yaptığı işlem görevi verene ve Yönetici Ömer Eren'e anlık düşer
+    dispatchActionNotification({
+        assignedBy: assignedBy,
+        performedBy: currentUser ? currentUser.name : 'Personel',
+        customerTitle: customerTitle,
+        status: status,
+        notes: notes,
+        targetId: targetId
+    });
+
+    addAuditLog("GÖREV İŞLEMİ", `${currentUser ? currentUser.name : 'Personel'}, '${customerTitle}' için işlem yaptı (Durum: ${status}, Not: ${notes.slice(0, 60)}).`);
+    syncToServer();
+    closeTaskActionModal();
+    renderAll();
+    playNotificationTone('INVITE');
+
+    alert(`✅ İşleminiz başarıyla kaydedildi!\n\nGörevi veren (${assignedBy}) ve Yönetici Ömer Eren'e anlık bildirim iletildi.`);
+}
+
+function renderOmerApprovalCenter() {
+    const container = document.getElementById('omer-approval-center-container');
+    const modalContainer = document.getElementById('modal-approval-list-container');
+    const badge = document.getElementById('badge-pending-approvals');
+
+    const pendingRequests = (appState.approvalRequests || []).filter(r => r.status === 'PENDING');
+    if (badge) badge.textContent = pendingRequests.length;
+
+    const isAdminOmer = isOmerEren(currentUser);
+
+    // Ömer Eren için sesli uyarı
+    if (isAdminOmer && pendingRequests.length > 0) {
+        pendingRequests.forEach(req => {
+            const notifKey = `omer_notif_req_${req.id}`;
+            if (!localStorage.getItem(notifKey)) {
+                localStorage.setItem(notifKey, '1');
+                const actionLabel = req.type.includes('DELETE') ? 'silme' : 'düzenleme';
+                playNotificationTone('APPROVAL');
+                sendBrowserNotification(
+                    `🛡️ Yönetici Onayı Bekleniyor (${actionLabel.toUpperCase()})`,
+                    `${req.requestedBy}, '${req.customerTitle}' kaydı için ${actionLabel} onayı istedi.`,
+                    notifKey,
+                    'APPROVAL'
+                );
+            }
+        });
+    }
+
+    if (pendingRequests.length === 0) {
+        if (container) container.innerHTML = '';
+        if (modalContainer) {
+            modalContainer.innerHTML = `
+                <div style="text-align:center; padding:2rem; color:var(--text-sec);">
+                    <i class="fa-solid fa-check-circle" style="font-size:2.5rem; color:#10b981; margin-bottom:0.75rem; display:block;"></i>
+                    Harika! Şu anda onay bekleyen herhangi bir silme veya düzenleme talebi bulunmuyor.
+                </div>
+            `;
+        }
+        return;
+    }
+
+    const htmlContent = `
+        <div class="omer-approval-card">
+            <div class="omer-approval-header">
+                <div style="color:#fef08a; font-weight:800; font-size:1.02rem; display:flex; align-items:center; gap:0.5rem;">
+                    <i class="fa-solid fa-user-shield" style="color:#f59e0b; font-size:1.25rem;"></i>
+                    <span>🛡️ ÖMER EREN YÖNETİCİ ONAY MERKEZİ (${pendingRequests.length} Onay Bekleyen İşlem)</span>
+                </div>
+                <div style="display:flex; gap:0.4rem; align-items:center;">
+                    <button type="button" class="btn btn-secondary btn-sm" onclick="playNotificationTone('APPROVAL')">
+                        <i class="fa-solid fa-volume-high"></i> Sesli Alarm
+                    </button>
+                    <span class="badge badge-high">Yetki: SADECE ÖMER EREN</span>
+                </div>
+            </div>
+            <div style="display:flex; flex-direction:column; gap:0.65rem;">
+                ${pendingRequests.map(req => {
+                    const isDel = req.type.includes('DELETE');
+                    return `
+                        <div class="omer-approval-item ${isDel ? 'delete-req' : 'edit-req'}">
+                            <div style="flex:1; min-width:240px;">
+                                <div style="display:flex; align-items:center; gap:0.5rem; flex-wrap:wrap; margin-bottom:4px;">
+                                    <span class="badge ${isDel ? 'badge-critical' : 'badge-high'}">
+                                        ${isDel ? '🗑️ SİLME ONAY TALEBİ' : '✏️ DÜZENLEME ONAY TALEBİ'}
+                                    </span>
+                                    <strong style="color:#fff; font-size:0.95rem;">${req.customerTitle}</strong>
+                                </div>
+                                <div style="font-size:0.8rem; color:#cbd5e1; margin-bottom:3px;">
+                                    Talep Eden: <strong>${req.requestedBy}</strong> &bull; Tarih: <strong>${req.requestedAt}</strong>
+                                    ${req.reason ? ` &bull; Gerekçe: <strong style="color:#fde68a;">${req.reason}</strong>` : ''}
+                                </div>
+                                ${!isDel && req.proposedData ? `
+                                    <div class="diff-box">
+                                        <span style="color:#38bdf8; font-weight:700;">Talep Edilen Yeni Bilgiler:</span>
+                                        <div style="margin-top:2px; color:#e2e8f0;">
+                                            Görüşme Türü: <strong>${req.proposedData.type}</strong> | Sonuç: <strong>${req.proposedData.result}</strong> | Görevli: <strong>${req.proposedData.assignedTo || req.proposedData.personnel}</strong> | Termin: <strong>${formatDateTR(req.proposedData.dueDate)} ${req.proposedData.dueTime || ''}</strong>
+                                            ${req.proposedData.notes ? `<br>Not: <em>${req.proposedData.notes}</em>` : ''}
+                                        </div>
+                                    </div>
+                                ` : ''}
+                            </div>
+                            <div style="display:flex; gap:0.45rem; flex-wrap:wrap;">
+                                ${isAdminOmer ? `
+                                    <button type="button" class="btn btn-success btn-sm" onclick="approveRequest('${req.id}')">
+                                        <i class="fa-solid fa-check"></i> ${isDel ? 'Silmeyi Onayla (Kaydı Sil)' : 'Değişikliği Onayla &amp; Uygula'}
+                                    </button>
+                                    <button type="button" class="btn btn-danger btn-sm" onclick="rejectRequest('${req.id}')">
+                                        <i class="fa-solid fa-xmark"></i> Reddet
+                                    </button>
+                                ` : `
+                                    <span class="badge badge-warning"><i class="fa-solid fa-hourglass-half"></i> Yönetici Ömer Eren İnceliyor</span>
+                                `}
+                            </div>
+                        </div>
+                    `;
+                }).join('')}
+            </div>
+        </div>
+    `;
+
+    if (container) {
+        if (isAdminOmer || pendingRequests.some(r => r.requestedBy === (currentUser ? currentUser.name : ''))) {
+            container.innerHTML = htmlContent;
+        } else {
+            container.innerHTML = '';
+        }
+    }
+
+    if (modalContainer) {
+        modalContainer.innerHTML = htmlContent;
+    }
+}
+
+function openApprovalCenterModal() {
+    renderOmerApprovalCenter();
+    const modal = document.getElementById('manager-approval-modal');
+    if (modal) modal.classList.add('open');
+}
+
+function closeApprovalCenterModal() {
+    const modal = document.getElementById('manager-approval-modal');
+    if (modal) modal.classList.remove('open');
+}
+
+function approveRequest(reqId) {
+    if (!isOmerEren(currentUser)) {
+        alert("Bu işlem için yalnızca Yönetici ÖMER EREN yetkilidir!");
+        return;
+    }
+    const req = (appState.approvalRequests || []).find(r => r.id === reqId);
+    if (!req || req.status !== 'PENDING') return;
+
+    if (req.type === 'DELETE_VISIT') {
+        appState.visits = (appState.visits || []).filter(v => v.id !== req.targetId);
+        addAuditLog("ONAY İŞLEMİ", `${req.customerTitle} ziyaret kaydı silme talebi Yönetici ÖMER EREN tarafından ONAYLANDI ve kayıt silindi.`);
+    } else if (req.type === 'DELETE_TASK') {
+        appState.tasks = (appState.tasks || []).filter(t => t.id !== req.targetId);
+        addAuditLog("ONAY İŞLEMİ", `${req.targetTitle} görev silme talebi Yönetici ÖMER EREN tarafından ONAYLANDI ve görev silindi.`);
+    } else if (req.type === 'EDIT_VISIT' && req.proposedData) {
+        const idx = (appState.visits || []).findIndex(v => v.id === req.targetId);
+        if (idx !== -1) {
+            appState.visits[idx] = {
+                ...appState.visits[idx],
+                ...req.proposedData,
+                approvalStatus: 'Onaylandı',
+                approvedBy: 'ÖMER EREN',
+                approvedAt: formatNowTR()
+            };
+        }
+        addAuditLog("ONAY İŞLEMİ", `${req.customerTitle} ziyaret kaydı düzenleme talebi Yönetici ÖMER EREN tarafından ONAYLANDI ve uygulandı.`);
+    }
+
+    req.status = 'APPROVED';
+    req.resolvedBy = 'ÖMER EREN';
+    req.resolvedAt = formatNowTR();
+
+    dispatchApprovalResultNotification({
+        recipient: req.requestedBy,
+        customerTitle: req.customerTitle || req.targetTitle,
+        isApproved: true,
+        actionType: req.type.includes('DELETE') ? 'silme' : 'düzenleme'
+    });
+
+    syncToServer();
+    renderAll();
+    playNotificationTone('INVITE');
+    showToast(`✅ '${req.customerTitle}' talebi onaylandı ve devreye alındı.`, 'success');
+}
+
+function rejectRequest(reqId) {
+    if (!isOmerEren(currentUser)) {
+        alert("Bu işlem için yalnızca Yönetici ÖMER EREN yetkilidir!");
+        return;
+    }
+    const req = (appState.approvalRequests || []).find(r => r.id === reqId);
+    if (!req || req.status !== 'PENDING') return;
+
+    req.status = 'REJECTED';
+    req.resolvedBy = 'ÖMER EREN';
+    req.resolvedAt = formatNowTR();
+
+    addAuditLog("ONAY İŞLEMİ", `${req.customerTitle} kaydı için gönderilen talep Yönetici ÖMER EREN tarafından REDDEDİLDİ.`);
+
+    dispatchApprovalResultNotification({
+        recipient: req.requestedBy,
+        customerTitle: req.customerTitle || req.targetTitle,
+        isApproved: false,
+        actionType: req.type.includes('DELETE') ? 'silme' : 'düzenleme'
+    });
+
+    syncToServer();
+    renderAll();
+    showToast(`❌ '${req.customerTitle}' talebi reddedildi.`, 'info');
+}
+
+function dispatchDelegationNotification(info) {
+    if (!info || !info.assignedTo) return;
+    const req = {
+        id: 'PUSH-ASG-' + Date.now(),
+        username: normalizeTR(info.assignedTo),
+        userFullName: info.assignedTo,
+        title: `⚡ Size Yeni Görev Atandı: ${info.customerTitle}`,
+        body: `Atayan: ${info.assignedBy} • Termin: ${formatDateTR(info.dueDate)} ${info.dueTime} [${info.priority}]${info.instructions ? `\nTalimat: ${info.instructions}` : ''}`,
+        url: './?tab=tasks-tab',
+        delaySeconds: 0,
+        status: 'PENDING',
+        createdAt: formatNowTR()
+    };
+    if (!Array.isArray(appState.pushTestRequests)) appState.pushTestRequests = [];
+    appState.pushTestRequests.unshift(req);
+
+    try {
+        fetch('/api/push/test', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                username: info.assignedTo,
+                title: req.title,
+                body: req.body,
+                url: req.url,
+                delaySeconds: 0
+            })
+        }).catch(() => {});
+    } catch (e) {}
+}
+
+function dispatchActionNotification(info) {
+    if (!info) return;
+    const targets = [info.assignedBy, 'ÖMER EREN'];
+    targets.forEach((targetUser, idx) => {
+        if (!targetUser) return;
+        const req = {
+            id: `PUSH-ACT-${Date.now()}-${idx}`,
+            username: normalizeTR(targetUser),
+            userFullName: targetUser,
+            title: `✅ Görevde İşlem Yapıldı: ${info.customerTitle}`,
+            body: `İşlem Yapan: ${info.performedBy} • Durum: ${info.status}\nNot: ${info.notes ? info.notes.slice(0, 80) : 'İşlem tamamlandı.'}`,
+            url: './?tab=active-tab',
+            delaySeconds: 0,
+            status: 'PENDING',
+            createdAt: formatNowTR()
+        };
+        if (!Array.isArray(appState.pushTestRequests)) appState.pushTestRequests = [];
+        appState.pushTestRequests.unshift(req);
+
+        try {
+            fetch('/api/push/test', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    username: targetUser,
+                    title: req.title,
+                    body: req.body,
+                    url: req.url,
+                    delaySeconds: 0
+                })
+            }).catch(() => {});
+        } catch (e) {}
+    });
+}
+
+function dispatchApprovalPushToManager(info) {
+    if (!info) return;
+    const req = {
+        id: 'PUSH-APP-' + Date.now(),
+        username: 'omer',
+        userFullName: 'ÖMER EREN',
+        title: info.title,
+        body: info.body,
+        url: './?tab=dashboard-tab',
+        delaySeconds: 0,
+        status: 'PENDING',
+        createdAt: formatNowTR()
+    };
+    if (!Array.isArray(appState.pushTestRequests)) appState.pushTestRequests = [];
+    appState.pushTestRequests.unshift(req);
+
+    try {
+        fetch('/api/push/test', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                username: 'omer',
+                title: req.title,
+                body: req.body,
+                url: req.url,
+                delaySeconds: 0
+            })
+        }).catch(() => {});
+    } catch (e) {}
+}
+
+function dispatchApprovalResultNotification(info) {
+    if (!info || !info.recipient) return;
+    const req = {
+        id: 'PUSH-RES-' + Date.now(),
+        username: normalizeTR(info.recipient),
+        userFullName: info.recipient,
+        title: info.isApproved ? `🎉 Talebiniz Onaylandı: ${info.customerTitle}` : `❌ Talebiniz Reddedildi: ${info.customerTitle}`,
+        body: info.isApproved ? `Yönetici Ömer Eren ${info.actionType} talebinizi ONAYLANDI ve uyguladı.` : `Yönetici Ömer Eren ${info.actionType} talebinizi REDDETTİ. Kayıt değiştirilmedi.`,
+        url: './?tab=active-tab',
+        delaySeconds: 0,
+        status: 'PENDING',
+        createdAt: formatNowTR()
+    };
+    if (!Array.isArray(appState.pushTestRequests)) appState.pushTestRequests = [];
+    appState.pushTestRequests.unshift(req);
+
+    try {
+        fetch('/api/push/test', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                username: info.recipient,
+                title: req.title,
+                body: req.body,
+                url: req.url,
+                delaySeconds: 0
+            })
+        }).catch(() => {});
+    } catch (e) {}
 }
 
 function printVisitReport() {
@@ -2922,21 +3731,38 @@ function renderTasks() {
 
     container.innerHTML = tasks.map(t => {
         const isDone = t.status === 'Tamamlandı';
+        const isPendingApproval = (appState.approvalRequests || []).some(r => r.targetId === t.id && r.status === 'PENDING');
+
         return `
-            <div class="kpi-card" style="align-items:flex-start; ${isDone ? 'opacity:0.65;' : ''}">
+            <div class="kpi-card" style="align-items:flex-start; ${isDone ? 'opacity:0.65;' : ''} ${isPendingApproval ? 'border-color:#f59e0b; box-shadow:0 0 14px rgba(245,158,11,0.22);' : ''}">
                 <div style="flex:1;">
                     <div style="display:flex; align-items:center; gap:0.5rem; flex-wrap:wrap; margin-bottom:4px;">
                         <span class="badge ${isDone ? 'badge-success' : 'badge-p2'}">${isDone ? '✅ Tamamlandı' : '⏳ Bekliyor'}</span>
+                        ${t.priority && t.priority !== 'Normal' ? `<span class="badge ${t.priority === 'Kritik' ? 'badge-critical' : 'badge-high'}">${t.priority}</span>` : ''}
+                        ${isPendingApproval ? `<span class="badge badge-warning" style="background:#f59e0b; color:#000; font-weight:800;"><i class="fa-solid fa-hourglass-half fa-spin"></i> Yönetici Onayı Bekliyor</span>` : ''}
                         <strong style="color:#fff; font-size:0.95rem;">${t.title}</strong>
                     </div>
                     <div style="font-size:0.78rem; color:var(--text-sec); margin-bottom:4px;">
-                        Sorumlu: <strong>${t.assignee}</strong> &bull; Yönetici: <strong>${t.manager || 'ÖMER EREN'}</strong> &bull; Termin: <strong style="color:#fde68a;">${formatDateTR(t.dueDate)} ${t.dueTime || ''}</strong>
+                        Sorumlu: <strong>${t.assignee}</strong> &bull; Atayan / Yönetici: <strong>${t.assignedBy || t.manager || 'ÖMER EREN'}</strong> &bull; Termin: <strong style="color:#fde68a;">${formatDateTR(t.dueDate)} ${t.dueTime || ''}</strong>
                     </div>
                     ${t.note ? `<div style="font-size:0.8rem; color:#cbd5e1; background:rgba(0,0,0,0.25); padding:6px 10px; border-radius:6px; margin-top:4px;">${t.note}</div>` : ''}
+                    ${Array.isArray(t.actionLogs) && t.actionLogs.length > 0 ? `
+                        <div style="margin-top:4px; font-size:0.75rem; color:#34d399;">
+                            <i class="fa-solid fa-clock-rotate-left"></i> Son İşlem: <strong>${t.actionLogs[0].user}</strong> (${t.actionLogs[0].status}) - ${t.actionLogs[0].note}
+                        </div>
+                    ` : ''}
                 </div>
-                <div style="display:flex; gap:0.4rem;">
+                <div style="display:flex; gap:0.4rem; flex-wrap:wrap; align-items:center;">
+                    ${!isDone ? `
+                        <button type="button" class="btn btn-primary btn-sm" onclick="openTaskActionModal('${t.id}', 'TASK')" title="İşlem Yap &amp; Raporla">
+                            <i class="fa-solid fa-clipboard-check"></i> Raporla
+                        </button>
+                    ` : ''}
                     <button type="button" class="btn ${isDone ? 'btn-secondary' : 'btn-success'} btn-sm" onclick="toggleTaskStatus('${t.id}')">
                         ${isDone ? 'Geri Al' : '<i class="fa-solid fa-check"></i> Tamamla'}
+                    </button>
+                    <button type="button" class="btn btn-danger btn-sm" onclick="requestDeleteTask('${t.id}')" title="Görevi Sil (Yönetici Onaylı)">
+                        <i class="fa-solid fa-trash"></i>
                     </button>
                 </div>
             </div>
@@ -3759,6 +4585,21 @@ window.checkPwaInstallState = checkPwaInstallState;
 window.isAppRunningStandalone = isAppRunningStandalone;
 window.shareAppOnWhatsApp = shareAppOnWhatsApp;
 
+// Yönetici Onay Kalkanı & Görevlendirme Fonksiyonları
+window.requestDeleteVisit = requestDeleteVisit;
+window.requestDeleteTask = requestDeleteTask;
+window.openApprovalRequestModal = openApprovalRequestModal;
+window.closeApprovalRequestModal = closeApprovalRequestModal;
+window.handleApprovalRequestSubmit = handleApprovalRequestSubmit;
+window.openTaskActionModal = openTaskActionModal;
+window.closeTaskActionModal = closeTaskActionModal;
+window.handleTaskActionSubmit = handleTaskActionSubmit;
+window.renderOmerApprovalCenter = renderOmerApprovalCenter;
+window.openApprovalCenterModal = openApprovalCenterModal;
+window.closeApprovalCenterModal = closeApprovalCenterModal;
+window.approveRequest = approveRequest;
+window.rejectRequest = rejectRequest;
+
 // ==========================================================================
 // 11. BAŞLATICI (INITIALIZATION)
 // ==========================================================================
@@ -3768,6 +4609,7 @@ function renderAll() {
     renderLegacyCustomers();
     renderActiveVisits();
     renderTasks();
+    renderOmerApprovalCenter();
     renderDistrictStrategies();
     renderLogs();
     runAiDeduplicationAnalysis();
@@ -3784,7 +4626,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     if ('caches' in window) {
         caches.keys().then(keys => {
             keys.forEach(k => {
-                if (k !== 'dizsan-ziyaret-v1.3.0') caches.delete(k);
+                if (k !== 'dizsan-ziyaret-v1.5.0') caches.delete(k);
             });
         });
     }
@@ -3916,7 +4758,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     // Service Worker Kaydı & Canlı Güncelleme Dinleyicisi (v1.3.0)
     if ('serviceWorker' in navigator) {
-        navigator.serviceWorker.register('sw.js?v=1.4.1').then(reg => {
+        navigator.serviceWorker.register('sw.js?v=1.5.0').then(reg => {
             reg.update();
             reg.addEventListener('updatefound', () => {
                 const newWorker = reg.installing;

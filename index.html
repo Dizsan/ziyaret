@@ -23,7 +23,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Outfit:wght@600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     
-    <link rel="stylesheet" href="style.css?v=1.4.1">
+    <link rel="stylesheet" href="style.css?v=1.5.0">
 </head>
 <body>
 
@@ -143,6 +143,14 @@
                     <span class="nav-badge">434</span>
                 </div>
 
+                <div id="nav-item-approvals" class="nav-item" onclick="openApprovalCenterModal()" style="display:none;">
+                    <div class="nav-item-left">
+                        <i class="fa-solid fa-user-shield" style="color:#f59e0b;"></i>
+                        <span>🛡️ Yönetici Onay Merkezi</span>
+                    </div>
+                    <span id="badge-pending-approvals" class="nav-badge" style="background:#f59e0b; color:#000; font-weight:800;">0</span>
+                </div>
+
                 <div id="nav-item-logs" class="nav-item" data-tab="logs-tab" onclick="switchTab('logs-tab')" style="display:none;">
                     <div class="nav-item-left">
                         <i class="fa-solid fa-shield-halved"></i>
@@ -191,7 +199,7 @@
 
                 <div class="navbar-right">
                     <button type="button" class="btn btn-secondary btn-sm app-version-chip" id="app-version-badge" onclick="openVersionModal()" title="Sürüm ve Cihaz Güncelleme Merkezi">
-                        <i class="fa-solid fa-code-branch" style="color:#38bdf8;"></i> <span id="app-current-version-text">v1.4.1</span>
+                        <i class="fa-solid fa-code-branch" style="color:#38bdf8;"></i> <span id="app-current-version-text">v1.5.0</span>
                     </button>
 
                     <button type="button" class="btn btn-secondary btn-sm" onclick="forceRefreshFromGitHub()" id="btn-navbar-refresh" title="Logo ERP Verilerini Yenile">
@@ -253,6 +261,9 @@
 
                 <!-- ÜST BİLDİRİM VE İZİN ALARM BANNERI -->
                 <div id="bg-notification-permission-banner"></div>
+
+                <!-- ÖMER EREN YÖNETİCİ ONAY MERKEZİ (DEĞİŞTİRME VE SİLME ONAYI) -->
+                <div id="omer-approval-center-container"></div>
 
                 <!-- ==============================================================
                      SEKME 1: GENEL BAKIŞ & KOKPİT (DASHBOARD-TAB)
@@ -696,17 +707,20 @@
     </nav>
 
     <!-- ==========================================================================
-         MODAL 1: YENİ ZİYARET / TELEFON GÖRÜŞMESİ EKLEME
+         MODAL 1: YENİ ZİYARET / TELEFON GÖRÜŞMESİ & GÖREVLENDİRME MODALI
          ========================================================================== -->
     <div id="visit-modal" class="modal-backdrop">
         <div class="modal-box">
             <div class="modal-header">
-                <h3><i class="fa-solid fa-phone-volume" style="color:var(--dizsan-light);"></i> Ziyaret &amp; Görüşme Kaydı Girişi</h3>
-                <button class="modal-close" onclick="closeVisitModal()">&times;</button>
+                <h3 id="visit-modal-title"><i class="fa-solid fa-phone-volume" style="color:var(--dizsan-light);"></i> Ziyaret, Görüşme &amp; Personel Görevi</h3>
+                <button type="button" class="modal-close" onclick="closeVisitModal()">&times;</button>
             </div>
             <form id="visit-form" onsubmit="saveVisitRecord(event)">
+                <input type="hidden" id="visit-id" value="">
+                <input type="hidden" id="visit-mode" value="NEW">
                 <div class="modal-body">
-                    <div style="display:grid; grid-template-columns:1fr 1fr; gap:0.75rem; margin-bottom:0.85rem;">
+                    <!-- Üst İşlem ve Sonuç Seçicileri -->
+                    <div class="grid-2-col" style="display:grid; grid-template-columns:1fr 1fr; gap:0.75rem; margin-bottom:0.85rem;">
                         <div class="form-group" style="margin-bottom:0;">
                             <label>Görüşme / İşlem Türü *</label>
                             <select id="visit-type-select" class="form-control" onchange="updateVisitTravelCalculation()" required>
@@ -733,7 +747,52 @@
                         <datalist id="customer-datalist"></datalist>
                     </div>
 
-                    <div style="display:grid; grid-template-columns:1fr 1fr; gap:0.75rem; margin-bottom:0.85rem;">
+                    <!-- PERSONEL GÖREVLENDİRMESİ VE TERMİN BÖLÜMÜ (İKİ YÖNLÜ BİLDİRİMLİ) -->
+                    <div style="background:linear-gradient(135deg, rgba(2,132,199,0.14), rgba(37,99,235,0.08)); border:1px solid rgba(56,189,248,0.4); border-radius:12px; padding:0.85rem; margin-bottom:0.85rem;">
+                        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.6rem; flex-wrap:wrap; gap:0.4rem;">
+                            <strong style="color:#38bdf8; font-size:0.88rem; display:flex; align-items:center; gap:0.4rem;">
+                                <i class="fa-solid fa-user-gear"></i> Personel Görevlendirmesi &amp; Termin
+                            </strong>
+                            <span class="badge badge-p2" style="font-size:0.7rem;"><i class="fa-solid fa-satellite-dish"></i> İki Yönlü Bildirimli</span>
+                        </div>
+
+                        <div class="grid-2-col" style="display:grid; grid-template-columns:1fr 1fr; gap:0.75rem; margin-bottom:0.75rem;">
+                            <div class="form-group" style="margin-bottom:0;">
+                                <label>Görevlendirilen Personel *</label>
+                                <select id="visit-assigned-to" class="form-control" required></select>
+                            </div>
+                            <div class="form-group" style="margin-bottom:0;">
+                                <label>Görevi Veren / Atayan</label>
+                                <input type="text" id="visit-assigned-by" class="form-control" readonly style="opacity:0.85; background:rgba(0,0,0,0.25);">
+                            </div>
+                        </div>
+
+                        <div class="date-time-grid" style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:0.75rem; margin-bottom:0.75rem;">
+                            <div class="form-group" style="margin-bottom:0;">
+                                <label>Termin Tarihi *</label>
+                                <input type="date" id="visit-due-date" class="form-control" required>
+                            </div>
+                            <div class="form-group" style="margin-bottom:0;">
+                                <label>Termin Saati *</label>
+                                <input type="time" id="visit-due-time" class="form-control" value="10:00" required>
+                            </div>
+                            <div class="form-group" style="margin-bottom:0;">
+                                <label>Öncelik Derecesi</label>
+                                <select id="visit-priority" class="form-control">
+                                    <option value="Normal">🟢 Normal</option>
+                                    <option value="Acil">🟡 Acil</option>
+                                    <option value="Kritik">🔴 Kritik VIP</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="form-group" style="margin-bottom:0;">
+                            <label>Görev Talimatı / Özel Açıklama</label>
+                            <textarea id="visit-task-instructions" class="form-control" rows="2" placeholder="Görevlendirilen personelin yapacağı görüşme konusu, teklif hazırlığı veya özel talimatlar..."></textarea>
+                        </div>
+                    </div>
+
+                    <div class="grid-2-col" style="display:grid; grid-template-columns:1fr 1fr; gap:0.75rem; margin-bottom:0.85rem;">
                         <div class="form-group" style="margin-bottom:0;">
                             <label>Görüşülen Yetkili / Şoför</label>
                             <input type="text" id="visit-contact-person" class="form-control" placeholder="Yetkili adı soyadı...">
@@ -744,7 +803,7 @@
                         </div>
                     </div>
 
-                    <div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:0.75rem; margin-bottom:0.85rem;">
+                    <div class="grid-3-col" style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:0.75rem; margin-bottom:0.85rem;">
                         <div class="form-group" style="margin-bottom:0;">
                             <label>İl / İlçe</label>
                             <input type="text" id="visit-location" class="form-control" placeholder="Örn: Çorum / Osmancık" oninput="updateVisitTravelCalculation()">
@@ -754,7 +813,7 @@
                             <input type="text" id="visit-plate" class="form-control" placeholder="19 XX 000">
                         </div>
                         <div class="form-group" style="margin-bottom:0;">
-                            <label>Görüşmeyi Yapan Personel *</label>
+                            <label>Kayıt / Rapor Sahibi *</label>
                             <select id="visit-personnel-select" class="form-control" required></select>
                         </div>
                     </div>
@@ -762,6 +821,14 @@
                     <div class="form-group">
                         <label>Görüşme Notları / Müşteri Talebi &amp; Detaylar *</label>
                         <textarea id="visit-notes" class="form-control" rows="3" placeholder="Görüşme konusu, araç durumu, teklif detayları veya müşteri geri bildirimi..." required></textarea>
+                    </div>
+
+                    <!-- Değişiklik Gerekçesi (Sadece Düzenleme Modunda Açılır) -->
+                    <div id="visit-edit-reason-container" style="display:none; margin-bottom:0.85rem; background:rgba(245,158,11,0.14); border:1px solid rgba(245,158,11,0.45); border-radius:10px; padding:0.85rem;">
+                        <label style="color:#fde68a; font-weight:700; display:block; margin-bottom:0.35rem;">
+                            <i class="fa-solid fa-user-shield"></i> Yönetici Ömer Eren Onayı İçin Değişiklik Gerekçesi *
+                        </label>
+                        <textarea id="visit-edit-reason" class="form-control" rows="2" placeholder="Bu kayıtta neden değişiklik yapıldığını yöneticiye iletilmek üzere açıklayınız..."></textarea>
                     </div>
 
                     <!-- Fotoğraf / Belge Ekleme Alanı -->
@@ -784,7 +851,7 @@
                                 <label style="font-size:0.78rem; font-weight:700; color:#fde68a; display:block; margin-bottom:0.4rem;">
                                     📌 Takip / Randevu Eylem Türü *
                                 </label>
-                                <div style="display:grid; grid-template-columns:1fr 1fr; gap:0.65rem;">
+                                <div class="grid-2-col" style="display:grid; grid-template-columns:1fr 1fr; gap:0.65rem;">
                                     <div id="followup-opt-phone" class="followup-type-btn type-phone active" onclick="setFollowupActionType('TELEFON')">
                                         <i class="fa-solid fa-phone" style="font-size:1.15rem; color:#38bdf8;"></i>
                                         <div>
@@ -803,7 +870,7 @@
                                 <input type="hidden" id="visit-followup-type" value="TELEFON">
                             </div>
 
-                            <div style="display:grid; grid-template-columns:1fr 1fr; gap:0.75rem;">
+                            <div class="date-time-grid" style="display:grid; grid-template-columns:1fr 1fr; gap:0.75rem;">
                                 <div>
                                     <label style="font-size:0.78rem; font-weight:600; color:#fde68a;">Randevu / Takip Tarihi *</label>
                                     <input type="date" id="visit-task-date" class="form-control" onchange="handleVisitDateOrTimeChange()">
@@ -814,24 +881,111 @@
                                 </div>
                             </div>
 
-                            <!-- Telefon Bilgi Kartı (Sadece Telefon Seçiliyken Açılır - KM Yok) -->
-                            <div id="visit-phone-info-box" style="margin-top:0.75rem; background:rgba(56,189,248,0.1); border:1px solid rgba(56,189,248,0.3); border-radius:10px; padding:0.85rem; display:block;">
-                                <!-- JS tarafından dinamik doldurulur -->
-                            </div>
+                            <!-- Telefon Bilgi Kartı -->
+                            <div id="visit-phone-info-box" style="margin-top:0.75rem; background:rgba(56,189,248,0.1); border:1px solid rgba(56,189,248,0.3); border-radius:10px; padding:0.85rem; display:block;"></div>
 
-                            <!-- Akıllı Seyahat & Çıkış Uyarısı Canlı Önizleme Kutusu (Sadece Ziyaret Seçiliyken Açılır - KM ve Google Haritalar) -->
-                            <div id="visit-travel-calc-box" class="travel-calc-box" style="display:none;">
-                                <!-- Dinamik içerik updateVisitTravelCalculation tarafından güncellenir -->
-                            </div>
+                            <!-- Akıllı Seyahat & Çıkış Uyarısı Canlı Önizleme Kutusu -->
+                            <div id="visit-travel-calc-box" class="travel-calc-box" style="display:none;"></div>
                         </div>
                     </div>
                 </div>
 
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" onclick="closeVisitModal()">İptal</button>
-                    <button type="submit" class="btn btn-primary"><i class="fa-solid fa-check"></i> Kaydet &amp; Senkronize Et</button>
+                    <button type="submit" id="visit-submit-btn" class="btn btn-primary"><i class="fa-solid fa-check"></i> Kaydet &amp; Senkronize Et</button>
                 </div>
             </form>
+        </div>
+    </div>
+
+    <!-- ==========================================================================
+         MODAL 1.1: YÖNETİCİ ONAY TALEBİ MODALI (PERSONEL SİLME VEYA DEĞİŞTİRME)
+         ========================================================================== -->
+    <div id="approval-request-modal" class="modal-backdrop">
+        <div class="modal-box">
+            <div class="modal-header">
+                <h3 id="arm-title"><i class="fa-solid fa-user-shield" style="color:#f59e0b;"></i> Yönetici (Ömer Eren) Onayı Gerekiyor</h3>
+                <button type="button" class="modal-close" onclick="closeApprovalRequestModal()">&times;</button>
+            </div>
+            <form id="approval-request-form" onsubmit="handleApprovalRequestSubmit(event)">
+                <input type="hidden" id="arm-type">
+                <input type="hidden" id="arm-target-id">
+                <div class="modal-body">
+                    <div style="background:rgba(245,158,11,0.12); border:1px solid rgba(245,158,11,0.4); border-radius:10px; padding:0.85rem; margin-bottom:1rem; color:#fde68a; font-size:0.85rem; line-height:1.45;">
+                        <i class="fa-solid fa-triangle-exclamation" style="color:#f59e0b; margin-right:4px;"></i>
+                        <strong>Yönetici Onay Kalkanı:</strong> Dizsan güvenlik kuralları gereğince, daha önce kaydedilmiş veriler yöneticimiz <strong>Ömer Eren</strong> onayı olmadan doğrudan silinemez veya değiştirilemez. Talebiniz anlık olarak Ömer Eren'in telefonuna bildirim olarak düşecektir.
+                    </div>
+                    <div class="form-group">
+                        <label>İlgili Kayıt / Müşteri</label>
+                        <input type="text" id="arm-target-title" class="form-control" readonly style="opacity:0.85; background:rgba(0,0,0,0.25);">
+                    </div>
+                    <div class="form-group">
+                        <label id="arm-reason-label">Gerekçe / Açıklama *</label>
+                        <textarea id="arm-reason" class="form-control" rows="3" placeholder="Bu işlem için gerekçenizi yazınız..." required></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" onclick="closeApprovalRequestModal()">Vazgeç</button>
+                    <button type="submit" class="btn btn-warning"><i class="fa-solid fa-paper-plane"></i> Ömer Eren'in Onayına Gönder</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- ==========================================================================
+         MODAL 1.2: GÖREVLİ PERSONEL İŞLEM & RAPORLAMA MODALI (İKİ YÖNLÜ BİLDİRİM)
+         ========================================================================== -->
+    <div id="task-action-modal" class="modal-backdrop">
+        <div class="modal-box">
+            <div class="modal-header">
+                <h3><i class="fa-solid fa-clipboard-check" style="color:#10b981;"></i> Görevde İşlem Yap &amp; Raporla</h3>
+                <button type="button" class="modal-close" onclick="closeTaskActionModal()">&times;</button>
+            </div>
+            <form id="task-action-form" onsubmit="handleTaskActionSubmit(event)">
+                <input type="hidden" id="ta-target-id">
+                <input type="hidden" id="ta-target-type" value="VISIT">
+                <div class="modal-body">
+                    <div class="form-group">
+                        <label>İlgili Müşteri / Görev</label>
+                        <input type="text" id="ta-customer-title" class="form-control" readonly style="opacity:0.85; background:rgba(0,0,0,0.25);">
+                    </div>
+                    <div class="form-group">
+                        <label>İşlem Durumu *</label>
+                        <select id="ta-status" class="form-control" required>
+                            <option value="İşlem Yapıldı">⚡ İşlem Yapıldı / Müşteriyle Görüşüldü</option>
+                            <option value="Tamamlandı">✅ Görev Başarıyla Tamamlandı</option>
+                            <option value="Ulaşılamadı">📵 Ulaşılamadı / Tekrar Denenecek</option>
+                            <option value="Bekliyor">⏳ Devam Ediyor / Beklemede</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Yapılan İşlem / Görüşme Detayı *</label>
+                        <textarea id="ta-notes" class="form-control" rows="3" placeholder="Müşteriyle neler görüşüldü, ne karar alındı veya teklif sonucu..." required></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" onclick="closeTaskActionModal()">Kapat</button>
+                    <button type="submit" class="btn btn-success"><i class="fa-solid fa-paper-plane"></i> İşlemi Kaydet &amp; Görevi Verene Bildir</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- ==========================================================================
+         MODAL 1.3: ÖMER EREN YÖNETİCİ ONAY MERKEZİ MODALI
+         ========================================================================== -->
+    <div id="manager-approval-modal" class="modal-backdrop">
+        <div class="modal-box">
+            <div class="modal-header">
+                <h3><i class="fa-solid fa-user-shield" style="color:#f59e0b;"></i> Ömer Eren Yönetici Onay Merkezi</h3>
+                <button type="button" class="modal-close" onclick="closeApprovalCenterModal()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div id="modal-approval-list-container"></div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" onclick="closeApprovalCenterModal()">Kapat</button>
+            </div>
         </div>
     </div>
 
@@ -1313,6 +1467,6 @@
     <!-- Scripts -->
     <script src="dizsan-back-navigation.js?v=1.4.1"></script>
     <script src="auto-date-helper.js"></script>
-    <script src="app.js?v=1.4.1"></script>
+    <script src="app.js?v=1.5.0"></script>
 </body>
 </html>
