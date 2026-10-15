@@ -1,0 +1,30 @@
+{
+  "name": "DİZSAN Müşteri Ziyaret & Saha Takip Sistemi",
+  "short_name": "Dizsan Ziyaret",
+  "description": "DİZSAN Müşteri Ziyaret, Telefon Görüşme, Saha Raporlama ve Kayıp Müşteri Kazanım Sistemi",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "background_color": "#0b0f19",
+  "theme_color": "#0284c7",
+  "orientation": "any",
+  "icons": [
+    {
+      "src": "icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "dizsan_logo.jpg",
+      "sizes": "300x300",
+      "type": "image/jpeg",
+      "purpose": "any"
+    }
+  ]
+}

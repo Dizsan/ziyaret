@@ -1,0 +1,1169 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>DİZSAN Müşteri Ziyaret, Telefon &amp; Saha Takip Sistemi</title>
+    
+    <!-- PWA & Mobile Web App Meta Tags -->
+    <meta name="theme-color" content="#0284c7">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Dizsan Ziyaret">
+    <link rel="manifest" href="manifest.json">
+    <link rel="icon" type="image/jpeg" href="dizsan_logo.jpg">
+    <link rel="apple-touch-icon" href="apple-touch-icon.png">
+
+    <!-- Fonts & Icons -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Outfit:wght@600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    
+    <link rel="stylesheet" href="style.css?v=1.3.3">
+</head>
+<body>
+
+    <!-- ==========================================================================
+         GİRİŞ EKRANI (LOGIN OVERLAY) - DİZGÜN & DİZSAN TOPLANTI ENTEGRELİ
+         ========================================================================== -->
+    <div id="login-overlay" class="login-overlay">
+        <div class="login-card">
+            <div class="login-brand">
+                <img src="dizsan_logo.jpg" alt="Dizsan Logo" class="login-logo">
+                <h1>DİZSAN OTOMOTİV</h1>
+                <p>Müşteri Ziyaret, Telefon Görüşme &amp; Saha Raporlama Sistemi</p>
+            </div>
+
+            <!-- Hızlı Personel Giriş Seçicisi (24 Resmi Personel + Yönetici Ömer Eren) -->
+            <div class="quick-users">
+                <span class="quick-users-label"><i class="fa-solid fa-users"></i> Hızlı Personel Seçimi:</span>
+                <div id="quick-user-list" class="user-chips">
+                    <!-- Dinamik olarak JS tarafından doldurulur -->
+                </div>
+            </div>
+
+            <form id="login-form" onsubmit="handleLogin(event)">
+                <div id="login-error" style="display:none; background:rgba(239,68,68,0.15); border:1px solid rgba(239,68,68,0.4); color:#fca5a5; padding:0.65rem; border-radius:8px; font-size:0.8rem; margin-bottom:1rem; text-align:left;"></div>
+
+                <div class="form-group">
+                    <label>Kullanıcı Adı veya Personel Adı *</label>
+                    <div class="input-with-icon">
+                        <i class="fa-solid fa-user"></i>
+                        <input type="text" id="login-username" class="form-control" placeholder="Örn: ömer veya hakan.aydin" required>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label>Giriş Şifresi *</label>
+                    <div class="input-with-icon">
+                        <i class="fa-solid fa-lock"></i>
+                        <input type="password" id="login-password" class="form-control" placeholder="••••••" required>
+                    </div>
+                </div>
+
+                <div class="login-actions">
+                    <label class="checkbox-label">
+                        <input type="checkbox" id="login-remember-me" checked>
+                        <span>Beni Hatırla</span>
+                    </label>
+                    <a class="forgot-link" onclick="openForgotPasswordModal()">Şifremi Unuttum?</a>
+                </div>
+
+                <button type="submit" class="btn btn-primary btn-block">
+                    <i class="fa-solid fa-right-to-bracket"></i> Sisteme Güvenli Giriş Yap
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- ==========================================================================
+         ANA UYGULAMA DÜZENİ (APP CONTAINER)
+         ========================================================================== -->
+    <div class="app-container">
+
+        <!-- SOL MENÜ (SIDEBAR) -->
+        <aside id="sidebar" class="sidebar">
+            <div class="sidebar-header">
+                <img src="dizsan_logo.jpg" alt="Dizsan" class="sidebar-logo">
+                <div class="sidebar-brand">
+                    <h2>DİZSAN SAHA</h2>
+                    <span>Ziyaret &amp; CRM <strong id="sidebar-app-version" style="color:var(--dizsan-light);">v1.3.0</strong></span>
+                </div>
+            </div>
+
+            <nav class="sidebar-nav">
+                <div class="nav-item active" data-tab="dashboard-tab" onclick="switchTab('dashboard-tab')">
+                    <div class="nav-item-left">
+                        <i class="fa-solid fa-chart-pie"></i>
+                        <span>Genel Bakış &amp; Kokpit</span>
+                    </div>
+                </div>
+
+                <div class="nav-item" data-tab="legacy-tab" onclick="switchTab('legacy-tab')">
+                    <div class="nav-item-left">
+                        <i class="fa-solid fa-database"></i>
+                        <span>Kayıp Müşteri Planı (Arşiv)</span>
+                    </div>
+                    <span id="badge-legacy-count" class="nav-badge">2.682</span>
+                </div>
+
+                <div class="nav-item" data-tab="active-tab" onclick="switchTab('active-tab')">
+                    <div class="nav-item-left">
+                        <i class="fa-solid fa-car-side"></i>
+                        <span>Güncel Saha &amp; Aramalar</span>
+                    </div>
+                    <span id="badge-active-visits" class="nav-badge warning">0</span>
+                </div>
+
+                <div class="nav-item" data-tab="ai-match-tab" onclick="switchTab('ai-match-tab')">
+                    <div class="nav-item-left">
+                        <i class="fa-solid fa-wand-magic-sparkles"></i>
+                        <span>🤖 Yapay Zeka Tekleştirme</span>
+                    </div>
+                    <span id="badge-ai-matches" class="nav-badge danger">AI Aktif</span>
+                </div>
+
+                <div class="nav-item" data-tab="tasks-tab" onclick="switchTab('tasks-tab')">
+                    <div class="nav-item-left">
+                        <i class="fa-solid fa-list-check"></i>
+                        <span>Aksiyon &amp; Hatırlatıcılar</span>
+                    </div>
+                    <span id="badge-pending-tasks" class="nav-badge">0</span>
+                </div>
+
+                <div class="nav-item" data-tab="strategy-tab" onclick="switchTab('strategy-tab')">
+                    <div class="nav-item-left">
+                        <i class="fa-solid fa-map-location-dot"></i>
+                        <span>İlçe Rut Strateji Rehberi</span>
+                    </div>
+                    <span class="nav-badge">434</span>
+                </div>
+
+                <div id="nav-item-logs" class="nav-item" data-tab="logs-tab" onclick="switchTab('logs-tab')" style="display:none;">
+                    <div class="nav-item-left">
+                        <i class="fa-solid fa-shield-halved"></i>
+                        <span>🛡️ Yönetici Denetim İzi</span>
+                    </div>
+                </div>
+            </nav>
+
+            <div class="sidebar-footer">
+                <div class="user-profile">
+                    <div class="user-info" style="cursor:pointer;" onclick="openChangePasswordModal()" title="Şifre Değiştir">
+                        <img id="current-user-avatar" src="dizsan_logo.jpg" alt="User" class="user-avatar">
+                        <div class="user-details">
+                            <span id="current-user-name" class="user-name">Giriş Yapılmadı</span>
+                            <span id="current-user-role" class="user-role">Misafir</span>
+                        </div>
+                    </div>
+                    <div style="display:flex; align-items:center; gap:0.25rem;">
+                        <button type="button" class="btn-icon" title="Şifre Değiştir" onclick="openChangePasswordModal()" style="color:#fbbf24;">
+                            <i class="fa-solid fa-key"></i>
+                        </button>
+                        <button type="button" class="btn-icon" title="Güvenli Çıkış" onclick="handleLogout()">
+                            <i class="fa-solid fa-power-off"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </aside>
+
+        <!-- SAĞ ANA İÇERİK (MAIN WRAPPER) -->
+        <div class="main-wrapper">
+
+            <!-- ÜST BİLGİ VE AKSİYON ÇUBUĞU (TOP NAVBAR) -->
+            <header class="top-navbar">
+                <div class="navbar-left">
+                    <button class="mobile-menu-btn" onclick="toggleMobileSidebar()">
+                        <i class="fa-solid fa-bars"></i>
+                    </button>
+                    <h1 id="page-title" class="page-title">
+                        <i class="fa-solid fa-chart-pie" style="color:var(--dizsan-light);"></i> Genel Bakış &amp; Kokpit
+                    </h1>
+                </div>
+
+                <div class="navbar-right">
+                    <button type="button" class="btn btn-secondary btn-sm app-version-chip" id="app-version-badge" onclick="openVersionModal()" title="Sürüm ve Cihaz Güncelleme Merkezi">
+                        <i class="fa-solid fa-code-branch" style="color:#38bdf8;"></i> <span id="app-current-version-text">v1.3.3</span>
+                    </button>
+
+                    <span id="sync-status-badge" class="status-chip online hide-on-sm">
+                        <i class="fa-solid fa-cloud-arrow-up"></i> <span id="sync-status-text">Bulut &amp; GitHub Aktif</span>
+                    </span>
+
+                    <button type="button" class="btn btn-secondary btn-sm" onclick="openPushTestCenterModal()">
+                        <i class="fa-solid fa-satellite-dish" style="color:#38bdf8;"></i> <span class="hide-on-sm">Web Push &amp; Test</span>
+                    </button>
+
+                    <button type="button" class="btn btn-primary btn-sm" onclick="openVisitModal()">
+                        <i class="fa-solid fa-plus"></i> <span>Görüşme / Ziyaret Ekle</span>
+                    </button>
+
+                    <button type="button" class="btn btn-success btn-sm hide-on-sm" onclick="openCustomerModal()">
+                        <i class="fa-solid fa-user-plus"></i> <span>Yeni Müşteri</span>
+                    </button>
+
+                    <button type="button" class="btn btn-secondary btn-sm" title="Şifre Değiştir" onclick="openChangePasswordModal()">
+                        <i class="fa-solid fa-key" style="color:#fbbf24;"></i> <span class="hide-on-sm">Şifre Değiştir</span>
+                    </button>
+
+                    <button type="button" class="btn btn-secondary btn-sm" title="WhatsApp Paylaş" onclick="shareAppOnWhatsApp()">
+                        <i class="fa-brands fa-whatsapp" style="color:#25d366; font-size:1.1rem;"></i>
+                    </button>
+
+                    <button type="button" class="btn btn-secondary btn-sm" title="Cihaza Yükle" onclick="openInstallGuideModal()">
+                        <i class="fa-solid fa-qrcode"></i>
+                    </button>
+                </div>
+            </header>
+
+            <!-- İÇERİK GÖVDESİ -->
+            <main class="content-body">
+
+                <!-- SÜRÜM GÜNCELLEME ALARM BANNERI (TÜM CİHAZLARDA OTOMATİK) -->
+                <div id="app-update-alert-banner" class="app-update-banner" style="display:none;"></div>
+
+                <!-- ÜST BİLDİRİM VE İZİN ALARM BANNERI -->
+                <div id="bg-notification-permission-banner"></div>
+
+                <!-- ==============================================================
+                     SEKME 1: GENEL BAKIŞ & KOKPİT (DASHBOARD-TAB)
+                     ============================================================== -->
+                <section id="dashboard-tab" class="tab-section active">
+                    <!-- KPI Kartları -->
+                    <div class="kpi-grid">
+                        <div class="kpi-card">
+                            <div class="kpi-content">
+                                <h3>Toplam 120 Cari Müşteri</h3>
+                                <div id="kpi-total-customers" class="kpi-value">2.682</div>
+                                <div class="kpi-sub">1998 – 2026 Arşiv Havuzu</div>
+                            </div>
+                            <div class="kpi-icon blue"><i class="fa-solid fa-users"></i></div>
+                        </div>
+
+                        <div class="kpi-card">
+                            <div class="kpi-content">
+                                <h3>Kayıp (Acil Churn) Müşteri</h3>
+                                <div id="kpi-churn-customers" class="kpi-value" style="color:#f87171;">2.325</div>
+                                <div class="kpi-sub">%86.7 Kurtarılacak Portföy</div>
+                            </div>
+                            <div class="kpi-icon red"><i class="fa-solid fa-triangle-exclamation"></i></div>
+                        </div>
+
+                        <div class="kpi-card">
+                            <div class="kpi-content">
+                                <h3>Gerçekleşen Saha / Arama</h3>
+                                <div id="kpi-completed-visits" class="kpi-value" style="color:#34d399;">0</div>
+                                <div class="kpi-sub">Kayıt altına alınan görüşmeler</div>
+                            </div>
+                            <div class="kpi-icon green"><i class="fa-solid fa-phone-volume"></i></div>
+                        </div>
+
+                        <div class="kpi-card">
+                            <div class="kpi-content">
+                                <h3>Bekleyen Ziyaret / Arama</h3>
+                                <div id="kpi-pending-tasks" class="kpi-value" style="color:#fbbf24;">0</div>
+                                <div class="kpi-sub">Termin bekleyen aksiyonlar</div>
+                            </div>
+                            <div class="kpi-icon amber"><i class="fa-solid fa-clock"></i></div>
+                        </div>
+
+                        <div class="kpi-card">
+                            <div class="kpi-content">
+                                <h3>Tarihsel Ciro Havuzu</h3>
+                                <div id="kpi-total-revenue" class="kpi-value" style="font-size:1.35rem;">₺184.2M</div>
+                                <div class="kpi-sub">Scania &amp; Ağır Vasıta Servis</div>
+                            </div>
+                            <div class="kpi-icon purple"><i class="fa-solid fa-turkish-lira-sign"></i></div>
+                        </div>
+                    </div>
+
+                    <!-- Hızlı İşlem & Churn Öncelik Kartları -->
+                    <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(320px, 1fr)); gap:1.25rem; margin-bottom:1.5rem;">
+                        <!-- Sol: Churn Öncelik Dağılımı -->
+                        <div class="table-card" style="margin-bottom:0;">
+                            <div class="table-header-row">
+                                <div class="table-header-title">
+                                    <i class="fa-solid fa-fire" style="color:#ef4444;"></i> Churn Öncelik &amp; VIP Müşteri Grupları
+                                </div>
+                            </div>
+                            <div style="padding:1.25rem; display:flex; flex-direction:column; gap:0.75rem;">
+                                <div style="display:flex; justify-content:space-between; align-items:center; background:rgba(239,68,68,0.1); border:1px solid rgba(239,68,68,0.3); border-radius:10px; padding:0.8rem 1rem; cursor:pointer;" onclick="filterLegacyByPriority('P1 - VIP Kritik Filo')">
+                                    <div>
+                                        <strong style="color:#fca5a5; font-size:0.92rem;">🚨 P1 - VIP Kritik Filolar</strong>
+                                        <div style="font-size:0.75rem; color:#cbd5e1;">Yüksek ciro geçmişi, birden fazla araç, en acil ziyaret</div>
+                                    </div>
+                                    <span id="kpi-p1-vip-count" class="badge badge-p1" style="font-size:0.9rem;">184 Müşteri</span>
+                                </div>
+
+                                <div style="display:flex; justify-content:space-between; align-items:center; background:rgba(245,158,11,0.1); border:1px solid rgba(245,158,11,0.3); border-radius:10px; padding:0.8rem 1rem; cursor:pointer;" onclick="filterLegacyByPriority('P1 - Acil Churn')">
+                                    <div>
+                                        <strong style="color:#fde68a; font-size:0.92rem;">⏰ P1 - Acil Churn (Son 1-3 Yıldır Gelmeyenler)</strong>
+                                        <div style="font-size:0.75rem; color:#cbd5e1;">Modern portföy, arayı soğutmadan geri kazanım randevusu</div>
+                                    </div>
+                                    <span id="kpi-p1-churn-count" class="badge badge-p2" style="font-size:0.9rem;">742 Müşteri</span>
+                                </div>
+
+                                <div style="display:flex; justify-content:space-between; align-items:center; background:rgba(56,189,248,0.1); border:1px solid rgba(56,189,248,0.3); border-radius:10px; padding:0.8rem 1rem; cursor:pointer;" onclick="filterLegacyByPriority('P1 - Vefa & Geri Kazanım')">
+                                    <div>
+                                        <strong style="color:#93c5fd; font-size:0.92rem;">🤝 P1 - Vefa &amp; Nostaljik Eski Dostlar</strong>
+                                        <div style="font-size:0.75rem; color:#cbd5e1;">1998-2015 arası çalışılmış köklü nakliyeci ve ustalar</div>
+                                    </div>
+                                    <span id="kpi-p1-vefa-count" class="badge badge-p3" style="font-size:0.9rem;">1.399 Müşteri</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Sağ: En Son Görüşme / Ziyaret Kayıtları -->
+                        <div class="table-card" style="margin-bottom:0;">
+                            <div class="table-header-row">
+                                <div class="table-header-title">
+                                    <i class="fa-solid fa-clock-rotate-left" style="color:var(--dizsan-light);"></i> Son Ziyaret ve Telefon Görüşmeleri
+                                </div>
+                                <button type="button" class="btn btn-secondary btn-sm" onclick="switchTab('active-tab')">Tümünü Gör</button>
+                            </div>
+                            <div id="dashboard-recent-visits" style="padding:1rem; display:flex; flex-direction:column; gap:0.65rem;">
+                                <!-- Dinamik olarak JS tarafından doldurulur -->
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- ==============================================================
+                     SEKME 2: ESKİ KAYITLAR (1998-2026 ARŞİV & ZİYARET PLANI)
+                     ============================================================== -->
+                <section id="legacy-tab" class="tab-section">
+                    <!-- Filtreleme Çubuğu -->
+                    <div class="filter-bar">
+                        <div class="filter-group">
+                            <div class="search-box">
+                                <i class="fa-solid fa-magnifying-glass"></i>
+                                <input type="text" id="legacy-search" class="filter-input" placeholder="Müşteri ünvanı, cari kod, yetkili, telefon veya plaka ara..." oninput="renderLegacyCustomers()">
+                            </div>
+
+                            <div class="city-filter-wrapper">
+                                <i class="fa-solid fa-location-dot city-icon"></i>
+                                <input type="text" 
+                                       id="legacy-filter-city" 
+                                       class="filter-input" 
+                                       placeholder="Şehir yaz / seç..." 
+                                       autocomplete="off" 
+                                       spellcheck="false"
+                                       list="legacy-filter-city-list"
+                                       oninput="handleCityFilterInput()" 
+                                       onchange="handleCityFilterChange()"
+                                       onfocus="handleCityInputFocus()"
+                                       onkeydown="handleCityInputKeyDown(event)">
+                                <datalist id="legacy-filter-city-list">
+                                    <!-- Dinamik olarak JS tarafından doldurulur -->
+                                </datalist>
+                                <div class="city-action-btns">
+                                    <button type="button" 
+                                            id="legacy-city-clear-btn" 
+                                            class="city-action-btn" 
+                                            onclick="clearCityFilter(event)" 
+                                            style="display:none;" 
+                                            title="Şehri Temizle">
+                                        <i class="fa-solid fa-xmark"></i>
+                                    </button>
+                                    <button type="button" 
+                                            id="legacy-city-dropdown-btn" 
+                                            class="city-action-btn" 
+                                            onclick="toggleCityDropdown(event)" 
+                                            title="Tüm Şehirleri Göster / Seç">
+                                        <i class="fa-solid fa-chevron-down"></i>
+                                    </button>
+                                </div>
+                                <div id="legacy-city-suggestions" class="city-suggestions-dropdown">
+                                    <!-- Dinamik şehir listesi & arama -->
+                                </div>
+                            </div>
+
+                            <select id="legacy-filter-district" class="filter-input" onchange="renderLegacyCustomers()">
+                                <option value="">📍 Tüm İlçeler</option>
+                            </select>
+
+                            <select id="legacy-filter-rut" class="filter-input" onchange="renderLegacyCustomers()">
+                                <option value="">🚗 Tüm Rutlar (RUT-01..12)</option>
+                            </select>
+
+                            <select id="legacy-filter-priority" class="filter-input" onchange="renderLegacyCustomers()">
+                                <option value="">🎯 Tüm Öncelikler</option>
+                                <option value="P1 - VIP Kritik Filo">P1 - VIP Kritik Filo</option>
+                                <option value="P1 - Acil Churn">P1 - Acil Churn</option>
+                                <option value="P1 - Vefa & Geri Kazanım">P1 - Vefa &amp; Geri Kazanım</option>
+                                <option value="P2">P2 Öncelikli</option>
+                                <option value="P3">P3 Rut Ziyareti</option>
+                            </select>
+
+                            <select id="legacy-filter-balance" class="filter-input" onchange="renderLegacyCustomers()">
+                                <option value="">💰 Bakiye Durumu</option>
+                                <option value="Borçlu">Borçlu Olanlar</option>
+                                <option value="Alacaklı">Alacaklı Olanlar</option>
+                                <option value="Kayıt Yok">Sıfır / Bakiye Yok</option>
+                            </select>
+                        </div>
+
+                        <div style="display:flex; gap:0.5rem;">
+                            <button type="button" class="btn btn-secondary btn-sm" onclick="exportLegacyToExcel()">
+                                <i class="fa-solid fa-file-excel" style="color:#34d399;"></i> Excel (CSV) İndir
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Müşteri Listesi Tablosu -->
+                    <div class="table-card">
+                        <div class="table-header-row">
+                            <div class="table-header-title">
+                                <i class="fa-solid fa-table-list" style="color:var(--dizsan-light);"></i>
+                                <span id="legacy-table-count-label">Kayıp Müşteri Ziyaret Listesi (2.682 Müşteri)</span>
+                            </div>
+                            <div id="legacy-pagination-info" style="font-size:0.8rem; color:var(--text-sec);">
+                                <!-- Sayfalama bilgisi -->
+                            </div>
+                        </div>
+
+                        <div class="table-responsive">
+                            <table class="dizsan-table">
+                                <thead>
+                                    <tr>
+                                        <th>Cari Kodu</th>
+                                        <th>Müşteri / Ünvan</th>
+                                        <th>Yetkili &amp; Telefon</th>
+                                        <th>İl / İlçe / Rut</th>
+                                        <th>Plaka &amp; Araç</th>
+                                        <th>Geçmiş Ciro</th>
+                                        <th>Son Kayıt</th>
+                                        <th>Bakiye</th>
+                                        <th>Öncelik</th>
+                                        <th style="text-align:right;">İşlem</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="legacy-table-body">
+                                    <!-- Dinamik olarak JS tarafından doldurulur -->
+                                </tbody>
+                            </table>
+                        </div>
+
+                        <!-- Sayfalama Kontrolleri -->
+                        <div style="padding:0.85rem 1.25rem; display:flex; justify-content:space-between; align-items:center; background:rgba(0,0,0,0.2); border-top:1px solid var(--border-color);">
+                            <button type="button" id="btn-legacy-prev" class="btn btn-secondary btn-sm" onclick="changeLegacyPage(-1)">
+                                <i class="fa-solid fa-arrow-left"></i> Önceki Sayfa
+                            </button>
+                            <span id="legacy-page-indicator" style="font-size:0.82rem; font-weight:700; color:#fff;">Sayfa 1 / 27</span>
+                            <button type="button" id="btn-legacy-next" class="btn btn-secondary btn-sm" onclick="changeLegacyPage(1)">
+                                Sonraki Sayfa <i class="fa-solid fa-arrow-right"></i>
+                            </button>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- ==============================================================
+                     SEKME 3: GÜNCEL SAHA & ZİYARET KAYITLARI (ACTIVE-TAB)
+                     ============================================================== -->
+                <section id="active-tab" class="tab-section">
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1.25rem; flex-wrap:wrap; gap:0.75rem;">
+                        <div>
+                            <h2 style="font-size:1.15rem; font-weight:800; color:#fff;">🚗 Saha Ziyaretleri &amp; Telefon Görüşme Kayıtları</h2>
+                            <p style="font-size:0.82rem; color:var(--text-sec); margin-top:2px;">Personeller tarafından gerçekleştirilen yüz yüze ziyaretler, yapılan telefon görüşmeleri ve alınan servis randevuları.</p>
+                        </div>
+                        <div style="display:flex; gap:0.5rem;">
+                            <button type="button" class="btn btn-primary" onclick="openVisitModal()">
+                                <i class="fa-solid fa-plus-circle"></i> Yeni Ziyaret / Görüşme Kaydet
+                            </button>
+                            <button type="button" class="btn btn-secondary" onclick="printVisitReport()">
+                                <i class="fa-solid fa-print"></i> Saha Raporu Yazdır (A4)
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Filtreler -->
+                    <div class="filter-bar" style="margin-bottom:1rem;">
+                        <div class="filter-group">
+                            <input type="text" id="active-search" class="filter-input" placeholder="Müşteri, yetkili, not veya personel ara..." oninput="renderActiveVisits()">
+                            <select id="active-filter-type" class="filter-input" onchange="renderActiveVisits()">
+                                <option value="">Tüm Türler (Ziyaret &amp; Telefon)</option>
+                                <option value="ZİYARET">🚗 Saha Ziyareti</option>
+                                <option value="TELEFON">📞 Telefon Görüşmesi</option>
+                            </select>
+                            <select id="active-filter-result" class="filter-input" onchange="renderActiveVisits()">
+                                <option value="">Tüm Sonuçlar</option>
+                                <option value="Olumlu">🤝 Olumlu / Servise Davet Edildi</option>
+                                <option value="Teklif Verildi">📑 Fiyat Teklifi Verildi</option>
+                                <option value="Randevu Alındı">📅 Randevu Alındı</option>
+                                <option value="Takip Edilecek">⏳ Takip Edilecek</option>
+                                <option value="Ulaşılamadı">📵 Ulaşılamadı</option>
+                                <option value="Olumsuz">🚫 Olumsuz</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- Ziyaret Kartları Listesi -->
+                    <div id="active-visits-list" class="visit-list">
+                        <!-- Dinamik olarak JS tarafından doldurulur -->
+                    </div>
+                </section>
+
+                <!-- ==============================================================
+                     SEKME 4: 🤖 YAPAY ZEKA DESTEKLİ TEKLEŞTİRME & ANALİZ (AI-MATCH-TAB)
+                     ============================================================== -->
+                <section id="ai-match-tab" class="tab-section">
+                    <div style="background:linear-gradient(135deg, rgba(139,92,246,0.2), rgba(2,132,199,0.2)); border:1px solid rgba(139,92,246,0.45); border-radius:var(--radius-md); padding:1.25rem; margin-bottom:1.5rem;">
+                        <div style="display:flex; justify-content:space-between; align-items:flex-start; flex-wrap:wrap; gap:0.75rem;">
+                            <div>
+                                <h2 style="font-size:1.2rem; font-weight:800; color:#fff; display:flex; align-items:center; gap:0.6rem;">
+                                    <i class="fa-solid fa-brain" style="color:#c084fc;"></i> Yapay Zeka Destekli Akıllı Analiz &amp; Müşteri Tekleştirme Motoru
+                                </h2>
+                                <p style="font-size:0.84rem; color:#e2e8f0; margin-top:4px; max-width:760px; line-height:1.5;">
+                                    Eski Excel arşivi (1998-2026) ile yeni Logo ERP / canlı saha kayıtları arasındaki <strong>aynı vergi numarası, telefon, plaka ve unvan benzerliklerini</strong> tarar. Çakışan mükerrer kayıtları tek bir <strong>"Birleşik Master Müşteri Kartı"</strong> altında toplar ve sadeleştirir.
+                                </p>
+                            </div>
+                            <button type="button" class="btn btn-primary" onclick="runAiDeduplicationAnalysis()">
+                                <i class="fa-solid fa-arrows-rotate"></i> AI Analizini Yeniden Çalıştır
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- AI Eşleşme ve Sadeleştirme Sonuç Listesi -->
+                    <div id="ai-matches-container">
+                        <!-- Dinamik olarak JS tarafından doldurulur -->
+                    </div>
+                </section>
+
+                <!-- ==============================================================
+                     SEKME 5: AKSİYON & GÖREV TAKİBİ (TASKS-TAB)
+                     ============================================================== -->
+                <section id="tasks-tab" class="tab-section">
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1.25rem; flex-wrap:wrap; gap:0.75rem;">
+                        <div>
+                            <h2 style="font-size:1.15rem; font-weight:800; color:#fff;">🔔 Saha Görevleri &amp; Çift Aşamalı Hatırlatıcılar</h2>
+                            <p style="font-size:0.82rem; color:var(--text-sec); margin-top:2px;">Personele ve yöneticilere atanan arama/ziyaret görevleri. Termin tarihinden <strong>1 gün önce</strong> ve <strong>aynı gün</strong> sesli ve kilit ekranı bildirimi gönderilir.</p>
+                        </div>
+                        <button type="button" class="btn btn-warning" onclick="openTaskModal()">
+                            <i class="fa-solid fa-plus-circle"></i> Yeni Görev / Hatırlatıcı Ata
+                        </button>
+                    </div>
+
+                    <div id="tasks-list-container" style="display:flex; flex-direction:column; gap:0.75rem;">
+                        <!-- Dinamik olarak JS tarafından doldurulur -->
+                    </div>
+                </section>
+
+                <!-- ==============================================================
+                     SEKME 6: İLÇE RUT STRATEJİ & CEO SATIŞ REHBERİ (STRATEGY-TAB)
+                     ============================================================== -->
+                <section id="strategy-tab" class="tab-section">
+                    <div class="filter-bar">
+                        <div class="filter-group">
+                            <input type="text" id="strategy-search" class="filter-input" placeholder="İl, ilçe veya rut ara..." oninput="renderDistrictStrategies()">
+                        </div>
+                    </div>
+
+                    <div class="table-card">
+                        <div class="table-header-row">
+                            <div class="table-header-title">
+                                <i class="fa-solid fa-map-marked-alt" style="color:var(--dizsan-light);"></i>
+                                <span>İl ve İlçe Bazlı 120 Kodlu Müşteri Saha Planı &amp; Müzakere Rehberi (434 Bölge)</span>
+                            </div>
+                        </div>
+
+                        <div class="table-responsive">
+                            <table class="dizsan-table">
+                                <thead>
+                                    <tr>
+                                        <th>Rut Kodu</th>
+                                        <th>İl</th>
+                                        <th>İlçe</th>
+                                        <th>Toplam Cari</th>
+                                        <th>Kayıp (Churn)</th>
+                                        <th>Toplam İşlem</th>
+                                        <th>Bölge Cirosu (TL)</th>
+                                        <th>Saha Ziyaret Odağı &amp; Müzakere Stratejisi</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="strategy-table-body">
+                                    <!-- Dinamik olarak JS tarafından doldurulur -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- ==============================================================
+                     SEKME 7: YÖNETİCİ DENETİM İZİ (LOGS-TAB - SADECE ÖMER EREN)
+                     ============================================================== -->
+                <section id="logs-tab" class="tab-section">
+                    <div style="background:rgba(245,158,11,0.12); border:1px solid rgba(245,158,11,0.4); border-radius:var(--radius-md); padding:1rem 1.25rem; margin-bottom:1.25rem; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:0.6rem;">
+                        <div>
+                            <strong style="color:#fde68a; font-size:0.95rem;"><i class="fa-solid fa-shield-halved"></i> Güvenli Yönetici Denetim İzi (Audit Log):</strong>
+                            <div style="font-size:0.78rem; color:#cbd5e1; margin-top:2px;">Bu ekran ve tüm sistem hareket kayıtları kural gereği <strong>yalnızca Yönetici ÖMER EREN</strong> tarafından görüntülenebilir.</div>
+                        </div>
+                        <button type="button" class="btn btn-secondary btn-sm" onclick="exportLogsCSV()">
+                            <i class="fa-solid fa-file-csv"></i> Logları CSV İndir
+                        </button>
+                    </div>
+
+                    <div class="table-card">
+                        <div class="table-responsive">
+                            <table class="dizsan-table">
+                                <thead>
+                                    <tr>
+                                        <th>Tarih / Saat</th>
+                                        <th>Personel</th>
+                                        <th>Kategori</th>
+                                        <th>İşlem Detayı</th>
+                                        <th>Cihaz / Platform</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="logs-table-body">
+                                    <!-- Dinamik olarak doldurulur -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </section>
+
+            </main>
+        </div>
+    </div>
+
+    <!-- MOBİL ALT NAVİGASYON (BOTTOM BAR) -->
+    <nav class="mobile-nav-bar">
+        <div class="mobile-nav-item active" data-tab="dashboard-tab" onclick="switchTab('dashboard-tab')">
+            <i class="fa-solid fa-chart-pie"></i>
+            <span>Kokpit</span>
+        </div>
+        <div class="mobile-nav-item" data-tab="legacy-tab" onclick="switchTab('legacy-tab')">
+            <i class="fa-solid fa-database"></i>
+            <span>Arşiv</span>
+        </div>
+        <div class="mobile-nav-item" data-tab="active-tab" onclick="switchTab('active-tab')">
+            <i class="fa-solid fa-car-side"></i>
+            <span>Saha</span>
+        </div>
+        <div class="mobile-nav-item" data-tab="ai-match-tab" onclick="switchTab('ai-match-tab')">
+            <i class="fa-solid fa-brain"></i>
+            <span>AI Tekleştir</span>
+        </div>
+        <div class="mobile-nav-item" data-tab="tasks-tab" onclick="switchTab('tasks-tab')">
+            <i class="fa-solid fa-list-check"></i>
+            <span>Görevler</span>
+        </div>
+    </nav>
+
+    <!-- ==========================================================================
+         MODAL 1: YENİ ZİYARET / TELEFON GÖRÜŞMESİ EKLEME
+         ========================================================================== -->
+    <div id="visit-modal" class="modal-backdrop">
+        <div class="modal-box">
+            <div class="modal-header">
+                <h3><i class="fa-solid fa-phone-volume" style="color:var(--dizsan-light);"></i> Ziyaret &amp; Görüşme Kaydı Girişi</h3>
+                <button class="modal-close" onclick="closeVisitModal()">&times;</button>
+            </div>
+            <form id="visit-form" onsubmit="saveVisitRecord(event)">
+                <div class="modal-body">
+                    <div style="display:grid; grid-template-columns:1fr 1fr; gap:0.75rem; margin-bottom:0.85rem;">
+                        <div class="form-group" style="margin-bottom:0;">
+                            <label>Görüşme / İşlem Türü *</label>
+                            <select id="visit-type-select" class="form-control" onchange="updateVisitTravelCalculation()" required>
+                                <option value="ZİYARET">🚗 Yüz Yüze Saha Ziyareti</option>
+                                <option value="TELEFON">📞 Telefon Görüşmesi</option>
+                            </select>
+                        </div>
+                        <div class="form-group" style="margin-bottom:0;">
+                            <label>Görüşme Sonucu *</label>
+                            <select id="visit-result-select" class="form-control" onchange="handleVisitResultChange()" oninput="handleVisitResultChange()" onclick="handleVisitResultChange()" required>
+                                <option value="Olumlu">🤝 Olumlu / Servise Davet Edildi</option>
+                                <option value="Teklif Verildi">📑 Fiyat Teklifi Verildi</option>
+                                <option value="Randevu Alındı">📅 Randevu Alındı</option>
+                                <option value="Takip Edilecek">⏳ Takip Edilecek (Tekrar Aranacak)</option>
+                                <option value="Ulaşılamadı">📵 Ulaşılamadı / Cevap Vermedi</option>
+                                <option value="Olumsuz">🚫 Olumsuz / Başka Servisle Çalışıyor</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Müşteri / Cari Ünvanı *</label>
+                        <input type="text" id="visit-customer-title" class="form-control" placeholder="Müşteri ünvanı veya arşive kayıtlı cari adı..." list="customer-datalist" required>
+                        <datalist id="customer-datalist"></datalist>
+                    </div>
+
+                    <div style="display:grid; grid-template-columns:1fr 1fr; gap:0.75rem; margin-bottom:0.85rem;">
+                        <div class="form-group" style="margin-bottom:0;">
+                            <label>Görüşülen Yetkili / Şoför</label>
+                            <input type="text" id="visit-contact-person" class="form-control" placeholder="Yetkili adı soyadı...">
+                        </div>
+                        <div class="form-group" style="margin-bottom:0;">
+                            <label>İletişim Telefonu</label>
+                            <input type="text" id="visit-phone" class="form-control" placeholder="05xx xxx xx xx">
+                        </div>
+                    </div>
+
+                    <div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:0.75rem; margin-bottom:0.85rem;">
+                        <div class="form-group" style="margin-bottom:0;">
+                            <label>İl / İlçe</label>
+                            <input type="text" id="visit-location" class="form-control" placeholder="Örn: Çorum / Osmancık" oninput="updateVisitTravelCalculation()">
+                        </div>
+                        <div class="form-group" style="margin-bottom:0;">
+                            <label>Plaka / Araç</label>
+                            <input type="text" id="visit-plate" class="form-control" placeholder="19 XX 000">
+                        </div>
+                        <div class="form-group" style="margin-bottom:0;">
+                            <label>Görüşmeyi Yapan Personel *</label>
+                            <select id="visit-personnel-select" class="form-control" required></select>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Görüşme Notları / Müşteri Talebi &amp; Detaylar *</label>
+                        <textarea id="visit-notes" class="form-control" rows="3" placeholder="Görüşme konusu, araç durumu, teklif detayları veya müşteri geri bildirimi..." required></textarea>
+                    </div>
+
+                    <!-- Fotoğraf / Belge Ekleme Alanı -->
+                    <div class="form-group">
+                        <label><i class="fa-solid fa-camera"></i> Fotoğraf, Servis Formu veya Kartvizit Ekle (İsteğe Bağlı)</label>
+                        <input type="file" id="visit-file-input" class="form-control" accept="image/*,.pdf,.doc,.docx" multiple onchange="handleVisitFileUpload(event)">
+                        <div id="visit-file-preview" style="display:flex; gap:0.5rem; flex-wrap:wrap; margin-top:0.4rem;"></div>
+                    </div>
+
+                    <!-- Takip / Hatırlatıcı Görevi Oluşturma (Otomatik Açılan Kademeli Motor) -->
+                    <div id="visit-task-container" style="background:rgba(245,158,11,0.08); border:1px solid rgba(245,158,11,0.3); border-radius:12px; padding:0.85rem; margin-top:0.6rem; transition:all 0.3s ease;">
+                        <label class="checkbox-label" style="margin-bottom:0.4rem; display:flex; align-items:center; gap:0.5rem; cursor:pointer;">
+                            <input type="checkbox" id="visit-create-task-cb" onchange="toggleVisitTaskFields()">
+                            <strong id="visit-task-cb-label" style="color:#fde68a; font-size:0.88rem;"><i class="fa-solid fa-bell"></i> Bu görüşme için takip randevusu / hatırlatıcı görevi oluştur</strong>
+                        </label>
+                        
+                        <div id="visit-task-fields" style="display:none; margin-top:0.65rem;">
+                            <!-- Takip Eylem Türü Seçimi (Telefon veya Ziyaret) -->
+                            <div style="margin-bottom:0.75rem;">
+                                <label style="font-size:0.78rem; font-weight:700; color:#fde68a; display:block; margin-bottom:0.4rem;">
+                                    📌 Takip / Randevu Eylem Türü *
+                                </label>
+                                <div style="display:grid; grid-template-columns:1fr 1fr; gap:0.65rem;">
+                                    <div id="followup-opt-phone" class="followup-type-btn type-phone active" onclick="setFollowupActionType('TELEFON')">
+                                        <i class="fa-solid fa-phone" style="font-size:1.15rem; color:#38bdf8;"></i>
+                                        <div>
+                                            <strong style="display:block; font-size:0.85rem; color:#fff;">📞 Telefon Görüşmesi</strong>
+                                            <span style="font-size:0.72rem; color:#94a3b8;">Tekrar aranacak (1 saat kala sesli uyarı)</span>
+                                        </div>
+                                    </div>
+                                    <div id="followup-opt-visit" class="followup-type-btn type-visit" onclick="setFollowupActionType('ZİYARET')">
+                                        <i class="fa-solid fa-car-side" style="font-size:1.15rem; color:#f59e0b;"></i>
+                                        <div>
+                                            <strong style="display:block; font-size:0.85rem; color:#fff;">🚗 Saha Ziyareti</strong>
+                                            <span style="font-size:0.72rem; color:#94a3b8;">Yüz yüze gidilecek (Mesafe &amp; Çıkış Uyarısı)</span>
+                                        </div>
+                                    </div>
+                                </div>
+                                <input type="hidden" id="visit-followup-type" value="TELEFON">
+                            </div>
+
+                            <div style="display:grid; grid-template-columns:1fr 1fr; gap:0.75rem;">
+                                <div>
+                                    <label style="font-size:0.78rem; font-weight:600; color:#fde68a;">Randevu / Takip Tarihi *</label>
+                                    <input type="date" id="visit-task-date" class="form-control" onchange="handleVisitDateOrTimeChange()">
+                                </div>
+                                <div>
+                                    <label style="font-size:0.78rem; font-weight:600; color:#fde68a;">Randevu Saati *</label>
+                                    <input type="time" id="visit-task-time" class="form-control" value="10:00" onchange="handleVisitDateOrTimeChange()">
+                                </div>
+                            </div>
+
+                            <!-- Telefon Bilgi Kartı (Sadece Telefon Seçiliyken Açılır - KM Yok) -->
+                            <div id="visit-phone-info-box" style="margin-top:0.75rem; background:rgba(56,189,248,0.1); border:1px solid rgba(56,189,248,0.3); border-radius:10px; padding:0.85rem; display:block;">
+                                <!-- JS tarafından dinamik doldurulur -->
+                            </div>
+
+                            <!-- Akıllı Seyahat & Çıkış Uyarısı Canlı Önizleme Kutusu (Sadece Ziyaret Seçiliyken Açılır - KM ve Google Haritalar) -->
+                            <div id="visit-travel-calc-box" class="travel-calc-box" style="display:none;">
+                                <!-- Dinamik içerik updateVisitTravelCalculation tarafından güncellenir -->
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" onclick="closeVisitModal()">İptal</button>
+                    <button type="submit" class="btn btn-primary"><i class="fa-solid fa-check"></i> Kaydet &amp; Senkronize Et</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- ==========================================================================
+         MODAL 2: BAĞIMSIZ YENİ MÜŞTERİ / CARİ KARTI EKLEME
+         ========================================================================== -->
+    <div id="customer-modal" class="modal-backdrop">
+        <div class="modal-box">
+            <div class="modal-header">
+                <h3><i class="fa-solid fa-user-plus" style="color:var(--dizsan-light);"></i> Bağımsız Müşteri / Cari Kartı Tanımla</h3>
+                <button class="modal-close" onclick="closeCustomerModal()">&times;</button>
+            </div>
+            <form id="customer-form" onsubmit="saveNewCustomer(event)">
+                <div class="modal-body">
+                    <div style="display:grid; grid-template-columns:1fr 2fr; gap:0.75rem; margin-bottom:0.85rem;">
+                        <div class="form-group" style="margin-bottom:0;">
+                            <label>Cari Kodu *</label>
+                            <input type="text" id="cust-code" class="form-control" placeholder="120.XX.XXX" required>
+                        </div>
+                        <div class="form-group" style="margin-bottom:0;">
+                            <label>Müşteri / Cari Ünvanı *</label>
+                            <input type="text" id="cust-title" class="form-control" placeholder="Firma veya şahıs ünvanı..." required>
+                        </div>
+                    </div>
+
+                    <div style="display:grid; grid-template-columns:1fr 1fr; gap:0.75rem; margin-bottom:0.85rem;">
+                        <div class="form-group" style="margin-bottom:0;">
+                            <label>Yetkili Kişi</label>
+                            <input type="text" id="cust-auth" class="form-control" placeholder="Yetkili adı...">
+                        </div>
+                        <div class="form-group" style="margin-bottom:0;">
+                            <label>Telefon Numarası *</label>
+                            <input type="text" id="cust-phone" class="form-control" placeholder="05xx xxx xx xx" required>
+                        </div>
+                    </div>
+
+                    <div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:0.75rem; margin-bottom:0.85rem;">
+                        <div class="form-group" style="margin-bottom:0;">
+                            <label>İl *</label>
+                            <input type="text" id="cust-city" class="form-control" placeholder="Örn: Çorum" required>
+                        </div>
+                        <div class="form-group" style="margin-bottom:0;">
+                            <label>İlçe *</label>
+                            <input type="text" id="cust-district" class="form-control" placeholder="Örn: Merkez" required>
+                        </div>
+                        <div class="form-group" style="margin-bottom:0;">
+                            <label>Rut Kodu</label>
+                            <input type="text" id="cust-rut" class="form-control" placeholder="RUT-01" value="RUT-01">
+                        </div>
+                    </div>
+
+                    <div style="display:grid; grid-template-columns:1fr 1fr; gap:0.75rem; margin-bottom:0.85rem;">
+                        <div class="form-group" style="margin-bottom:0;">
+                            <label>Plaka / Filo</label>
+                            <input type="text" id="cust-plates" class="form-control" placeholder="19 XX 000">
+                        </div>
+                        <div class="form-group" style="margin-bottom:0;">
+                            <label>Araç Modeli / Marka</label>
+                            <input type="text" id="cust-model" class="form-control" placeholder="Scania / Ağır Vasıta">
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Açık Adres / Garaj Lokasyonu</label>
+                        <textarea id="cust-address" class="form-control" rows="2" placeholder="Cadde, sokak, sanayi sitesi no..."></textarea>
+                    </div>
+                </div>
+
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" onclick="closeCustomerModal()">İptal</button>
+                    <button type="submit" class="btn btn-success"><i class="fa-solid fa-check"></i> Müşteriyi Kaydet</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- ==========================================================================
+         MODAL 3: GÖREV / HATIRLATICI ATAMA MODALI
+         ========================================================================== -->
+    <div id="task-modal" class="modal-backdrop">
+        <div class="modal-box">
+            <div class="modal-header">
+                <h3><i class="fa-solid fa-bell" style="color:#fbbf24;"></i> Yeni Ziyaret / Arama Görevi Ata</h3>
+                <button class="modal-close" onclick="closeTaskModal()">&times;</button>
+            </div>
+            <form id="task-form" onsubmit="saveTaskRecord(event)">
+                <div class="modal-body">
+                    <div class="form-group">
+                        <label>Görev Başlığı / Amaç *</label>
+                        <input type="text" id="task-title" class="form-control" placeholder="Örn: Filo bakım teklifi için yüz yüze ziyaret..." required>
+                    </div>
+                    <div style="display:grid; grid-template-columns:1fr 1fr; gap:0.75rem; margin-bottom:0.85rem;">
+                        <div class="form-group" style="margin-bottom:0;">
+                            <label>Sorumlu Personel *</label>
+                            <select id="task-assignee" class="form-control" required></select>
+                        </div>
+                        <div class="form-group" style="margin-bottom:0;">
+                            <label>Bilgilendirilen Yönetici *</label>
+                            <select id="task-manager" class="form-control" required></select>
+                        </div>
+                    </div>
+                    <div style="display:grid; grid-template-columns:1fr 1fr; gap:0.75rem; margin-bottom:0.85rem;">
+                        <div class="form-group" style="margin-bottom:0;">
+                            <label>İşlem Türü *</label>
+                            <select id="task-type-select" class="form-control" onchange="updateStandaloneTaskTravelCalc()" required>
+                                <option value="ZİYARET">🚗 Yüz Yüze Saha Ziyareti</option>
+                                <option value="TELEFON">📞 Telefon Görüşmesi</option>
+                            </select>
+                        </div>
+                        <div class="form-group" style="margin-bottom:0;">
+                            <label>Hedef İl / İlçe (Mesafe Hesabı İçin)</label>
+                            <input type="text" id="task-location" class="form-control" placeholder="Örn: Çorum / Osmancık" oninput="updateStandaloneTaskTravelCalc()">
+                        </div>
+                    </div>
+                    <div style="display:grid; grid-template-columns:1fr 1fr; gap:0.75rem; margin-bottom:0.85rem;">
+                        <div class="form-group" style="margin-bottom:0;">
+                            <label>Termin Tarihi *</label>
+                            <input type="date" id="task-duedate" class="form-control" onchange="updateStandaloneTaskTravelCalc()" required>
+                        </div>
+                        <div class="form-group" style="margin-bottom:0;">
+                            <label>Randevu / Görüşme Saati *</label>
+                            <input type="time" id="task-duetime" class="form-control" value="09:30" onchange="updateStandaloneTaskTravelCalc()" required>
+                        </div>
+                    </div>
+                    <div id="task-travel-calc-box" class="travel-calc-box" style="margin-bottom:0.85rem;"></div>
+                    <div class="form-group">
+                        <label>İlgili Müşteri / Açıklama</label>
+                        <input type="text" id="task-desc" class="form-control" placeholder="Müşteri adı veya detay...">
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" onclick="closeTaskModal()">İptal</button>
+                    <button type="submit" class="btn btn-warning"><i class="fa-solid fa-check"></i> Görevi Kaydet &amp; Hatırlatıcı Kur</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- ==========================================================================
+         MODAL 4: 15 SANİYE KİLİT EKRANI PUSH TEST MERKEZİ
+         ========================================================================== -->
+    <div id="push-test-modal" class="modal-backdrop">
+        <div class="modal-box" style="max-width:760px;">
+            <div class="modal-header">
+                <h3><i class="fa-solid fa-satellite-dish" style="color:#38bdf8;"></i> VAPID Web Push &amp; Kilit Ekranı Test Merkezi</h3>
+                <button class="modal-close" onclick="closePushTestCenterModal()">&times;</button>
+            </div>
+            <div id="push-test-modal-body" class="modal-body" style="display:flex; flex-direction:column; gap:1rem;">
+                <!-- Dinamik doldurulur -->
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" onclick="closePushTestCenterModal()">Kapat</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ==========================================================================
+         MODAL 5: QR KODLU KURULUM & REHBER
+         ========================================================================== -->
+    <div id="install-guide-modal" class="modal-backdrop">
+        <div class="modal-box" style="max-width:560px;">
+            <div class="modal-header">
+                <h3><i class="fa-solid fa-mobile-screen" style="color:#34d399;"></i> Telefon ve Tablete Kurulum</h3>
+                <button class="modal-close" onclick="closeInstallGuideModal()">&times;</button>
+            </div>
+            <div class="modal-body" style="text-align:center;">
+                <p style="font-size:0.85rem; color:var(--text-sec); margin-bottom:1rem;">Telefonunuzun veya tabletinizin kamerasından QR kodu okutarak uygulamayı anında açabilirsiniz:</p>
+                <img id="install-qr-img" src="" alt="QR Kod" style="width:190px; height:190px; background:#fff; padding:10px; border-radius:14px; margin-bottom:1rem;">
+                <div style="background:rgba(255,255,255,0.04); border:1px solid var(--border-color); border-radius:12px; padding:0.85rem; font-size:0.82rem; text-align:left; color:#cbd5e1; line-height:1.5;">
+                    • <strong>Apple iPhone / iPad:</strong> Safari'de açtıktan sonra alt ortadaki <strong>Paylaş (⬆️)</strong> butonuna dokunup <strong>"Ana Ekrana Ekle"</strong> seçin.<br>
+                    • <strong>Android Telefon / Tablet:</strong> Chrome veya Samsung Internet sağ üst menüsünden <strong>"Uygulamayı Yükle"</strong> seçeneğine dokunun.
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" onclick="closeInstallGuideModal()">Kapat</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ==========================================================================
+         MODAL 6: ŞİFREMİ UNUTTUM MODALI (E-POSTA DOĞRULAMA KODLU)
+         ========================================================================== -->
+    <div id="forgot-password-modal" class="modal-backdrop">
+        <div class="modal-box" style="max-width:500px;">
+            <div class="modal-header">
+                <h3><i class="fa-solid fa-key" style="color:#f59e0b;"></i> Şifremi Unuttum &amp; Doğrulama</h3>
+                <button class="modal-close" onclick="closeForgotPasswordModal()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div id="forgot-step-1">
+                    <p style="font-size:0.83rem; color:#cbd5e1; margin-bottom:1rem;">Lütfen kullanıcı adınızı ve doğrulama kodunun gönderileceği e-posta adresinizi girin:</p>
+                    <div id="forgot-step1-msg" style="display:none; padding:0.6rem; border-radius:8px; font-size:0.8rem; margin-bottom:0.75rem;"></div>
+                    <div class="form-group">
+                        <label>Kullanıcı Adı veya Personel Adı *</label>
+                        <input type="text" id="forgot-user-identifier" class="form-control" placeholder="Örn: hakan.aydin veya fatih.kiroglu">
+                    </div>
+                    <div class="form-group">
+                        <label>E-Posta Adresi *</label>
+                        <input type="email" id="forgot-manual-email" class="form-control" placeholder="kullanici@kurum.com.tr">
+                    </div>
+                    <button type="button" class="btn btn-primary btn-block" onclick="sendPasswordResetCode()">
+                        <i class="fa-solid fa-paper-plane"></i> Doğrulama Kodu Gönder
+                    </button>
+                </div>
+
+                <div id="forgot-step-2" style="display:none;">
+                    <div id="forgot-sent-info" style="font-size:0.84rem; color:#34d399; margin-bottom:1rem;"></div>
+                    <div id="forgot-step2-msg" style="display:none; padding:0.6rem; border-radius:8px; font-size:0.8rem; margin-bottom:0.75rem;"></div>
+                    <div class="form-group">
+                        <label>6 Haneli Doğrulama Kodu *</label>
+                        <input type="text" id="forgot-verification-code" class="form-control" placeholder="123456" maxlength="6" style="font-size:1.2rem; letter-spacing:4px; text-align:center;">
+                    </div>
+                    <div class="form-group">
+                        <label>Yeni Şifre *</label>
+                        <input type="password" id="forgot-new-password" class="form-control" placeholder="En az 3 karakter">
+                    </div>
+                    <div class="form-group">
+                        <label>Yeni Şifre Tekrarı *</label>
+                        <input type="password" id="forgot-new-password-confirm" class="form-control" placeholder="Şifrenizi tekrar yazın">
+                    </div>
+                    <button type="button" class="btn btn-success btn-block" onclick="verifyAndResetPassword()">
+                        <i class="fa-solid fa-check"></i> Şifreyi Güncelle &amp; Giriş Yap
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ==========================================================================
+         MODAL 7: ACİL YOLA ÇIKIŞ UYARISI & NAVİGASYON MODALI
+         ========================================================================== -->
+    <div id="urgent-departure-modal" class="modal-backdrop">
+        <div class="modal-box" style="max-width:560px; border:2px solid #f59e0b; box-shadow:0 0 50px rgba(245,158,11,0.45);">
+            <div class="modal-header" style="background:rgba(245,158,11,0.18); border-bottom:1px solid rgba(245,158,11,0.35);">
+                <h3 style="color:#fde68a; display:flex; align-items:center; gap:0.5rem;">
+                    <i class="fa-solid fa-car-on" style="color:#f59e0b; font-size:1.35rem;"></i> 
+                    <span>YOLA ÇIKIŞ VAKTİ! Randevuya Hareket Zamanı</span>
+                </h3>
+                <button class="modal-close" onclick="closeUrgentDepartureModal()">&times;</button>
+            </div>
+            <div class="modal-body" id="urgent-departure-modal-body"></div>
+            <div class="modal-footer" id="urgent-departure-modal-footer" style="display:flex; justify-content:space-between; gap:0.5rem; flex-wrap:wrap;"></div>
+        </div>
+    </div>
+
+    <!-- ==========================================================================
+         MODAL 8: SÜRÜM & TÜM CİHAZLARI GÜNCELLEME MERKEZİ (ÖMER EREN & GENEL)
+         ========================================================================== -->
+    <div id="version-modal" class="modal-backdrop">
+        <div class="modal-box" style="max-width:520px;">
+            <div class="modal-header">
+                <h3><i class="fa-solid fa-code-branch" style="color:var(--dizsan-light);"></i> Sürüm &amp; Otomatik Güncelleme Merkezi</h3>
+                <button class="modal-close" onclick="closeVersionModal()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div style="background:rgba(15,23,42,0.8); border:1px solid var(--border-color); border-radius:12px; padding:1rem; margin-bottom:1rem;">
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.75rem;">
+                        <span style="font-size:0.85rem; color:var(--text-muted);">Bu Cihazdaki Aktif Sürüm:</span>
+                        <span class="badge badge-success" style="font-size:0.88rem; padding:4px 10px;" id="modal-device-version">v1.3.3</span>
+                    </div>
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.75rem;">
+                        <span style="font-size:0.85rem; color:var(--text-muted);">Buluttaki En Güncel Sürüm:</span>
+                        <span class="badge" style="background:#0284c7; color:#fff; font-size:0.88rem; padding:4px 10px;" id="modal-cloud-version">v1.3.0</span>
+                    </div>
+                    <div style="display:flex; justify-content:space-between; align-items:center;">
+                        <span style="font-size:0.85rem; color:var(--text-muted);">Yayınlanma Tarihi:</span>
+                        <span style="font-size:0.82rem; color:#fde68a;" id="modal-release-date">15.10.2026 22:15</span>
+                    </div>
+                </div>
+
+                <div style="background:rgba(52,211,153,0.08); border:1px solid rgba(52,211,153,0.25); border-radius:10px; padding:0.85rem; margin-bottom:1rem;">
+                    <div style="display:flex; align-items:center; gap:0.5rem; color:#34d399; font-weight:700; font-size:0.85rem; margin-bottom:0.3rem;">
+                        <i class="fa-solid fa-circle-check"></i>
+                        <span>Sıfır Temas Otomatik Güncelleme Motoru Aktif</span>
+                    </div>
+                    <p style="margin:0; font-size:0.78rem; color:#cbd5e1; line-height:1.45;">
+                        Herhangi bir cihazda veya sunucuda yeni sürüm yayınlandığında; iPhone, iPad, Android, Mac ve Windows üzerindeki tüm açık veya kapalı uygulamalar <strong>otomatik olarak algılayıp kendisini en son sürüme günceller</strong>. Manuel işlem yapmanıza gerek kalmaz.
+                    </p>
+                </div>
+
+                <div style="margin-bottom:1rem;">
+                    <label style="font-size:0.8rem; font-weight:600; color:var(--text-muted); display:block; margin-bottom:0.35rem;">
+                        Son Sürüm Notları (Changelog):
+                    </label>
+                    <div id="modal-release-notes" style="background:rgba(0,0,0,0.3); border:1px solid var(--border-color); border-radius:8px; padding:0.65rem 0.85rem; font-size:0.8rem; color:#e2e8f0; line-height:1.4;">
+                        Tüm cihazlar için otomatik güncelleme motoru ve sürüm kontrol merkezi aktif edildi.
+                    </div>
+                </div>
+
+                <!-- Yönetici (Ömer Eren) Yeni Sürüm Yayına Alma Paneli -->
+                <div id="admin-publish-panel" style="display:none; background:rgba(245,158,11,0.08); border:1px dashed #f59e0b; border-radius:12px; padding:0.9rem; margin-top:1rem;">
+                    <div style="display:flex; align-items:center; gap:0.5rem; color:#fbbf24; font-weight:700; font-size:0.88rem; margin-bottom:0.6rem;">
+                        <i class="fa-solid fa-cloud-arrow-up"></i>
+                        <span>🛡️ Yönetici: Yeni Sürüm Yayınla &amp; Tüm Cihazlarda Güncelle</span>
+                    </div>
+                    <div style="display:grid; grid-template-columns:120px 1fr; gap:0.6rem; margin-bottom:0.6rem;">
+                        <input type="text" id="admin-new-version-input" class="form-control" placeholder="1.3.1" style="font-weight:700;">
+                        <input type="text" id="admin-new-version-notes" class="form-control" placeholder="Yapılan değişiklikleri veya notu yazın...">
+                    </div>
+                    <button type="button" class="btn btn-warning btn-block" onclick="adminPublishNewVersion()">
+                        <i class="fa-solid fa-rocket"></i> Yayına Al &amp; Yüklü Bütün Cihazları Otomatik Güncelle
+                    </button>
+                </div>
+            </div>
+            <div class="modal-footer" style="display:flex; justify-content:space-between; flex-wrap:wrap; gap:0.5rem;">
+                <button type="button" class="btn btn-secondary" onclick="checkForAppUpdates(true)">
+                    <i class="fa-solid fa-rotate"></i> Şimdi Güncellemeleri Denetle
+                </button>
+                <button type="button" class="btn btn-primary" onclick="closeVersionModal()">Kapat</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ==========================================================================
+         MODAL 9: ŞİFRE DEĞİŞTİRME MODALI (GİRİŞ YAPMIŞ PERSONEL İÇİN)
+         ========================================================================== -->
+    <div id="change-password-modal" class="modal-backdrop">
+        <div class="modal-box" style="max-width:480px;">
+            <div class="modal-header">
+                <h3><i class="fa-solid fa-key" style="color:#f59e0b;"></i> Şifre Değiştir</h3>
+                <button class="modal-close" onclick="closeChangePasswordModal()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div style="background:rgba(255,255,255,0.04); border:1px solid var(--border-color); border-radius:12px; padding:0.9rem; margin-bottom:1.1rem; display:flex; align-items:center; gap:0.75rem;">
+                    <img id="change-pass-user-avatar" src="dizsan_logo.jpg" alt="User" style="width:44px; height:44px; border-radius:50%; object-fit:cover; border:2px solid var(--dizsan-light);">
+                    <div>
+                        <div id="change-pass-user-name" style="font-weight:700; color:#ffffff; font-size:0.95rem;">-</div>
+                        <div id="change-pass-user-role" style="font-size:0.8rem; color:var(--text-sec);">-</div>
+                    </div>
+                </div>
+
+                <div id="change-pass-error" style="display:none; background:rgba(239,68,68,0.15); border:1px solid rgba(239,68,68,0.4); color:#fca5a5; padding:0.65rem 0.85rem; border-radius:8px; font-size:0.82rem; margin-bottom:1rem;"></div>
+                <div id="change-pass-success" style="display:none; background:rgba(52,211,153,0.15); border:1px solid rgba(52,211,153,0.4); color:#6ee7b7; padding:0.65rem 0.85rem; border-radius:8px; font-size:0.82rem; margin-bottom:1rem;"></div>
+
+                <form id="change-password-form" onsubmit="handleChangePasswordSubmit(event)">
+                    <div class="form-group">
+                        <label>Mevcut Şifreniz *</label>
+                        <div class="input-with-icon">
+                            <i class="fa-solid fa-lock"></i>
+                            <input type="password" id="change-pass-current" class="form-control" placeholder="Mevcut şifrenizi girin" required autocomplete="current-password">
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Yeni Şifre *</label>
+                        <div class="input-with-icon">
+                            <i class="fa-solid fa-key"></i>
+                            <input type="password" id="change-pass-new" class="form-control" placeholder="En az 3 karakter" required autocomplete="new-password">
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Yeni Şifre Tekrarı *</label>
+                        <div class="input-with-icon">
+                            <i class="fa-solid fa-shield-halved"></i>
+                            <input type="password" id="change-pass-confirm" class="form-control" placeholder="Yeni şifrenizi tekrar girin" required autocomplete="new-password">
+                        </div>
+                    </div>
+
+                    <button type="submit" class="btn btn-primary btn-block" style="margin-top:1.25rem;">
+                        <i class="fa-solid fa-floppy-disk"></i> Yeni Şifreyi Kaydet &amp; Güncelle
+                    </button>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" onclick="closeChangePasswordModal()">Kapat</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- A4 RESMİ SAHA VE ZİYARET TUTANAĞI YAZDIRMA ALANI -->
+    <div id="print-report-area"></div>
+
+    <!-- Scripts -->
+    <script src="auto-date-helper.js"></script>
+    <script src="app.js?v=1.3.3"></script>
+</body>
+</html>
