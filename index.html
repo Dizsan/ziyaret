@@ -20,7 +20,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Outfit:wght@600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     
-    <link rel="stylesheet" href="style.css?v=1.3.3">
+    <link rel="stylesheet" href="style.css?v=1.3.4">
 </head>
 <body>
 
@@ -185,11 +185,11 @@
 
                 <div class="navbar-right">
                     <button type="button" class="btn btn-secondary btn-sm app-version-chip" id="app-version-badge" onclick="openVersionModal()" title="Sürüm ve Cihaz Güncelleme Merkezi">
-                        <i class="fa-solid fa-code-branch" style="color:#38bdf8;"></i> <span id="app-current-version-text">v1.3.3</span>
+                        <i class="fa-solid fa-code-branch" style="color:#38bdf8;"></i> <span id="app-current-version-text">v1.3.4</span>
                     </button>
 
-                    <span id="sync-status-badge" class="status-chip online hide-on-sm">
-                        <i class="fa-solid fa-cloud-arrow-up"></i> <span id="sync-status-text">Bulut &amp; GitHub Aktif</span>
+                    <span id="sync-status-badge" class="status-chip online hide-on-sm" onclick="forceRefreshFromGitHub()" style="cursor:pointer;" title="GitHub'dan Canlı Logo ERP Verilerini Yenile">
+                        <i class="fa-solid fa-arrows-rotate" id="navbar-refresh-icon"></i> <span id="sync-status-text">Logo ERP Canlı: 15.10.2026 22:45</span>
                     </span>
 
                     <button type="button" class="btn btn-secondary btn-sm" onclick="openPushTestCenterModal()">
@@ -231,6 +231,22 @@
                      SEKME 1: GENEL BAKIŞ & KOKPİT (DASHBOARD-TAB)
                      ============================================================== -->
                 <section id="dashboard-tab" class="tab-section active">
+                    <!-- Logo ERP Canlı Veri Akış Çubuğu -->
+                    <div class="logo-erp-live-bar" id="dashboard-logo-live-bar">
+                        <div class="live-bar-left">
+                            <span class="live-pulse"></span>
+                            <div class="live-bar-texts">
+                                <span class="live-bar-title"><i class="fa-solid fa-database"></i> Logo ERP Canlı Veri Akışı (GitHub Senkron)</span>
+                                <span class="live-bar-sub" id="live-bar-timestamp">Sorgu Zamanı: 15.10.2026 22:45 | Son Fatura Anı: 20.08.2026 23:59:59 | 2.682 Müşteri &amp; Canlı Servis Geçmişi</span>
+                            </div>
+                        </div>
+                        <div class="live-bar-right">
+                            <button type="button" class="btn btn-secondary btn-sm" onclick="forceRefreshFromGitHub()" id="btn-dashboard-refresh">
+                                <i class="fa-solid fa-arrows-rotate" id="bar-refresh-icon"></i> <span>GitHub'dan Anlık Çek</span>
+                            </button>
+                        </div>
+                    </div>
+
                     <!-- KPI Kartları -->
                     <div class="kpi-grid">
                         <div class="kpi-card">
@@ -1047,7 +1063,7 @@
                 <div style="background:rgba(15,23,42,0.8); border:1px solid var(--border-color); border-radius:12px; padding:1rem; margin-bottom:1rem;">
                     <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.75rem;">
                         <span style="font-size:0.85rem; color:var(--text-muted);">Bu Cihazdaki Aktif Sürüm:</span>
-                        <span class="badge badge-success" style="font-size:0.88rem; padding:4px 10px;" id="modal-device-version">v1.3.3</span>
+                        <span class="badge badge-success" style="font-size:0.88rem; padding:4px 10px;" id="modal-device-version">v1.3.4</span>
                     </div>
                     <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.75rem;">
                         <span style="font-size:0.85rem; color:var(--text-muted);">Buluttaki En Güncel Sürüm:</span>
@@ -1159,11 +1175,30 @@
         </div>
     </div>
 
+    <!-- 10. MÜŞTERİ DETAY VE LOGO ERP GEÇMİŞİ MODALI -->
+    <div id="customer-detail-modal" class="modal-backdrop">
+        <div class="modal-box" style="max-width:850px;">
+            <div class="modal-header">
+                <div>
+                    <h3 id="cd-title" style="margin-bottom:0.25rem;"><i class="fa-solid fa-file-invoice" style="color:var(--dizsan-light);"></i> Müşteri &amp; Logo ERP Detayı</h3>
+                    <div id="cd-subtitle" style="font-size:0.78rem; color:var(--text-sec);">Cari Kodu ve Bilgileri</div>
+                </div>
+                <button class="modal-close" onclick="closeCustomerDetailModal()">&times;</button>
+            </div>
+            <div class="modal-body" id="cd-modal-body">
+                <!-- Dinamik içerik app.js tarafından üretilir -->
+            </div>
+            <div class="modal-footer" id="cd-modal-footer">
+                <button type="button" class="btn btn-secondary" onclick="closeCustomerDetailModal()">Kapat</button>
+            </div>
+        </div>
+    </div>
+
     <!-- A4 RESMİ SAHA VE ZİYARET TUTANAĞI YAZDIRMA ALANI -->
     <div id="print-report-area"></div>
 
     <!-- Scripts -->
     <script src="auto-date-helper.js"></script>
-    <script src="app.js?v=1.3.3"></script>
+    <script src="app.js?v=1.3.4"></script>
 </body>
 </html>

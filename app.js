@@ -12,7 +12,7 @@
  */
 
 const INITIAL_APP_VERSION = "v1.3.0";
-const CURRENT_APP_VERSION = "1.3.3";
+const CURRENT_APP_VERSION = "1.3.4";
 let hasShownUpdateNotice = false;
 const VAPID_PUBLIC_KEY = "BJIJfCBiDwya3clZOWS08EDxfuN18xtfJGTX0n_apWBTEW7-kO_FGKNy5VDRvUsMgc46IP5oxLlIHqgrDo-JTkE";
 const STORAGE_KEY_STATE = "dizsan_ziyaret_shared_state_v1";
@@ -501,38 +501,143 @@ async function adminPublishNewVersion() {
 // ==========================================================================
 // 1. VERİ BAŞLATMA, GÖMÜLÜ VERİTABANI VE SENKRONİZASYON
 // ==========================================================================
+let liveSyncIntervalId = null;
+
 async function loadInitialData() {
+    // 1. Aşama: Kullanıcıyı asla bekletmemek için yerel önbellek varsa 0 ms ile yükle
     const raw = localStorage.getItem(STORAGE_KEY_STATE);
-    let stateLoaded = false;
     if (raw) {
         try {
             const parsed = JSON.parse(raw);
             if (parsed && Array.isArray(parsed.customers) && parsed.customers.length > 0) {
                 parsed.users = migrateOfficialUserEmails(parsed.users);
                 appState = { ...appState, ...parsed };
-                stateLoaded = true;
+                updateLogoLiveIndicator();
             }
         } catch (e) {}
     }
 
-    // Eğer yerel hafızada müşteri havuzu yoksa customer_database.json'dan 0 ms ile yükle
-    if (!stateLoaded || (appState.customers || []).length === 0) {
-        try {
-            const resp = await fetch('customer_database.json?t=' + Date.now());
-            if (resp.ok) {
-                const dbJson = await resp.json();
-                appState.customers = dbJson.customers || [];
-                appState.districtStrategies = dbJson.districtStrategies || {};
-                saveStateLocally();
-            }
-        } catch (err) {}
+    // 2. Aşama: DizGün ekosistem köprüsünü senkronize et
+    syncWithDizGunBridge();
+
+    // 3. Aşama: Logo ERP ve müşteri verilerini GitHub'dan ANLIK ve CANLI çek (önbellek baypas edilerek)
+    fetchLiveGitHubData(true);
+
+    // 4. Aşama: 30 saniyede bir GitHub canlı senkronizasyonunu arka planda sürdür
+    if (!liveSyncIntervalId) {
+        liveSyncIntervalId = setInterval(() => {
+            fetchLiveGitHubData(false);
+        }, 30000);
+    }
+}
+
+function updateLogoLiveIndicator() {
+    const meta = appState.logoMetadata || {};
+    const queryDateStr = meta.queryDateFormatted || '15.10.2026 22:45';
+    const invMoment = meta.latestInvoiceMoment || '20.08.2026 23:59:59';
+    const totalCust = (appState.customers || []).length.toLocaleString('tr-TR');
+
+    const badgeText = document.getElementById('sync-status-text');
+    if (badgeText) {
+        badgeText.textContent = `Logo ERP Canlı: ${queryDateStr}`;
     }
 
-    // DizGün ortak ekosistemiyle senkronize et
-    syncWithDizGunBridge();
-    // GitHub API üzerinden en güncel bulut verisini çek
-    syncFromServer();
+    const subText = document.getElementById('live-bar-timestamp');
+    if (subText) {
+        subText.textContent = `Sorgu Zamanı: ${queryDateStr} | Son Fatura Anı: ${invMoment} | ${totalCust} Müşteri & Canlı Servis Geçmişi`;
+    }
 }
+
+async function forceRefreshFromGitHub() {
+    const navIcon = document.getElementById('navbar-refresh-icon');
+    const barIcon = document.getElementById('bar-refresh-icon');
+    if (navIcon) navIcon.classList.add('spinning');
+    if (barIcon) barIcon.classList.add('spinning');
+
+    try {
+        const success = await fetchLiveGitHubData(false);
+        const meta = appState.logoMetadata || {};
+        const qTime = meta.queryDateFormatted || formatNowTR();
+        showToast(`🟢 Logo ERP verileri GitHub'dan canlı olarak çekildi ve güncellendi! (Sorgu: ${qTime})`, 'success');
+    } catch (err) {
+        showToast('Senkronizasyon uyarısı: ' + err.message, 'danger');
+    } finally {
+        setTimeout(() => {
+            if (navIcon) navIcon.classList.remove('spinning');
+            if (barIcon) barIcon.classList.remove('spinning');
+        }, 600);
+    }
+}
+
+async function fetchLiveGitHubData(isInitial = false) {
+    const sources = [
+        'shared_state.json?t=' + Date.now(),
+        'https://raw.githubusercontent.com/Dizsan/ziyaret/main/shared_state.json?t=' + Date.now(),
+        'customer_database.json?t=' + Date.now(),
+        'https://raw.githubusercontent.com/Dizsan/ziyaret/main/customer_database.json?t=' + Date.now()
+    ];
+
+    let liveData = null;
+    for (const src of sources) {
+        try {
+            const res = await fetch(src, { cache: 'no-store' });
+            if (res.ok) {
+                const parsed = await res.json();
+                if (parsed && Array.isArray(parsed.customers) && parsed.customers.length > 0) {
+                    liveData = parsed;
+                    break;
+                }
+            }
+        } catch (e) {}
+    }
+
+    if (!liveData) return false;
+
+    let hasChanges = false;
+    if (liveData.customers && liveData.customers.length > 0) {
+        appState.customers = liveData.customers;
+        hasChanges = true;
+    }
+    if (liveData.districtStrategies && Object.keys(liveData.districtStrategies).length > 0) {
+        appState.districtStrategies = liveData.districtStrategies;
+        hasChanges = true;
+    }
+    if (liveData.logoMetadata) {
+        appState.logoMetadata = liveData.logoMetadata;
+        hasChanges = true;
+    }
+    if (liveData.users && liveData.users.length > 0) {
+        appState.users = migrateOfficialUserEmails(liveData.users);
+    }
+
+    // Cihazdaki bekleyen yerel kayıtları koruyarak bulut ziyaretlerini birleştir
+    if (Array.isArray(liveData.visits) && liveData.visits.length > (appState.visits || []).length) {
+        appState.visits = liveData.visits;
+        hasChanges = true;
+    }
+    if (Array.isArray(liveData.tasks) && liveData.tasks.length > (appState.tasks || []).length) {
+        appState.tasks = liveData.tasks;
+        hasChanges = true;
+    }
+
+    // Sürüm kontrolü
+    if (liveData.latestVersion && liveData.latestVersion.version) {
+        if (compareVersions(liveData.latestVersion.version, CURRENT_APP_VERSION) > 0) {
+            triggerZeroTouchAppUpdate(liveData.latestVersion);
+        }
+    } else if (liveData.version && compareVersions(liveData.version, CURRENT_APP_VERSION) > 0) {
+        triggerZeroTouchAppUpdate({ version: liveData.version, releaseNotes: 'GitHub üzerinden yeni sürüm alındı.' });
+    }
+
+    if (hasChanges || isInitial) {
+        saveStateLocally();
+        updateLogoLiveIndicator();
+        renderAll();
+        return true;
+    }
+    return false;
+}
+
 
 function saveStateLocally() {
     appState.users = migrateOfficialUserEmails(appState.users);
@@ -626,37 +731,7 @@ async function pushStateToGitHubCloud(isRetry = false) {
 async function syncFromServer() {
     if (isCloudPutInFlight || hasPendingCloudPut || (Date.now() - lastLocalSaveTime < 6000)) return;
     try {
-        const token = getCloudAuthToken();
-        const res = await fetch(`${CLOUD_API_URL}?t=${Date.now()}`, {
-            headers: { 'Authorization': `token ${token}`, 'Accept': 'application/vnd.github.v3+json' },
-            cache: 'no-store'
-        });
-        if (res.ok) {
-            const fileObj = await res.json();
-            lastKnownCloudSha = fileObj.sha;
-            if (fileObj.content) {
-                const cloudData = JSON.parse(decodeUTF8Base64(fileObj.content));
-                if (cloudData && Array.isArray(cloudData.customers) && cloudData.customers.length > 0) {
-                    const localTime = new Date(appState.updatedAt || 0).getTime();
-                    const cloudTime = new Date(cloudData.updatedAt || 0).getTime();
-                    if (cloudTime > localTime) {
-                        cloudData.users = migrateOfficialUserEmails(cloudData.users);
-                        appState = cloudData;
-                        saveStateLocally();
-                        renderAll();
-                    }
-                }
-                if (cloudData && cloudData.latestVersion && cloudData.latestVersion.version) {
-                    if (compareVersions(cloudData.latestVersion.version, CURRENT_APP_VERSION) > 0) {
-                        triggerZeroTouchAppUpdate(cloudData.latestVersion);
-                    }
-                } else if (cloudData && cloudData.version) {
-                    if (compareVersions(cloudData.version, CURRENT_APP_VERSION) > 0) {
-                        triggerZeroTouchAppUpdate({ version: cloudData.version, releaseNotes: 'Buluttan yeni sürüm alındı.' });
-                    }
-                }
-            }
-        }
+        await fetchLiveGitHubData(false);
     } catch (e) {}
 }
 
@@ -1409,8 +1484,8 @@ function renderLegacyCustomers() {
             <tr>
                 <td style="font-family:monospace; color:var(--dizsan-light); font-weight:700;">${c.code}</td>
                 <td>
-                    <strong style="color:#fff; font-size:0.86rem; display:block;">${c.title}</strong>
-                    <span style="font-size:0.72rem; color:var(--text-muted);">${c.address || c.era || ''}</span>
+                    <strong style="color:#fff; font-size:0.86rem; display:block; cursor:pointer;" onclick="openCustomerDetailModal('${c.code}')" title="Detay ve Logo ERP Fatura/Servis Geçmişini Gör">${c.title}</strong>
+                    <span style="font-size:0.72rem; color:var(--text-muted); cursor:pointer;" onclick="openCustomerDetailModal('${c.code}')">${c.address || c.era || ''}</span>
                 </td>
                 <td>
                     <div style="font-weight:600; color:#e2e8f0;">${c.authorized || '-'}</div>
@@ -1437,6 +1512,9 @@ function renderLegacyCustomers() {
                 <td><span class="badge ${badgeCls}">${c.priority || 'Normal'}</span></td>
                 <td style="text-align:right;">
                     <div style="display:flex; justify-content:flex-end; gap:0.35rem;">
+                        <button type="button" class="btn btn-secondary btn-sm" title="Logo ERP Fatura &amp; Servis Geçmişi" onclick="openCustomerDetailModal('${c.code}')">
+                            <i class="fa-solid fa-file-invoice"></i> Logo Detay
+                        </button>
                         <button type="button" class="btn btn-primary btn-sm" title="Ziyaret / Görüşme Başlat" onclick="quickStartVisitForCustomer('${c.code}')">
                             <i class="fa-solid fa-phone"></i> Ziyaret / Ara
                         </button>
@@ -1465,6 +1543,162 @@ function exportLegacyToExcel() {
     a.download = `Dizsan_Kayip_Musteri_Plani_${new Date().toISOString().slice(0, 10)}.csv`;
     a.click();
     addAuditLog("DIŞA AKTARMA", "Kayıp müşteri ziyaret planı Excel (CSV) olarak indirildi.");
+}
+
+function openCustomerDetailModal(code) {
+    const customer = (appState.customers || []).find(c => c.code === code);
+    if (!customer) {
+        showToast('Müşteri bulunamadı: ' + code, 'danger');
+        return;
+    }
+
+    const modal = document.getElementById('customer-detail-modal');
+    if (!modal) return;
+
+    const cdTitle = document.getElementById('cd-title');
+    const cdSubtitle = document.getElementById('cd-subtitle');
+    const cdBody = document.getElementById('cd-modal-body');
+    const cdFooter = document.getElementById('cd-modal-footer');
+
+    if (cdTitle) {
+        cdTitle.innerHTML = `<i class="fa-solid fa-file-invoice" style="color:var(--dizsan-light);"></i> ${customer.title}`;
+    }
+    if (cdSubtitle) {
+        cdSubtitle.innerHTML = `<span style="font-family:monospace; color:#38bdf8; font-weight:700;">${customer.code}</span> | ${customer.city} / ${customer.district} | ${customer.rut || 'RUT BELİRSİZ'} | Logo ERP: <span style="color:#34d399;">Canlı &amp; Doğrulanmış</span>`;
+    }
+
+    const cleanPhone = (customer.phone || '').replace(/[^0-9]/g, '');
+    const cleanAddress = customer.address || `${customer.title} ${customer.city} ${customer.district}`;
+    const mapsUrl = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(cleanAddress)}`;
+
+    const historyItems = customer.serviceHistory || [];
+    let historyHtml = '';
+    if (historyItems.length > 0) {
+        historyHtml = `
+            <div style="overflow-x:auto; max-height:280px; border:1px solid var(--border-color); border-radius:var(--radius-md);">
+                <table class="service-history-table">
+                    <thead>
+                        <tr>
+                            <th>Tarih</th>
+                            <th>Fatura No</th>
+                            <th>Yapılan İşlem / Servis</th>
+                            <th>KM</th>
+                            <th style="text-align:right;">Tutar</th>
+                            <th>Vade / Ödeme</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${historyItems.map(h => `
+                            <tr>
+                                <td style="white-space:nowrap; font-weight:600; color:#38bdf8;">${h.tarih || '-'}</td>
+                                <td style="font-family:monospace; font-size:0.74rem;">${h.fatura_no || '-'}</td>
+                                <td style="max-width:240px; white-space:normal;">${h.islem || '-'}</td>
+                                <td>${h.km ? Number(h.km).toLocaleString('tr-TR') + ' KM' : '-'}</td>
+                                <td style="text-align:right; font-weight:700; color:#34d399;">${formatMoney(h.tutar || 0)}</td>
+                                <td style="font-size:0.72rem; color:var(--text-sec);">${h.odeme_tipi || '-'}</td>
+                            </tr>
+                        `).join('')}
+                    </tbody>
+                </table>
+            </div>
+        `;
+    } else {
+        historyHtml = `
+            <div style="background:rgba(255,255,255,0.02); border:1px dashed var(--border-color); border-radius:var(--radius-md); padding:1rem; text-align:center; color:var(--text-sec); font-size:0.82rem;">
+                <i class="fa-solid fa-circle-info" style="color:#38bdf8;"></i> Bu cari karta ait ayrıntılı servis fatura satırı bulunmamaktadır.<br>
+                Logo ERP son fatura tarihi: <strong style="color:#fff;">${customer.lastDate || '-'}</strong> | Bakiye: <strong style="color:#fff;">${formatMoney(customer.balance)}</strong> (${customer.balanceStatus || 'Kayıt Yok'})
+            </div>
+        `;
+    }
+
+    cdBody.innerHTML = `
+        <div class="detail-kpi-grid">
+            <div class="detail-kpi-card">
+                <span class="detail-kpi-title">Son Geliş / Fatura</span>
+                <span class="detail-kpi-value" style="color:#38bdf8;">${customer.lastDate || '-'}</span>
+                <span class="detail-kpi-sub" style="color:#f87171;">${customer.churnDuration || 'Kayıp Süresi Bilinmiyor'}</span>
+            </div>
+            <div class="detail-kpi-card">
+                <span class="detail-kpi-title">Logo ERP Bakiyesi</span>
+                <span class="detail-kpi-value" style="color:${customer.balance > 0 ? '#f87171' : customer.balance < 0 ? '#34d399' : '#94a3b8'};">
+                    ${formatMoney(customer.balance)}
+                </span>
+                <span class="detail-kpi-sub">${customer.balanceStatus || 'Bakiye Yok'}</span>
+            </div>
+            <div class="detail-kpi-card">
+                <span class="detail-kpi-title">Tarihsel Ciro</span>
+                <span class="detail-kpi-value" style="color:#34d399;">${formatMoney(customer.totalRevenue)}</span>
+                <span class="detail-kpi-sub">${customer.totalOperations || 0} Fatura / İşlem</span>
+            </div>
+            <div class="detail-kpi-card">
+                <span class="detail-kpi-title">Kayıtlı Araç / Plaka</span>
+                <span class="detail-kpi-value" style="font-size:0.85rem; color:#fde68a;">${customer.plates || 'Plakasız'}</span>
+                <span class="detail-kpi-sub">${customer.vehicleModel || 'Ağır Vasıta'}</span>
+            </div>
+        </div>
+
+        <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(280px, 1fr)); gap:1rem; margin-bottom:1.25rem;">
+            <div style="background:rgba(255,255,255,0.02); border:1px solid var(--border-color); border-radius:var(--radius-md); padding:0.85rem;">
+                <div class="detail-section-title"><i class="fa-solid fa-address-book"></i> Yetkili ve İletişim Bilgileri</div>
+                <div style="display:flex; flex-direction:column; gap:0.5rem; font-size:0.82rem;">
+                    <div><span style="color:var(--text-muted);">Yetkili / Şoför:</span> <strong style="color:#fff;">${customer.authorized || 'Bilinmiyor'}</strong></div>
+                    <div><span style="color:var(--text-muted);">Telefon:</span> <strong style="color:#38bdf8;">${customer.phone || 'YOK'}</strong></div>
+                    ${customer.loyaltyLevel ? `<div><span style="color:var(--text-muted);">Sadakat Seviyesi:</span> <span class="badge badge-success">${customer.loyaltyLevel}</span></div>` : ''}
+                    ${customer.lastKm ? `<div><span style="color:var(--text-muted);">Son Servis KM:</span> <strong style="color:#fde68a;">${Number(customer.lastKm).toLocaleString('tr-TR')} KM</strong></div>` : ''}
+                    ${customer.lastOperation ? `<div><span style="color:var(--text-muted);">Son İşlem:</span> <span style="color:#e2e8f0; font-size:0.75rem;">${customer.lastOperation}</span></div>` : ''}
+                </div>
+                <div style="display:flex; gap:0.5rem; margin-top:0.75rem; flex-wrap:wrap;">
+                    ${customer.phone && customer.phone !== 'YOK' ? `
+                        <a href="tel:${customer.phone}" class="btn btn-primary btn-sm"><i class="fa-solid fa-phone"></i> Hemen Ara</a>
+                        <a href="https://wa.me/${cleanPhone}" target="_blank" class="btn btn-success btn-sm"><i class="fa-brands fa-whatsapp"></i> WhatsApp</a>
+                    ` : ''}
+                </div>
+            </div>
+
+            <div style="background:rgba(255,255,255,0.02); border:1px solid var(--border-color); border-radius:var(--radius-md); padding:0.85rem;">
+                <div class="detail-section-title"><i class="fa-solid fa-location-dot"></i> Resmi Logo CLCARD Adresi</div>
+                <div style="font-size:0.82rem; color:#e2e8f0; line-height:1.45; min-height:48px;">
+                    ${customer.address || 'Kayıtlı açık adres bulunmuyor.'}
+                </div>
+                <div style="font-size:0.75rem; color:var(--text-muted); margin-top:0.4rem;">
+                    Bölge: <strong style="color:#fff;">${customer.city} / ${customer.district}</strong> (${customer.rut || '-'})
+                </div>
+                <div style="margin-top:0.75rem;">
+                    <a href="${mapsUrl}" target="_blank" class="btn btn-secondary btn-sm" style="display:inline-flex; align-items:center; gap:0.35rem;">
+                        <i class="fa-solid fa-map-location-dot" style="color:#38bdf8;"></i> Google Haritalar Yol Tarifi
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <div>
+            <div class="detail-section-title">
+                <i class="fa-solid fa-receipt"></i> Logo ERP Fatura ve Servis Hareketleri (Son Gelişler)
+                ${historyItems.length > 0 ? `<span class="badge badge-secondary" style="margin-left:auto;">${historyItems.length} Kayıt</span>` : ''}
+            </div>
+            ${historyHtml}
+        </div>
+    `;
+
+    cdFooter.innerHTML = `
+        <div style="display:flex; justify-content:space-between; width:100%; align-items:center; flex-wrap:wrap; gap:0.5rem;">
+            <button type="button" class="btn btn-primary" onclick="quickStartVisitForCustomer('${customer.code}'); closeCustomerDetailModal();">
+                <i class="fa-solid fa-phone-volume"></i> Ziyaret / Görüşme Başlat
+            </button>
+            <button type="button" class="btn btn-secondary" onclick="closeCustomerDetailModal()">Kapat</button>
+        </div>
+    `;
+
+    modal.classList.add('open');
+    modal.style.display = 'flex';
+}
+
+function closeCustomerDetailModal() {
+    const modal = document.getElementById('customer-detail-modal');
+    if (modal) {
+        modal.classList.remove('open');
+        modal.style.display = 'none';
+    }
 }
 
 // ==========================================================================
@@ -3544,7 +3778,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     // Service Worker Kaydı & Canlı Güncelleme Dinleyicisi (v1.3.0)
     if ('serviceWorker' in navigator) {
-        navigator.serviceWorker.register('sw.js?v=1.3.3').then(reg => {
+        navigator.serviceWorker.register('sw.js?v=1.3.4').then(reg => {
             reg.update();
             reg.addEventListener('updatefound', () => {
                 const newWorker = reg.installing;

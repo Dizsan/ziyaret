@@ -1,9 +1,9 @@
 {
   "appId": "ziyaret",
   "appName": "Dizsan Müşteri Ziyaret & Saha Takip",
-  "version": "1.3.3",
-  "build": 133,
-  "releasedAt": "2026-10-15 22:33:33",
-  "releaseNotes": "Sifre degistirme ve sifremi unuttum ozellikleri eklendi",
+  "version": "1.3.4",
+  "build": 134,
+  "releasedAt": "2026-10-15 22:42:33",
+  "releaseNotes": "Logo ERP anlik ve son gelisler verisi GitHub ile senkronize edildi",
   "author": "Ömer Eren & DİZSAN"
 }

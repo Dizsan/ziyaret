@@ -1362,9 +1362,149 @@ body {
     gap: 0.75rem;
 }
 
-@keyframes slideDownUpdate {
-    from { transform: translateY(-100%); opacity: 0; }
-    to { transform: translateY(0); opacity: 1; }
+/* LOGO ERP CANLI VERİ ÇUBUĞU VE SENKRONİZASYON */
+.logo-erp-live-bar {
+    background: linear-gradient(135deg, rgba(15, 23, 42, 0.95), rgba(30, 41, 59, 0.95));
+    border: 1px solid rgba(16, 185, 129, 0.4);
+    border-radius: var(--radius-md);
+    padding: 0.85rem 1.25rem;
+    margin-bottom: 1.25rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 0.85rem;
+    box-shadow: 0 4px 20px rgba(16, 185, 129, 0.15);
+}
+
+.live-bar-left {
+    display: flex;
+    align-items: center;
+    gap: 0.85rem;
+}
+
+.live-pulse {
+    width: 12px;
+    height: 12px;
+    background-color: #10b981;
+    border-radius: 50%;
+    box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7);
+    animation: livePulseAnim 1.8s infinite;
+    flex-shrink: 0;
+}
+
+@keyframes livePulseAnim {
+    0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7); }
+    70% { transform: scale(1.1); box-shadow: 0 0 0 10px rgba(16, 185, 129, 0); }
+    100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(16, 185, 129, 0); }
+}
+
+.live-bar-texts {
+    display: flex;
+    flex-direction: column;
+    gap: 0.2rem;
+}
+
+.live-bar-title {
+    font-size: 0.92rem;
+    font-weight: 800;
+    color: #34d399;
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+}
+
+.live-bar-sub {
+    font-size: 0.76rem;
+    color: var(--text-sec);
+}
+
+.live-bar-right {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.spinning {
+    animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+    100% { transform: rotate(360deg); }
+}
+
+/* CUSTOMER DETAIL MODAL STYLES */
+.detail-kpi-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+    gap: 0.75rem;
+    margin-bottom: 1.25rem;
+}
+
+.detail-kpi-card {
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-md);
+    padding: 0.75rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+}
+
+.detail-kpi-title {
+    font-size: 0.7rem;
+    color: var(--text-muted);
+    font-weight: 600;
+    text-transform: uppercase;
+}
+
+.detail-kpi-value {
+    font-size: 1.05rem;
+    font-weight: 800;
+    color: #fff;
+}
+
+.detail-kpi-sub {
+    font-size: 0.72rem;
+    color: var(--text-sec);
+}
+
+.detail-section-title {
+    font-size: 0.88rem;
+    font-weight: 700;
+    color: var(--dizsan-light);
+    margin-bottom: 0.65rem;
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+    padding-bottom: 0.35rem;
+}
+
+.service-history-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.78rem;
+    margin-top: 0.5rem;
+}
+
+.service-history-table th {
+    background: rgba(15, 23, 42, 0.9);
+    color: #94a3b8;
+    text-align: left;
+    padding: 0.5rem 0.65rem;
+    font-weight: 700;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.service-history-table td {
+    padding: 0.5rem 0.65rem;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    color: #e2e8f0;
+}
+
+.service-history-table tr:hover {
+    background: rgba(255, 255, 255, 0.02);
 }
 
 
