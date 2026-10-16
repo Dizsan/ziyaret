@@ -138,6 +138,12 @@
         "payment_date": "2026-10-16",
         "source": "Merkez Kasa",
         "notes": ""
+      },
+      "24": {
+        "is_paid": true,
+        "payment_date": "2026-10-16",
+        "source": "Merkez Kasa",
+        "notes": ""
       }
     },
     "ziraat_bankasi": {
@@ -183,5 +189,5 @@
     "vakifbank_otomotiv": {}
   },
   "customLoans": {},
-  "lastUpdated": "2026-10-16T19:18:19.856Z"
+  "lastUpdated": "2026-10-16T19:18:23.063Z"
 }
