@@ -1,5 +1,5 @@
 {
-  "version": "v1.3.0",
+  "version": "v1.5.3",
   "users": [
     {
       "order": 0,
@@ -193020,8 +193020,8 @@
       "platform": "Android / Mobil"
     }
   ],
-  "updatedAt": "2026-10-16T09:56:15.971Z",
-  "stateRevision": 45,
+  "updatedAt": "2026-10-16T13:00:54.978286",
+  "stateRevision": 43,
   "cities": [
     "Adana",
     "Adıyaman",
@@ -193188,5 +193188,13 @@
     "source": "Logo ERP Canlı Veritabanı (192.168.1.200:1433 LKSDB)",
     "realtimeSyncChannel": "GitHub Live API & Raw CDN",
     "status": "Aktif & Güncel (Sorgu Tarihindeki Son An: 15.10.2026)"
-  }
+  },
+  "appVersion": "1.5.3",
+  "latestVersion": {
+    "version": "1.5.3",
+    "releaseNotes": "Stil dosyası (style.css) bağlantısı düzeltildi ve kayıt/değişiklik izleme (Audit) alanları aktif edildi",
+    "releasedAt": "2026-10-16 13:00:54"
+  },
+  "versionUpdatedAt": "2026-10-16 13:00:54",
+  "versionReleaseNotes": "Stil dosyası (style.css) bağlantısı düzeltildi ve kayıt/değişiklik izleme (Audit) alanları aktif edildi"
 }
