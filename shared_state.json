@@ -193042,7 +193042,7 @@
       "platform": "Android / Mobil"
     }
   ],
-  "updatedAt": "2026-10-16T19:36:44.284837Z",
+  "updatedAt": "2026-10-16T19:37:08.622283Z",
   "stateRevision": 41,
   "cities": [
     "Adana",
@@ -193211,7 +193211,7 @@
     "realtimeSyncChannel": "GitHub Live API & Raw CDN",
     "status": "Aktif & Güncel (Sorgu Tarihindeki Son An: 15.10.2026)"
   },
-  "appVersion": "v1.5.4: Sonsuz otomatik yenileme (reload loop) ve Service Worker cakismasi tamamen giderildi",
-  "versionUpdatedAt": "2026-10-16 22:36:44",
-  "versionReleaseNotes": "Kredi Ödemeleri Takip Mobil PWA ve Canlı GitHub Senkronizasyonu (vv1.5.4: Sonsuz otomatik yenileme (reload loop) ve Service Worker cakismasi tamamen giderildi)"
+  "appVersion": "1.5.5",
+  "versionUpdatedAt": "2026-10-16 22:37:08",
+  "versionReleaseNotes": "Sonsuz otomatik yenileme (reload loop) ve Service Worker cakismasi tamamen giderildi"
 }

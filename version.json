@@ -1,7 +1,7 @@
 {
-  "version": "v1.5.4: Sonsuz otomatik yenileme (reload loop) ve Service Worker cakismasi tamamen giderildi",
-  "build": 1792179404,
-  "releasedAt": "2026-10-16 22:36:44",
-  "releaseNotes": "Kredi Ödemeleri Takip Mobil PWA ve Canlı GitHub Senkronizasyonu (vv1.5.4: Sonsuz otomatik yenileme (reload loop) ve Service Worker cakismasi tamamen giderildi)",
+  "version": "1.5.5",
+  "build": 155,
+  "releasedAt": "2026-10-16 22:37:08",
+  "releaseNotes": "Sonsuz otomatik yenileme (reload loop) ve Service Worker cakismasi tamamen giderildi",
   "author": "Ömer Eren & DİZSAN"
 }
