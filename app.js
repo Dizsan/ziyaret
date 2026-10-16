@@ -12,7 +12,7 @@
  */
 
 const INITIAL_APP_VERSION = "v1.3.0";
-const CURRENT_APP_VERSION = "1.5.2";
+const CURRENT_APP_VERSION = "1.5.3";
 let hasShownUpdateNotice = false;
 const VAPID_PUBLIC_KEY = "BJIJfCBiDwya3clZOWS08EDxfuN18xtfJGTX0n_apWBTEW7-kO_FGKNy5VDRvUsMgc46IP5oxLlIHqgrDo-JTkE";
 const STORAGE_KEY_STATE = "dizsan_ziyaret_shared_state_v1";
@@ -1096,6 +1096,7 @@ function switchTab(tabId) {
         'ai-match-tab': '<i class="fa-solid fa-wand-magic-sparkles" style="color:#c084fc;"></i> 🤖 Yapay Zeka Tekleştirme &amp; Churn Analizi',
         'tasks-tab': '<i class="fa-solid fa-list-check" style="color:#fbbf24;"></i> Aksiyon &amp; Çift Aşamalı Hatırlatıcılar',
         'strategy-tab': '<i class="fa-solid fa-map-location-dot" style="color:#34d399;"></i> İlçe Rut Strateji Rehberi',
+        'kredi-tab': '<i class="fa-solid fa-building-columns" style="color:#f59e0b;"></i> 💳 Kredi Ödemeleri Takip (Canlı GitHub Senkron)',
         'logs-tab': '<i class="fa-solid fa-shield-halved" style="color:#f59e0b;"></i> 🛡️ Yönetici Denetim İzi'
     };
 
@@ -4626,7 +4627,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     if ('caches' in window) {
         caches.keys().then(keys => {
             keys.forEach(k => {
-                if (k !== 'dizsan-ziyaret-v1.5.2') caches.delete(k);
+                if (k !== 'dizsan-ziyaret-v1.5.3') caches.delete(k);
             });
         });
     }
@@ -4758,7 +4759,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     // Service Worker Kaydı & Canlı Güncelleme Dinleyicisi (v1.3.0)
     if ('serviceWorker' in navigator) {
-        navigator.serviceWorker.register('sw.js?v=1.5.2').then(reg => {
+        navigator.serviceWorker.register('sw.js?v=1.5.3').then(reg => {
             reg.update();
             reg.addEventListener('updatefound', () => {
                 const newWorker = reg.installing;

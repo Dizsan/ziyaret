@@ -193020,7 +193020,7 @@
       "platform": "Android / Mobil"
     }
   ],
-  "updatedAt": "2026-10-16T19:09:42.291960Z",
+  "updatedAt": "2026-10-16T19:22:48.560810Z",
   "stateRevision": 41,
   "cities": [
     "Adana",
@@ -193189,7 +193189,7 @@
     "realtimeSyncChannel": "GitHub Live API & Raw CDN",
     "status": "Aktif & Güncel (Sorgu Tarihindeki Son An: 15.10.2026)"
   },
-  "appVersion": "1.5.2",
-  "versionUpdatedAt": "2026-10-16 22:09:42",
-  "versionReleaseNotes": "Kredi Ödemeleri Takip Mobil PWA ve Canlı GitHub Senkronizasyonu (v1.5.2)"
+  "appVersion": "1.5.3",
+  "versionUpdatedAt": "2026-10-16 22:22:48",
+  "versionReleaseNotes": "Kredi Ödemeleri Takip Mobil PWA ve Canlı GitHub Senkronizasyonu (v1.5.3)"
 }
