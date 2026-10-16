@@ -12,7 +12,7 @@
  */
 
 const INITIAL_APP_VERSION = "v1.3.0";
-const CURRENT_APP_VERSION = "1.5.3";
+const CURRENT_APP_VERSION = "1.5.2";
 let hasShownUpdateNotice = false;
 const VAPID_PUBLIC_KEY = "BJIJfCBiDwya3clZOWS08EDxfuN18xtfJGTX0n_apWBTEW7-kO_FGKNy5VDRvUsMgc46IP5oxLlIHqgrDo-JTkE";
 const STORAGE_KEY_STATE = "dizsan_ziyaret_shared_state_v1";
@@ -1118,48 +1118,6 @@ function toggleMobileSidebar() {
 // ==========================================================================
 // 4. KOKPİT VE ESKİ KAYITLAR (1998-2026 ARŞİV)
 // ==========================================================================
-function getRecordAuditInfo(item) {
-    if (!item) return { createdBy: 'ÖMER EREN', createdAt: '-', updatedBy: '-', updatedAt: 'Henüz değiştirilmedi', hasUpdate: false };
-    const createdBy = item.createdBy || item.assignedBy || item.personnel || item.manager || 'ÖMER EREN';
-    const fallbackCreated = item.date ? `${item.date} ${item.time || '09:00'}` : (item.dueDate ? `${formatDateTR(item.dueDate)} ${item.dueTime || '09:00'}` : '-');
-    const createdAt = item.createdAt || fallbackCreated;
-    const hasUpdate = Boolean(item.updatedBy || (item.updatedAt && item.updatedAt !== item.createdAt));
-    const updatedBy = hasUpdate ? (item.updatedBy || item.approvedBy || createdBy) : '-';
-    const updatedAt = hasUpdate ? (item.updatedAt || item.approvedAt || createdAt) : 'Henüz değiştirilmedi';
-    return { createdBy, createdAt, updatedBy, updatedAt, hasUpdate };
-}
-
-function renderRecordAuditBadge(item, compact = false) {
-    const info = getRecordAuditInfo(item);
-    if (compact) {
-        return `
-            <div style="margin-top:0.38rem; padding:0.32rem 0.55rem; background:rgba(15,23,42,0.65); border:1px solid rgba(148,163,184,0.2); border-radius:6px; font-size:0.71rem; color:#94a3b8; display:flex; flex-wrap:wrap; gap:0.55rem; align-items:center;">
-                <span><i class="fa-solid fa-user-plus" style="color:#38bdf8;"></i> Ekleyen: <strong style="color:#e2e8f0;">${info.createdBy}</strong> (${info.createdAt})</span>
-                <span>•</span>
-                <span><i class="fa-solid fa-user-pen" style="color:${info.hasUpdate ? '#fbbf24' : '#64748b'};"></i> Değiştiren: <strong style="color:${info.hasUpdate ? '#fde68a' : '#94a3b8'};">${info.updatedBy}</strong> (${info.updatedAt})</span>
-            </div>
-        `;
-    }
-    return `
-        <div style="margin-top:0.6rem; padding:0.5rem 0.7rem; background:rgba(15,23,42,0.72); border:1px solid rgba(56,189,248,0.22); border-radius:8px; font-size:0.74rem; color:#cbd5e1; display:grid; grid-template-columns:repeat(auto-fit, minmax(210px, 1fr)); gap:0.4rem;">
-            <div style="display:flex; align-items:center; gap:0.4rem;">
-                <i class="fa-solid fa-user-plus" style="color:#38bdf8;"></i>
-                <div>
-                    <span style="color:#94a3b8;">Ekleyen Personel &amp; Zamanı:</span><br>
-                    <strong style="color:#fff;">${info.createdBy}</strong> <span style="color:#38bdf8;">• ${info.createdAt}</span>
-                </div>
-            </div>
-            <div style="display:flex; align-items:center; gap:0.4rem;">
-                <i class="fa-solid fa-user-pen" style="color:${info.hasUpdate ? '#fbbf24' : '#64748b'};"></i>
-                <div>
-                    <span style="color:#94a3b8;">Değiştiren Personel &amp; Zamanı:</span><br>
-                    <strong style="color:${info.hasUpdate ? '#fde68a' : '#94a3b8'};">${info.updatedBy}</strong> <span style="color:${info.hasUpdate ? '#fbbf24' : '#64748b'};">• ${info.updatedAt}</span>
-                </div>
-            </div>
-        </div>
-    `;
-}
-
 function renderDashboard() {
     const customers = appState.customers || [];
     const visits = appState.visits || [];
@@ -1206,17 +1164,14 @@ function renderDashboard() {
             `;
         } else {
             recentBox.innerHTML = visits.slice(0, 4).map(v => `
-                <div style="background:rgba(255,255,255,0.03); border:1px solid var(--border-color); border-radius:10px; padding:0.75rem 0.9rem; display:flex; flex-direction:column; gap:0.2rem;">
-                    <div style="display:flex; justify-content:space-between; align-items:center; gap:0.5rem; flex-wrap:wrap;">
-                        <div>
-                            <strong style="color:#fff; font-size:0.88rem;">${v.type === 'ZİYARET' ? '🚗' : '📞'} ${v.customerTitle}</strong>
-                            <div style="font-size:0.75rem; color:var(--text-sec); margin-top:2px;">
-                                ${v.personnel} &bull; ${v.date} &bull; ${v.location || 'Merkez'}
-                            </div>
+                <div style="background:rgba(255,255,255,0.03); border:1px solid var(--border-color); border-radius:10px; padding:0.75rem 0.9rem; display:flex; justify-content:space-between; align-items:center; gap:0.5rem; flex-wrap:wrap;">
+                    <div>
+                        <strong style="color:#fff; font-size:0.88rem;">${v.type === 'ZİYARET' ? '🚗' : '📞'} ${v.customerTitle}</strong>
+                        <div style="font-size:0.75rem; color:var(--text-sec); margin-top:2px;">
+                            ${v.personnel} &bull; ${v.date} &bull; ${v.location || 'Merkez'}
                         </div>
-                        <span class="badge ${v.result === 'Olumlu' || v.result === 'Randevu Alındı' ? 'badge-success' : 'badge-p2'}">${v.result}</span>
                     </div>
-                    ${renderRecordAuditBadge(v, true)}
+                    <span class="badge ${v.result === 'Olumlu' || v.result === 'Randevu Alındı' ? 'badge-success' : 'badge-p2'}">${v.result}</span>
                 </div>
             `).join('');
         }
@@ -2366,8 +2321,6 @@ function openVisitModal(prefill = null, editId = null) {
                     submitBtn.innerHTML = `<i class="fa-solid fa-paper-plane"></i> Değişikliği Yönetici Onayına Gönder (Ömer Eren)`;
                 }
             }
-            const visitAuditBox = document.getElementById('visit-audit-info-box');
-            if (visitAuditBox) visitAuditBox.innerHTML = renderRecordAuditBadge(v, false);
         }
     } else {
         // YENİ GÖRÜŞME & GÖREVLENDİRME MODU (NEW)
@@ -2389,15 +2342,6 @@ function openVisitModal(prefill = null, editId = null) {
             if (phoneIn) phoneIn.value = prefill.phone || '';
             if (locIn) locIn.value = `${prefill.city || ''} / ${prefill.district || ''}`;
             if (plateIn) plateIn.value = prefill.plates || '';
-        }
-        const visitAuditBox = document.getElementById('visit-audit-info-box');
-        if (visitAuditBox) {
-            visitAuditBox.innerHTML = renderRecordAuditBadge({
-                createdBy: currentUser ? currentUser.name : 'ÖMER EREN',
-                createdAt: formatNowTR(),
-                updatedBy: '',
-                updatedAt: ''
-            }, false);
         }
     }
 
@@ -2628,8 +2572,6 @@ function saveVisitRecord(event) {
             alert("Düzenlenecek kayıt bulunamadı!");
             return;
         }
-        const editorName = currentUser ? currentUser.name : 'ÖMER EREN';
-        const editNow = formatNowTR();
 
         // 1. Durum: Yönetici ÖMER EREN doğrudan düzenler
         if (isOmerEren(currentUser)) {
@@ -2653,18 +2595,16 @@ function saveVisitRecord(event) {
                 taskInstructions,
                 approvalStatus: 'Onaylandı',
                 approvedBy: 'ÖMER EREN',
-                approvedAt: editNow,
-                updatedBy: editorName,
-                updatedAt: editNow
+                approvedAt: formatNowTR()
             };
 
-            addAuditLog("ZİYARET DÜZENLEME", `${customerTitle} kaydı Yönetici ÖMER EREN tarafından güncellendi (${editNow}).`);
+            addAuditLog("ZİYARET DÜZENLEME", `${customerTitle} kaydı Yönetici ÖMER EREN tarafından güncellendi.`);
             syncToServer();
             closeVisitModal();
             renderAll();
             playNotificationTone('INVITE');
             showToast(`✅ '${customerTitle}' kaydı Yönetici Ömer Eren yetkisiyle güncellendi.`, 'success');
-            alert(`✅ Kayıt Yönetici ÖMER EREN yetkisiyle başarıyla güncellendi!\n\n✏️ Değiştiren: ${editorName}\n🕒 Değiştirilme Zamanı: ${editNow}`);
+            alert(`✅ Kayıt Yönetici ÖMER EREN yetkisiyle başarıyla güncellendi!`);
             return;
         }
 
@@ -2687,8 +2627,8 @@ function saveVisitRecord(event) {
             targetId: editId,
             targetTitle: customerTitle,
             customerTitle: customerTitle,
-            requestedBy: editorName,
-            requestedAt: editNow,
+            requestedBy: currentUser ? currentUser.name : 'Personel',
+            requestedAt: formatNowTR(),
             reason: editReason,
             currentData: existingVisit,
             proposedData: {
@@ -2707,9 +2647,7 @@ function saveVisitRecord(event) {
                 dueDate,
                 dueTime,
                 priority,
-                taskInstructions,
-                updatedBy: editorName,
-                updatedAt: editNow
+                taskInstructions
             }
         });
 
@@ -2717,10 +2655,10 @@ function saveVisitRecord(event) {
         dispatchApprovalPushToManager({
             id: reqId,
             title: `🛡️ Yönetici Onayı Bekleniyor (Değişiklik)`,
-            body: `${editorName}, '${customerTitle}' kaydında DEĞİŞİKLİK onayı talep etti. Gerekçe: ${editReason}`
+            body: `${currentUser ? currentUser.name : 'Personel'}, '${customerTitle}' kaydında DEĞİŞİKLİK onayı talep etti. Gerekçe: ${editReason}`
         });
 
-        addAuditLog("ONAY TALEBİ", `${editorName}, ${editId} kodlu '${customerTitle}' kaydı için DEĞİŞİKLİK ONAY TALEBİ gönderdi (Yönetici Ömer Eren onayı bekleniyor).`);
+        addAuditLog("ONAY TALEBİ", `${currentUser ? currentUser.name : 'Personel'}, ${editId} kodlu '${customerTitle}' kaydı için DEĞİŞİKLİK ONAY TALEBİ gönderdi (Yönetici Ömer Eren onayı bekleniyor).`);
         syncToServer();
         closeVisitModal();
         renderAll();
@@ -2734,8 +2672,6 @@ function saveVisitRecord(event) {
     // YENİ GÖRÜŞME & GÖREVLENDİRME KAYDI (NEW MODE)
     // =========================================================================
     const visitId = 'VIS-' + Date.now();
-    const nowStr = formatNowTR();
-    const creatorName = currentUser ? currentUser.name : personnel;
     const newVisit = {
         id: visitId,
         type,
@@ -2757,10 +2693,8 @@ function saveVisitRecord(event) {
         taskStatus: 'Bekliyor',
         date: formatDateTR(new Date().toISOString().slice(0, 10)),
         time: new Date().toTimeString().slice(0, 5),
-        createdAt: nowStr,
-        createdBy: creatorName,
-        updatedBy: '',
-        updatedAt: '',
+        createdAt: formatNowTR(),
+        createdBy: currentUser ? currentUser.name : personnel,
         approvalStatus: isOmerEren(currentUser) ? 'Onaylandı' : 'Kayıt Yapıldı',
         actionLogs: []
     };
@@ -2808,10 +2742,7 @@ function saveVisitRecord(event) {
         visitDayBeforeFired: false,
         departureWarningFired: false,
         actionLogs: [],
-        createdBy: creatorName,
-        createdAt: nowStr,
-        updatedBy: '',
-        updatedAt: ''
+        createdAt: formatNowTR()
     };
 
     if (!Array.isArray(appState.tasks)) appState.tasks = [];
@@ -2841,8 +2772,7 @@ function saveVisitRecord(event) {
     playNotificationTone('INVITE');
 
     let alertMsg = `✅ Görüşme kaydı ve personel görevlendirmesi başarıyla sisteme işlendi!\n\n`;
-    alertMsg += `👤 Ekleyen Personel: ${creatorName} (${nowStr})\n`;
-    alertMsg += `🎯 Görevlendirilen Personel: ${assignedTo}\n`;
+    alertMsg += `👤 Görevlendirilen Personel: ${assignedTo}\n`;
     alertMsg += `📅 Termin: ${formatDateTR(dueDate)} Saat ${dueTime} [${priority}]\n`;
     if (assignedTo !== (currentUser ? currentUser.name : '')) {
         alertMsg += `⚡ ${assignedTo} personeline anlık kilit ekranı bildirimi ve görev ataması gönderildi.`;
@@ -2862,7 +2792,7 @@ function renderActiveVisits() {
         if (typeFilter && v.type !== typeFilter) return false;
         if (resultFilter && v.result !== resultFilter) return false;
         if (search) {
-            const hay = normalizeTR(`${v.customerTitle} ${v.contactPerson} ${v.phone} ${v.notes} ${v.personnel} ${v.location} ${v.createdBy || ''} ${v.updatedBy || ''}`);
+            const hay = normalizeTR(`${v.customerTitle} ${v.contactPerson} ${v.phone} ${v.notes} ${v.personnel} ${v.location}`);
             if (!hay.includes(search)) return false;
         }
         return true;
@@ -2964,9 +2894,6 @@ function renderActiveVisits() {
                         `).join('')}
                     </div>
                 ` : ''}
-
-                <!-- EKLEYEN & DEĞİŞİKLİK YAPAN PERSONEL, TARİH VE SAAT BİLGİSİ -->
-                ${renderRecordAuditBadge(v, false)}
 
                 <!-- AKSİYON BUTONLARI (DÜZENLE, SİL & İŞLEM YAP) -->
                 <div class="visit-actions-bar">
@@ -3141,26 +3068,22 @@ function handleTaskActionSubmit(event) {
     const notes = document.getElementById('ta-notes').value.trim();
 
     let assignedBy = 'ÖMER EREN';
-    const actUser = currentUser ? currentUser.name : 'Personel';
-    const actTime = formatNowTR();
 
     if (targetType === 'VISIT') {
         const v = (appState.visits || []).find(x => x.id === targetId);
         if (v) {
             assignedBy = v.assignedBy || 'ÖMER EREN';
             v.taskStatus = status;
-            v.updatedBy = actUser;
-            v.updatedAt = actTime;
             if (!Array.isArray(v.actionLogs)) v.actionLogs = [];
             v.actionLogs.unshift({
                 id: 'ACT-' + Date.now(),
-                user: actUser,
+                user: currentUser ? currentUser.name : 'Personel',
                 status: status,
                 note: notes,
-                timestamp: actTime
+                timestamp: formatNowTR()
             });
             if (status === 'Tamamlandı') {
-                v.completedAt = actTime;
+                v.completedAt = formatNowTR();
             }
         }
     } else {
@@ -3168,18 +3091,16 @@ function handleTaskActionSubmit(event) {
         if (t) {
             assignedBy = t.assignedBy || t.manager || 'ÖMER EREN';
             t.status = status;
-            t.updatedBy = actUser;
-            t.updatedAt = actTime;
             if (!Array.isArray(t.actionLogs)) t.actionLogs = [];
             t.actionLogs.unshift({
                 id: 'ACT-' + Date.now(),
-                user: actUser,
+                user: currentUser ? currentUser.name : 'Personel',
                 status: status,
                 note: notes,
-                timestamp: actTime
+                timestamp: formatNowTR()
             });
             if (status === 'Tamamlandı') {
-                t.completedAt = actTime;
+                t.completedAt = formatNowTR();
             }
         }
     }
@@ -3187,14 +3108,14 @@ function handleTaskActionSubmit(event) {
     // İKİ YÖNLÜ BİLDİRİM (Direction 2): Görevli personelin yaptığı işlem görevi verene ve Yönetici Ömer Eren'e anlık düşer
     dispatchActionNotification({
         assignedBy: assignedBy,
-        performedBy: actUser,
+        performedBy: currentUser ? currentUser.name : 'Personel',
         customerTitle: customerTitle,
         status: status,
         notes: notes,
         targetId: targetId
     });
 
-    addAuditLog("GÖREV İŞLEMİ", `${actUser}, '${customerTitle}' için işlem yaptı (Durum: ${status}, Not: ${notes.slice(0, 60)}).`);
+    addAuditLog("GÖREV İŞLEMİ", `${currentUser ? currentUser.name : 'Personel'}, '${customerTitle}' için işlem yaptı (Durum: ${status}, Not: ${notes.slice(0, 60)}).`);
     syncToServer();
     closeTaskActionModal();
     renderAll();
@@ -3349,9 +3270,7 @@ function approveRequest(reqId) {
                 ...req.proposedData,
                 approvalStatus: 'Onaylandı',
                 approvedBy: 'ÖMER EREN',
-                approvedAt: formatNowTR(),
-                updatedBy: req.requestedBy || req.proposedData.updatedBy || 'ÖMER EREN',
-                updatedAt: req.requestedAt || req.proposedData.updatedAt || formatNowTR()
+                approvedAt: formatNowTR()
             };
         }
         addAuditLog("ONAY İŞLEMİ", `${req.customerTitle} ziyaret kaydı düzenleme talebi Yönetici ÖMER EREN tarafından ONAYLANDI ve uygulandı.`);
@@ -3559,13 +3478,10 @@ function printVisitReport() {
                         <th style="border:1px solid #94a3b8; padding:6px;">Sorumlu Personel</th>
                         <th style="border:1px solid #94a3b8; padding:6px;">Sonuç</th>
                         <th style="border:1px solid #94a3b8; padding:6px;">Görüşme Notları &amp; Detaylar</th>
-                        <th style="border:1px solid #94a3b8; padding:6px;">Ekleyen / Değiştiren (Tarih &amp; Saat)</th>
                     </tr>
                 </thead>
                 <tbody>
-                    ${visits.map(v => {
-                        const vAudit = getRecordAuditInfo(v);
-                        return `
+                    ${visits.map(v => `
                         <tr>
                             <td style="border:1px solid #94a3b8; padding:6px;">${v.date} ${v.time}</td>
                             <td style="border:1px solid #94a3b8; padding:6px; font-weight:bold;">${v.type}</td>
@@ -3574,12 +3490,8 @@ function printVisitReport() {
                             <td style="border:1px solid #94a3b8; padding:6px;">${v.personnel}</td>
                             <td style="border:1px solid #94a3b8; padding:6px;">${v.result}</td>
                             <td style="border:1px solid #94a3b8; padding:6px;">${v.notes}</td>
-                            <td style="border:1px solid #94a3b8; padding:6px; font-size:10px;">
-                                <strong>Ekleyen:</strong> ${vAudit.createdBy} (${vAudit.createdAt})<br>
-                                <strong>Değiştiren:</strong> ${vAudit.updatedBy} (${vAudit.updatedAt})
-                            </td>
                         </tr>
-                    `;}).join('')}
+                    `).join('')}
                 </tbody>
             </table>
 
@@ -3717,48 +3629,12 @@ function mergeAiCustomers(matchIdx) {
 // ==========================================================================
 // 7. GÖREVLER VE 1 GÜN ÖNCE / AYNI GÜN HATIRLATICILARI
 // ==========================================================================
-function openTaskModal(taskId = null) {
+function openTaskModal() {
     const m = document.getElementById('task-modal');
     if (!m) return;
-    populateFilterOptions();
     document.getElementById('task-form').reset();
-
-    const editIdIn = document.getElementById('task-edit-id');
-    const modalTitleEl = document.getElementById('task-modal-title');
-    const auditBox = document.getElementById('task-audit-info-box');
-
-    if (taskId) {
-        const t = (appState.tasks || []).find(x => x.id === taskId);
-        if (t) {
-            if (editIdIn) editIdIn.value = t.id;
-            if (modalTitleEl) modalTitleEl.innerHTML = `<i class="fa-solid fa-pen-to-square" style="color:#fbbf24;"></i> Ziyaret / Arama Görevini Düzenle (${t.id})`;
-            document.getElementById('task-title').value = t.title || '';
-            document.getElementById('task-assignee').value = t.assignee || '';
-            document.getElementById('task-manager').value = t.manager || 'ÖMER EREN';
-            const typeSel = document.getElementById('task-type-select');
-            if (typeSel) typeSel.value = t.type || 'ZİYARET';
-            const locIn = document.getElementById('task-location');
-            if (locIn) locIn.value = t.location || 'Çorum';
-            document.getElementById('task-duedate').value = t.dueDate || '';
-            document.getElementById('task-duetime').value = t.dueTime || '09:30';
-            document.getElementById('task-desc').value = t.note || '';
-            if (auditBox) auditBox.innerHTML = renderRecordAuditBadge(t, false);
-        }
-    } else {
-        if (editIdIn) editIdIn.value = '';
-        if (modalTitleEl) modalTitleEl.innerHTML = `<i class="fa-solid fa-bell" style="color:#fbbf24;"></i> Yeni Ziyaret / Arama Görevi Ata`;
-        const tomorrow = new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString().slice(0, 10);
-        document.getElementById('task-duedate').value = tomorrow;
-        if (auditBox) {
-            auditBox.innerHTML = renderRecordAuditBadge({
-                createdBy: currentUser ? currentUser.name : 'ÖMER EREN',
-                createdAt: formatNowTR(),
-                updatedBy: '',
-                updatedAt: ''
-            }, false);
-        }
-    }
-
+    const tomorrow = new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString().slice(0, 10);
+    document.getElementById('task-duedate').value = tomorrow;
     updateStandaloneTaskTravelCalc();
     m.classList.add('open');
 }
@@ -3770,7 +3646,6 @@ function closeTaskModal() {
 
 function saveTaskRecord(event) {
     event.preventDefault();
-    const editId = document.getElementById('task-edit-id')?.value || '';
     const title = document.getElementById('task-title').value.trim();
     const assignee = document.getElementById('task-assignee').value;
     const manager = document.getElementById('task-manager').value;
@@ -3790,48 +3665,6 @@ function saveTaskRecord(event) {
     const visitDayBefore14Dt = new Date(`${prevDayStr}T14:00:00`);
     const visitDepWarningDt = new Date(`${dueDate}T${calc.departureTime}:00`);
 
-    const actorName = currentUser ? currentUser.name : 'ÖMER EREN';
-    const nowStr = formatNowTR();
-
-    if (editId) {
-        const idx = (appState.tasks || []).findIndex(t => t.id === editId);
-        if (idx !== -1) {
-            const existing = appState.tasks[idx];
-            appState.tasks[idx] = {
-                ...existing,
-                title,
-                customerTitle: title,
-                type,
-                location,
-                assignee,
-                manager,
-                dueDate,
-                dueTime,
-                note,
-                distanceKm: calc.km,
-                driveMinutes: calc.driveMins,
-                marginMinutes: calc.marginMins,
-                totalLeadMinutes: calc.totalLeadMins,
-                departureTime: calc.departureTime,
-                oneHourBeforeTime: calc.oneHourBeforeStr,
-                phoneAlertScheduled: phoneAlertDt.toISOString(),
-                visitDayBefore14Scheduled: visitDayBefore14Dt.toISOString(),
-                visitDepartureWarningScheduled: visitDepWarningDt.toISOString(),
-                createdBy: existing.createdBy || existing.assignedBy || 'ÖMER EREN',
-                createdAt: existing.createdAt || nowStr,
-                updatedBy: actorName,
-                updatedAt: nowStr
-            };
-            addAuditLog("GÖREV DÜZENLEME", `${editId} görevi ('${title}') ${actorName} tarafından güncellendi (${nowStr}).`);
-            syncToServer();
-            closeTaskModal();
-            renderAll();
-            playNotificationTone('INVITE');
-            alert(`✅ Görev başarıyla güncellendi!\n\n✏️ Değiştiren: ${actorName}\n🕒 Değiştirilme Zamanı: ${nowStr}`);
-            return;
-        }
-    }
-
     const newId = 'TSK-' + Date.now();
     appState.tasks.unshift({
         id: newId,
@@ -3840,7 +3673,6 @@ function saveTaskRecord(event) {
         type,
         location,
         assignee,
-        assignedBy: actorName,
         manager,
         dueDate,
         dueTime,
@@ -3858,30 +3690,23 @@ function saveTaskRecord(event) {
         phoneAlertFired: false,
         visitDayBeforeFired: false,
         departureWarningFired: false,
-        createdBy: actorName,
-        createdAt: nowStr,
-        updatedBy: '',
-        updatedAt: ''
+        createdAt: formatNowTR()
     });
 
-    addAuditLog("GÖREV", `${assignee} personeline yeni ${type} görevi atandı: '${title}' (Ekleyen: ${actorName}, Termin: ${formatDateTR(dueDate)} ${dueTime}, Çıkış Uyarısı: ${calc.departureTime}).`);
+    addAuditLog("GÖREV", `${assignee} personeline yeni ${type} görevi atandı: '${title}' (Termin: ${formatDateTR(dueDate)} ${dueTime}, Çıkış Uyarısı: ${calc.departureTime}).`);
     syncToServer();
     closeTaskModal();
     renderAll();
     playNotificationTone('INVITE');
-    alert(`✅ Görev ve otomatik akıllı hatırlatıcı başarıyla kaydedildi!\n\n👤 Ekleyen: ${actorName} (${nowStr})\n• ${type === 'TELEFON' ? 'Telefon görüşmesine 1 saat kala uyarı verilecektir.' : `1 gün önce 14:00'da hazırlık uyarısı & randevu günü saat ${calc.departureTime}'de ÇIKIŞ UYARISI çalacaktır.`}`);
+    alert(`✅ Görev ve otomatik akıllı hatırlatıcı başarıyla kaydedildi!\n\n• ${type === 'TELEFON' ? 'Telefon görüşmesine 1 saat kala uyarı verilecektir.' : `1 gün önce 14:00'da hazırlık uyarısı & randevu günü saat ${calc.departureTime}'de ÇIKIŞ UYARISI çalacaktır.`}`);
 }
 
 function toggleTaskStatus(taskId) {
     const t = (appState.tasks || []).find(x => x.id === taskId);
     if (!t) return;
-    const nowStr = formatNowTR();
-    const actorName = currentUser ? currentUser.name : 'ÖMER EREN';
     t.status = t.status === 'Tamamlandı' ? 'Bekliyor' : 'Tamamlandı';
-    t.completedAt = t.status === 'Tamamlandı' ? nowStr : null;
-    t.updatedBy = actorName;
-    t.updatedAt = nowStr;
-    addAuditLog("GÖREV", `${t.id} görevi durumu ${actorName} tarafından '${t.status}' olarak güncellendi (${nowStr}).`);
+    t.completedAt = t.status === 'Tamamlandı' ? formatNowTR() : null;
+    addAuditLog("GÖREV", `${t.id} görevi durumu '${t.status}' olarak güncellendi.`);
     syncToServer();
     renderAll();
 }
@@ -3926,12 +3751,8 @@ function renderTasks() {
                             <i class="fa-solid fa-clock-rotate-left"></i> Son İşlem: <strong>${t.actionLogs[0].user}</strong> (${t.actionLogs[0].status}) - ${t.actionLogs[0].note}
                         </div>
                     ` : ''}
-                    ${renderRecordAuditBadge(t, true)}
                 </div>
                 <div style="display:flex; gap:0.4rem; flex-wrap:wrap; align-items:center;">
-                    <button type="button" class="btn btn-secondary btn-sm" onclick="openTaskModal('${t.id}')" title="Görevi Düzenle">
-                        <i class="fa-solid fa-pen-to-square"></i> Düzenle
-                    </button>
                     ${!isDone ? `
                         <button type="button" class="btn btn-primary btn-sm" onclick="openTaskActionModal('${t.id}', 'TASK')" title="İşlem Yap &amp; Raporla">
                             <i class="fa-solid fa-clipboard-check"></i> Raporla
@@ -4805,7 +4626,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     if ('caches' in window) {
         caches.keys().then(keys => {
             keys.forEach(k => {
-                if (k !== 'dizsan-ziyaret-v1.5.3') caches.delete(k);
+                if (k !== 'dizsan-ziyaret-v1.5.2') caches.delete(k);
             });
         });
     }
@@ -4937,7 +4758,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     // Service Worker Kaydı & Canlı Güncelleme Dinleyicisi (v1.3.0)
     if ('serviceWorker' in navigator) {
-        navigator.serviceWorker.register('sw.js?v=1.5.3').then(reg => {
+        navigator.serviceWorker.register('sw.js?v=1.5.2').then(reg => {
             reg.update();
             reg.addEventListener('updatefound', () => {
                 const newWorker = reg.installing;

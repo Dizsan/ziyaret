@@ -1,9 +1,7 @@
 {
-  "appId": "ziyaret",
-  "appName": "Dizsan Müşteri Ziyaret & Saha Takip",
-  "version": "1.5.3",
-  "build": 153,
-  "releasedAt": "2026-10-16 13:00:54",
-  "releaseNotes": "Stil dosyası (style.css) bağlantısı düzeltildi ve kayıt/değişiklik izleme (Audit) alanları aktif edildi",
+  "version": "1.5.2",
+  "build": 152,
+  "releasedAt": "2026-10-16 22:09:42",
+  "releaseNotes": "Kredi Ödemeleri Takip Mobil PWA ve Canlı GitHub Senkronizasyonu (v1.5.2)",
   "author": "Ömer Eren & DİZSAN"
 }

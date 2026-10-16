@@ -23,7 +23,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Outfit:wght@600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     
-    <link rel="stylesheet" href="style.css?v=1.5.3">
+    <link rel="stylesheet" href="style.css?v=1.5.2">
 </head>
 <body>
 
@@ -199,7 +199,7 @@
 
                 <div class="navbar-right">
                     <button type="button" class="btn btn-secondary btn-sm app-version-chip" id="app-version-badge" onclick="openVersionModal()" title="Sürüm ve Cihaz Güncelleme Merkezi">
-                        <i class="fa-solid fa-code-branch" style="color:#38bdf8;"></i> <span id="app-current-version-text">v1.5.3</span>
+                        <i class="fa-solid fa-code-branch" style="color:#38bdf8;"></i> <span id="app-current-version-text">v1.5.2</span>
                     </button>
 
                     <button type="button" class="btn btn-secondary btn-sm" onclick="forceRefreshFromGitHub()" id="btn-navbar-refresh" title="Logo ERP Verilerini Yenile">
@@ -888,9 +888,6 @@
                             <div id="visit-travel-calc-box" class="travel-calc-box" style="display:none;"></div>
                         </div>
                     </div>
-
-                    <!-- Ekleyen ve Değişiklik Yapan Personel / Tarih & Saat Bilgisi -->
-                    <div id="visit-audit-info-box" style="margin-top:0.75rem;"></div>
                 </div>
 
                 <div class="modal-footer">
@@ -998,11 +995,10 @@
     <div id="customer-modal" class="modal-backdrop">
         <div class="modal-box">
             <div class="modal-header">
-                <h3 id="customer-modal-title"><i class="fa-solid fa-user-plus" style="color:var(--dizsan-light);"></i> Bağımsız Müşteri / Cari Kartı Tanımla</h3>
+                <h3><i class="fa-solid fa-user-plus" style="color:var(--dizsan-light);"></i> Bağımsız Müşteri / Cari Kartı Tanımla</h3>
                 <button class="modal-close" onclick="closeCustomerModal()">&times;</button>
             </div>
             <form id="customer-form" onsubmit="saveNewCustomer(event)">
-                <input type="hidden" id="cust-edit-code" value="">
                 <div class="modal-body">
                     <div style="display:grid; grid-template-columns:1fr 2fr; gap:0.75rem; margin-bottom:0.85rem;">
                         <div class="form-group" style="margin-bottom:0;">
@@ -1072,11 +1068,10 @@
     <div id="task-modal" class="modal-backdrop">
         <div class="modal-box">
             <div class="modal-header">
-                <h3 id="task-modal-title"><i class="fa-solid fa-bell" style="color:#fbbf24;"></i> Yeni Ziyaret / Arama Görevi Ata</h3>
+                <h3><i class="fa-solid fa-bell" style="color:#fbbf24;"></i> Yeni Ziyaret / Arama Görevi Ata</h3>
                 <button class="modal-close" onclick="closeTaskModal()">&times;</button>
             </div>
             <form id="task-form" onsubmit="saveTaskRecord(event)">
-                <input type="hidden" id="task-edit-id" value="">
                 <div class="modal-body">
                     <div class="form-group">
                         <label>Görev Başlığı / Amaç *</label>
@@ -1120,13 +1115,10 @@
                         <label>İlgili Müşteri / Açıklama</label>
                         <input type="text" id="task-desc" class="form-control" placeholder="Müşteri adı veya detay...">
                     </div>
-
-                    <!-- Ekleyen ve Değişiklik Yapan Personel / Tarih & Saat Bilgisi -->
-                    <div id="task-audit-info-box" style="margin-top:0.75rem;"></div>
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" onclick="closeTaskModal()">İptal</button>
-                    <button type="submit" id="task-submit-btn" class="btn btn-warning"><i class="fa-solid fa-check"></i> Görevi Kaydet &amp; Hatırlatıcı Kur</button>
+                    <button type="submit" class="btn btn-warning"><i class="fa-solid fa-check"></i> Görevi Kaydet &amp; Hatırlatıcı Kur</button>
                 </div>
             </form>
         </div>
@@ -1338,7 +1330,7 @@
                 <div style="background:rgba(15,23,42,0.8); border:1px solid var(--border-color); border-radius:12px; padding:1rem; margin-bottom:1rem;">
                     <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.75rem;">
                         <span style="font-size:0.85rem; color:var(--text-muted);">Bu Cihazdaki Aktif Sürüm:</span>
-                        <span class="badge badge-success" style="font-size:0.88rem; padding:4px 10px;" id="modal-device-version">v1.5.3</span>
+                        <span class="badge badge-success" style="font-size:0.88rem; padding:4px 10px;" id="modal-device-version">v1.4.1</span>
                     </div>
                     <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.75rem;">
                         <span style="font-size:0.85rem; color:var(--text-muted);">Buluttaki En Güncel Sürüm:</span>
@@ -1475,6 +1467,6 @@
     <!-- Scripts -->
     <script src="dizsan-back-navigation.js?v=2.0.0"></script>
     <script src="auto-date-helper.js"></script>
-    <script src="app.js?v=1.5.3"></script>
+    <script src="app.js?v=1.5.2"></script>
 </body>
 </html>

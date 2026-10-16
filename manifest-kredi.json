@@ -1,0 +1,25 @@
+{
+  "name": "Dizsan Kredi Ödemeleri Takip",
+  "short_name": "Kredi Takip",
+  "description": "Dizsan Banka Kredileri, Taksit, Faiz-Anapara Ayrımı, Erken Kapama ve Canlı GitHub Senkronizasyon Uygulaması",
+  "start_url": "./kredi-takip.html",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait-primary",
+  "background_color": "#070a13",
+  "theme_color": "#070a13",
+  "icons": [
+    {
+      "src": "Dizsan Logo.JPG",
+      "sizes": "192x192",
+      "type": "image/jpeg",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "Dizsan Logo.JPG",
+      "sizes": "512x512",
+      "type": "image/jpeg",
+      "purpose": "any maskable"
+    }
+  ]
+}
