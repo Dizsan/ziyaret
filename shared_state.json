@@ -192997,7 +192997,7 @@
   "unifiedMasterCustomers": [],
   "pushSubscriptions": [
     {
-      "id": "SUB-1792179478745",
+      "id": "SUB-1792179686165",
       "username": "ömer",
       "userFullName": "ÖMER EREN",
       "endpoint": "https://fcm.googleapis.com/fcm/send/dUeM7fO_-hU:APA91bFC0BLx_nnyTQP3BZVhKBFOQHlQyv86BEeucIP_zZxeVm2s_ttulNzQmmVkKX9L3RYg0b0Tm9UKmrtunBnG0qZk9RBM9UA9bhs2WPU2cfVfRHHHHlVzS4PRc-6d4xDzRf8YPe4Z",
@@ -193005,7 +193005,7 @@
       "auth": "sQsMxSsppqKqnfdNpNt6sQ",
       "browser": "Samsung Internet",
       "platform": "Android",
-      "updatedAt": "16.10.2026 22:37:58"
+      "updatedAt": "16.10.2026 22:41:26"
     },
     {
       "id": "SUB-1792167270196",
@@ -193042,8 +193042,8 @@
       "platform": "Android / Mobil"
     }
   ],
-  "updatedAt": "2026-10-16T19:38:36.478916Z",
-  "stateRevision": 41,
+  "updatedAt": "2026-10-16T19:41:26.166Z",
+  "stateRevision": 230,
   "cities": [
     "Adana",
     "Adıyaman",
@@ -193210,8 +193210,5 @@
     "source": "Logo ERP Canlı Veritabanı (192.168.1.200:1433 LKSDB)",
     "realtimeSyncChannel": "GitHub Live API & Raw CDN",
     "status": "Aktif & Güncel (Sorgu Tarihindeki Son An: 15.10.2026)"
-  },
-  "appVersion": "1.5.6",
-  "versionUpdatedAt": "2026-10-16 22:38:36",
-  "versionReleaseNotes": "Sonsuz otomatik yenileme (reload loop) ve Service Worker cakismasi tamamen giderildi"
+  }
 }
