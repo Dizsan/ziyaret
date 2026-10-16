@@ -193042,8 +193042,8 @@
       "platform": "Android / Mobil"
     }
   ],
-  "updatedAt": "2026-10-16T19:37:08.622283Z",
-  "stateRevision": 228,
+  "updatedAt": "2026-10-16T19:38:36.478916Z",
+  "stateRevision": 41,
   "cities": [
     "Adana",
     "Adıyaman",
@@ -193210,5 +193210,8 @@
     "source": "Logo ERP Canlı Veritabanı (192.168.1.200:1433 LKSDB)",
     "realtimeSyncChannel": "GitHub Live API & Raw CDN",
     "status": "Aktif & Güncel (Sorgu Tarihindeki Son An: 15.10.2026)"
-  }
+  },
+  "appVersion": "1.5.6",
+  "versionUpdatedAt": "2026-10-16 22:38:36",
+  "versionReleaseNotes": "Sonsuz otomatik yenileme (reload loop) ve Service Worker cakismasi tamamen giderildi"
 }

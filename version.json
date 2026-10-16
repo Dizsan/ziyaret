@@ -1,7 +1,7 @@
 {
-  "version": "1.5.5",
-  "build": 155,
-  "releasedAt": "2026-10-16 22:37:08",
+  "version": "1.5.6",
+  "build": 156,
+  "releasedAt": "2026-10-16 22:38:36",
   "releaseNotes": "Sonsuz otomatik yenileme (reload loop) ve Service Worker cakismasi tamamen giderildi",
   "author": "Ömer Eren & DİZSAN"
 }
