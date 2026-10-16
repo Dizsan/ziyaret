@@ -12,7 +12,7 @@
  */
 
 const INITIAL_APP_VERSION = "v1.3.0";
-const CURRENT_APP_VERSION = "1.5.3";
+const CURRENT_APP_VERSION = "v1.5.4: Sonsuz otomatik yenileme (reload loop) ve Service Worker cakismasi tamamen giderildi";
 let hasShownUpdateNotice = false;
 const VAPID_PUBLIC_KEY = "BJIJfCBiDwya3clZOWS08EDxfuN18xtfJGTX0n_apWBTEW7-kO_FGKNy5VDRvUsMgc46IP5oxLlIHqgrDo-JTkE";
 const STORAGE_KEY_STATE = "dizsan_ziyaret_shared_state_v1";
@@ -356,63 +356,61 @@ async function checkForAppUpdates(isManual = false) {
 
 function triggerZeroTouchAppUpdate(info) {
     if (hasShownUpdateNotice) return;
+    const newVer = (info && info.version) ? String(info.version).replace(/^[vV]/, '').trim() : '';
+    if (!newVer || compareVersions(newVer, CURRENT_APP_VERSION) <= 0) {
+        return;
+    }
+
+    // Sonsuz yenileme (reload loop) koruması: Aynı sürüm için daha önce yenileme yapıldıysa tekrar yenileme!
+    const lastReloadVer = localStorage.getItem('dizsan_last_reload_ver');
+    const lastReloadTs = parseInt(localStorage.getItem('dizsan_last_reload_ts') || '0', 10);
+    if (lastReloadVer === newVer || (Date.now() - lastReloadTs < 120000)) {
+        return;
+    }
+
     hasShownUpdateNotice = true;
+    localStorage.setItem('dizsan_last_reload_ver', newVer);
+    localStorage.setItem('dizsan_last_reload_ts', String(Date.now()));
 
     const banner = document.getElementById('app-update-alert-banner');
-    const newVer = info.version || 'Yeni Sürüm';
-    const notes = info.releaseNotes || 'Sistem özellikleri ve performans geliştirmeleri yayınlandı.';
+    const notes = (info && info.releaseNotes) || 'Sistem özellikleri ve performans geliştirmeleri yayınlandı.';
 
     if (banner) {
         banner.style.display = 'block';
         banner.innerHTML = `
             <div style="display:flex; align-items:center; justify-content:space-between; gap:1rem; flex-wrap:wrap;">
                 <div style="display:flex; align-items:center; gap:0.75rem;">
-                    <i class="fa-solid fa-arrows-rotate fa-spin" style="font-size:1.4rem; color:#38bdf8;"></i>
+                    <i class="fa-solid fa-circle-check" style="font-size:1.3rem; color:#34d399;"></i>
                     <div>
-                        <strong style="color:#ffffff; font-size:0.95rem;">🚀 Yeni Sürüm Yayında: v${newVer}</strong>
-                        <div style="font-size:0.8rem; color:#bae6fd;">${notes} — <strong>Tüm yüklü cihazlar otomatik güncelleniyor...</strong></div>
+                        <strong style="color:#ffffff; font-size:0.92rem;">Yeni Sürüm Hazır: v${newVer}</strong>
+                        <div style="font-size:0.78rem; color:#bae6fd;">${notes}</div>
                     </div>
                 </div>
                 <div style="display:flex; gap:0.5rem; align-items:center;">
                     <button type="button" class="btn btn-warning btn-sm" onclick="applyUpdateImmediately()" style="box-shadow:0 0 15px rgba(245,158,11,0.5);">
-                        <i class="fa-solid fa-bolt"></i> Şimdi Yenile &amp; Uygula
+                        <i class="fa-solid fa-bolt"></i> Şimdi Güncelle
+                    </button>
+                    <button type="button" class="btn btn-secondary btn-sm" onclick="document.getElementById('app-update-alert-banner').style.display='none'">
+                        Kapat
                     </button>
                 </div>
             </div>
         `;
     }
-
-    if (window.Notification && Notification.permission === 'granted') {
-        try {
-            new Notification('DİZSAN Ziyaret Güncellendi', {
-                body: `v${newVer} sürümü yüklendi: ${notes}`,
-                icon: 'dizsan_logo.jpg'
-            });
-        } catch (e) {}
-    }
-
-    // 2.5 saniye sonra önbelleği temizleyip otomatik yenile (Sıfır temas)
-    setTimeout(() => {
-        applyUpdateImmediately();
-    }, 2500);
 }
 
 function applyUpdateImmediately() {
+    localStorage.setItem('dizsan_last_reload_ts', String(Date.now()));
     if ('caches' in window) {
         caches.keys().then((names) => {
             return Promise.all(names.map(name => caches.delete(name)));
         }).then(() => {
-            if ('serviceWorker' in navigator) {
-                navigator.serviceWorker.getRegistrations().then(regs => {
-                    regs.forEach(r => r.update());
-                }).catch(() => {});
-            }
-            window.location.reload(true);
+            window.location.reload();
         }).catch(() => {
-            window.location.reload(true);
+            window.location.reload();
         });
     } else {
-        window.location.reload(true);
+        window.location.reload();
     }
 }
 
@@ -503,6 +501,17 @@ async function adminPublishNewVersion() {
 // 1. VERİ BAŞLATMA, GÖMÜLÜ VERİTABANI VE SENKRONİZASYON
 // ==========================================================================
 let liveSyncIntervalId = null;
+let lastSyncedSignature = '';
+
+function computeStateSignature(stateObj) {
+    if (!stateObj) return '';
+    const cLen = Array.isArray(stateObj.customers) ? stateObj.customers.length : 0;
+    const vLen = Array.isArray(stateObj.visits) ? stateObj.visits.length : 0;
+    const tLen = Array.isArray(stateObj.tasks) ? stateObj.tasks.length : 0;
+    const qDate = (stateObj.logoMetadata && stateObj.logoMetadata.queryDateFormatted) || '';
+    const upd = stateObj.updatedAt || '';
+    return `${cLen}|${vLen}|${tLen}|${qDate}|${upd}`;
+}
 
 async function loadInitialData() {
     // 1. Aşama: Kullanıcıyı asla bekletmemek için yerel önbellek varsa 0 ms ile yükle
@@ -513,6 +522,7 @@ async function loadInitialData() {
             if (parsed && Array.isArray(parsed.customers) && parsed.customers.length > 0) {
                 parsed.users = migrateOfficialUserEmails(parsed.users);
                 appState = { ...appState, ...parsed };
+                lastSyncedSignature = computeStateSignature(appState);
                 updateLogoLiveIndicator();
             }
         } catch (e) {}
@@ -521,15 +531,8 @@ async function loadInitialData() {
     // 2. Aşama: DizGün ekosistem köprüsünü senkronize et
     syncWithDizGunBridge();
 
-    // 3. Aşama: Logo ERP ve müşteri verilerini GitHub'dan ANLIK ve CANLI çek (önbellek baypas edilerek)
+    // 3. Aşama: Logo ERP ve müşteri verilerini GitHub'dan çek (yalnızca fark varsa ekranı günceller)
     fetchLiveGitHubData(true);
-
-    // 4. Aşama: 30 saniyede bir GitHub canlı senkronizasyonunu arka planda sürdür
-    if (!liveSyncIntervalId) {
-        liveSyncIntervalId = setInterval(() => {
-            fetchLiveGitHubData(false);
-        }, 30000);
-    }
 }
 
 function updateLogoLiveIndicator() {
@@ -556,10 +559,11 @@ async function forceRefreshFromGitHub() {
     if (barIcon) barIcon.classList.add('spinning');
 
     try {
-        const success = await fetchLiveGitHubData(false);
+        lastSyncedSignature = ''; // Manuel yenilemede zorla güncelle
+        await fetchLiveGitHubData(true);
         const meta = appState.logoMetadata || {};
         const qTime = meta.queryDateFormatted || formatNowTR();
-        showToast(`🟢 Logo ERP verileri GitHub'dan canlı olarak çekildi ve güncellendi! (Sorgu: ${qTime})`, 'success');
+        showToast(`Logo ERP verileri GitHub'dan canlı olarak çekildi ve güncellendi! (Sorgu: ${qTime})`, 'success');
     } catch (err) {
         showToast('Senkronizasyon uyarısı: ' + err.message, 'danger');
     } finally {
@@ -594,49 +598,44 @@ async function fetchLiveGitHubData(isInitial = false) {
 
     if (!liveData) return false;
 
-    let hasChanges = false;
+    const incomingSignature = computeStateSignature(liveData);
+    const hasActualDiff = incomingSignature !== lastSyncedSignature;
+
+    // Arka plan senkronizasyonunda hiçbir veri değişmediyse ekranı ASLA yeniden çizme!
+    if (!hasActualDiff && lastSyncedSignature !== '') {
+        return false;
+    }
+
+    lastSyncedSignature = incomingSignature;
+    if (liveData.updatedAt) {
+        appState.updatedAt = liveData.updatedAt;
+    }
+
     if (liveData.customers && liveData.customers.length > 0) {
         appState.customers = liveData.customers;
-        hasChanges = true;
     }
     if (liveData.districtStrategies && Object.keys(liveData.districtStrategies).length > 0) {
         appState.districtStrategies = liveData.districtStrategies;
-        hasChanges = true;
     }
     if (liveData.logoMetadata) {
         appState.logoMetadata = liveData.logoMetadata;
-        hasChanges = true;
     }
     if (liveData.users && liveData.users.length > 0) {
         appState.users = migrateOfficialUserEmails(liveData.users);
     }
 
     // Cihazdaki bekleyen yerel kayıtları koruyarak bulut ziyaretlerini birleştir
-    if (Array.isArray(liveData.visits) && liveData.visits.length > (appState.visits || []).length) {
+    if (Array.isArray(liveData.visits) && liveData.visits.length >= (appState.visits || []).length) {
         appState.visits = liveData.visits;
-        hasChanges = true;
     }
-    if (Array.isArray(liveData.tasks) && liveData.tasks.length > (appState.tasks || []).length) {
+    if (Array.isArray(liveData.tasks) && liveData.tasks.length >= (appState.tasks || []).length) {
         appState.tasks = liveData.tasks;
-        hasChanges = true;
     }
 
-    // Sürüm kontrolü
-    if (liveData.latestVersion && liveData.latestVersion.version) {
-        if (compareVersions(liveData.latestVersion.version, CURRENT_APP_VERSION) > 0) {
-            triggerZeroTouchAppUpdate(liveData.latestVersion);
-        }
-    } else if (liveData.version && compareVersions(liveData.version, CURRENT_APP_VERSION) > 0) {
-        triggerZeroTouchAppUpdate({ version: liveData.version, releaseNotes: 'GitHub üzerinden yeni sürüm alındı.' });
-    }
-
-    if (hasChanges || isInitial) {
-        saveStateLocally();
-        updateLogoLiveIndicator();
-        renderAll();
-        return true;
-    }
-    return false;
+    saveStateLocally();
+    updateLogoLiveIndicator();
+    renderAll();
+    return true;
 }
 
 
@@ -1103,6 +1102,13 @@ function switchTab(tabId) {
     const titleEl = document.getElementById('page-title');
     if (titleEl && pageTitleMap[tabId]) {
         titleEl.innerHTML = pageTitleMap[tabId];
+    }
+
+    if (tabId === 'kredi-tab') {
+        const krediFrame = document.getElementById('kredi-takip-iframe');
+        if (krediFrame && !krediFrame.getAttribute('src')) {
+            krediFrame.setAttribute('src', 'kredi-takip.html');
+        }
     }
 
     const sidebar = document.getElementById('sidebar');
@@ -4627,7 +4633,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     if ('caches' in window) {
         caches.keys().then(keys => {
             keys.forEach(k => {
-                if (k !== 'dizsan-ziyaret-v1.5.3') caches.delete(k);
+                if (k !== 'dizsan-ziyaret-vv1.5.4: Sonsuz otomatik yenileme (reload loop) ve Service Worker cakismasi tamamen giderildi') caches.delete(k);
             });
         });
     }
@@ -4757,27 +4763,8 @@ document.addEventListener('DOMContentLoaded', async () => {
         checkForAppUpdates(false);
     });
 
-    // Service Worker Kaydı & Canlı Güncelleme Dinleyicisi (v1.3.0)
+    // Service Worker Kaydı (Sonsuz yenileme döngüsü yaratmadan sessiz çalışır)
     if ('serviceWorker' in navigator) {
-        navigator.serviceWorker.register('sw.js?v=1.5.3').then(reg => {
-            reg.update();
-            reg.addEventListener('updatefound', () => {
-                const newWorker = reg.installing;
-                if (newWorker) {
-                    newWorker.addEventListener('statechange', () => {
-                        if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
-                            triggerZeroTouchAppUpdate({ version: CURRENT_APP_VERSION, releaseNotes: 'Yeni sürüm paketi indirildi.' });
-                        }
-                    });
-                }
-            });
-        }).catch(() => {});
-
-        navigator.serviceWorker.addEventListener('message', (event) => {
-            if (event.data && event.data.type === 'SW_UPDATED') {
-                const ver = (event.data.cacheName || '').replace('dizsan-ziyaret-v', '') || CURRENT_APP_VERSION;
-                triggerZeroTouchAppUpdate({ version: ver, releaseNotes: 'Sistem güncellendi.' });
-            }
-        });
+        navigator.serviceWorker.register('sw.js?v=v1.5.4: Sonsuz otomatik yenileme (reload loop) ve Service Worker cakismasi tamamen giderildi').catch(() => {});
     }
 });

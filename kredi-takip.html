@@ -2536,8 +2536,8 @@
             const dateSpan = document.getElementById('current-date-span');
             if (dateSpan) dateSpan.innerText = `${dd}.${mm}.${yyyy}`;
 
-            // Register Service Worker for standalone PWA installation
-            if ('serviceWorker' in navigator && (location.protocol === 'https:' || location.hostname === 'localhost')) {
+            // Register Service Worker only when not inside an iframe and not conflicting with /ziyaret/sw.js
+            if ('serviceWorker' in navigator && window.self === window.top && !location.pathname.includes('/ziyaret/')) {
                 navigator.serviceWorker.register('sw-kredi.js').catch(() => {});
             }
 

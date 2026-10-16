@@ -23,7 +23,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Outfit:wght@600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     
-    <link rel="stylesheet" href="style.css?v=1.5.3">
+    <link rel="stylesheet" href="style.css?v=v1.5.4: Sonsuz otomatik yenileme (reload loop) ve Service Worker cakismasi tamamen giderildi">
 </head>
 <body>
 
@@ -207,7 +207,7 @@
 
                 <div class="navbar-right">
                     <button type="button" class="btn btn-secondary btn-sm app-version-chip" id="app-version-badge" onclick="openVersionModal()" title="Sürüm ve Cihaz Güncelleme Merkezi">
-                        <i class="fa-solid fa-code-branch" style="color:#38bdf8;"></i> <span id="app-current-version-text">v1.5.3</span>
+                        <i class="fa-solid fa-code-branch" style="color:#38bdf8;"></i> <span id="app-current-version-text">vv1.5.4: Sonsuz otomatik yenileme (reload loop) ve Service Worker cakismasi tamamen giderildi</span>
                     </button>
 
                     <button type="button" class="btn btn-secondary btn-sm" onclick="forceRefreshFromGitHub()" id="btn-navbar-refresh" title="Logo ERP Verilerini Yenile">
@@ -691,7 +691,7 @@
                      ============================================================== -->
                 <section id="kredi-tab" class="tab-section" style="padding:0;">
                     <div style="width:100%; height:calc(100vh - 76px); min-height:680px; border-radius:14px; overflow:hidden; border:1px solid var(--border-color);">
-                        <iframe id="kredi-takip-iframe" src="kredi-takip.html" style="width:100%; height:100%; border:none; background:#090d16;" title="Dizsan Kredi Ödemeleri Takip"></iframe>
+                        <iframe id="kredi-takip-iframe" data-src="kredi-takip.html" style="width:100%; height:100%; border:none; background:#090d16;" title="Dizsan Kredi Ödemeleri Takip"></iframe>
                     </div>
                 </section>
 
@@ -1484,6 +1484,6 @@
     <!-- Scripts -->
     <script src="dizsan-back-navigation.js?v=2.0.0"></script>
     <script src="auto-date-helper.js"></script>
-    <script src="app.js?v=1.5.3"></script>
+    <script src="app.js?v=v1.5.4: Sonsuz otomatik yenileme (reload loop) ve Service Worker cakismasi tamamen giderildi"></script>
 </body>
 </html>

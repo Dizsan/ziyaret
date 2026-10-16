@@ -1,5 +1,5 @@
 // DİZSAN Müşteri Ziyaret & Saha Takip Service Worker (v1.4.1)
-const CACHE_NAME = "dizsan-ziyaret-v1.5.3";
+const CACHE_NAME = "dizsan-ziyaret-vv1.5.4: Sonsuz otomatik yenileme (reload loop) ve Service Worker cakismasi tamamen giderildi";
 const ASSETS = [
   './',
   './index.html',
@@ -47,13 +47,6 @@ self.addEventListener('activate', (e) => {
         })
       );
     }).then(() => self.clients.claim())
-      .then(() => {
-        return self.clients.matchAll({ type: 'window', includeUncontrolled: true }).then((clients) => {
-          clients.forEach((client) => {
-            client.postMessage({ type: 'SW_UPDATED', cacheName: CACHE_NAME });
-          });
-        });
-      })
   );
 });
 

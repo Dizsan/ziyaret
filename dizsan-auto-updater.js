@@ -177,7 +177,7 @@
         const notes = data.releaseNotes || 'Performans iyileştirmeleri ve yeni özellikler yayınlandı.';
         localStorage.setItem(STORAGE_KEY_VER, newVer);
 
-        // Bildirim Bannerı Göster
+        // Bildirim Bannerı Göster (Otomatik zorunlu sayfa yenileme döngüsü kaldırıldı)
         const banner = document.createElement('div');
         banner.className = 'dizsan-update-banner';
         banner.innerHTML = `
@@ -186,11 +186,11 @@
                     <span style="font-size:1.4rem;">🚀</span>
                     <div>
                         <strong style="font-size:0.95rem;">${APP_NAME} v${newVer} Yayında!</strong>
-                        <div style="font-size:0.8rem; color:#bae6fd; margin-top:2px;">${notes} — <strong>Cihazınız otomatik güncelleniyor...</strong></div>
+                        <div style="font-size:0.8rem; color:#bae6fd; margin-top:2px;">${notes}</div>
                     </div>
                 </div>
                 <button type="button" id="dizsan-update-now-btn" style="background:#f59e0b; color:#0f172a; border:none; padding:6px 14px; border-radius:8px; font-weight:700; font-size:0.85rem; cursor:pointer;">
-                    ⚡ Şimdi Uygula
+                    ⚡ Şimdi Güncelle
                 </button>
             </div>
         `;
@@ -200,11 +200,6 @@
         if (btn) {
             btn.onclick = () => applyUpdateImmediately();
         }
-
-        // 2.5 saniye sonra sıfır temasla otomatik yenile
-        setTimeout(() => {
-            applyUpdateImmediately();
-        }, 2500);
     }
 
     function applyUpdateImmediately() {
