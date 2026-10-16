@@ -1,5 +1,5 @@
 {
-  "version": "v1.5.2",
+  "version": "v1.3.0",
   "users": [
     {
       "order": 0,
@@ -192997,7 +192997,7 @@
   "unifiedMasterCustomers": [],
   "pushSubscriptions": [
     {
-      "id": "SUB-1792130842796",
+      "id": "SUB-1792144575970",
       "username": "ömer",
       "userFullName": "ÖMER EREN",
       "endpoint": "https://fcm.googleapis.com/fcm/send/fDM8-8-4jns:APA91bHflWu4hcMZvyYw9kAgFedqT8frDAT7Da3M_Gr7CX4rZ9jgqBeWE521YhfX4UISAyUW3iH3xL7Hf0VKjt4-0fisMsQCQ-nD6_u60leJnYsEZN7LU8zeaoYY7Nok6EX3e42L6bTV",
@@ -193005,7 +193005,7 @@
       "auth": "BbImkhD_b2UX0hkltpaNUA",
       "browser": "Samsung Internet",
       "platform": "Android",
-      "updatedAt": "16.10.2026 09:07:22"
+      "updatedAt": "16.10.2026 12:56:15"
     }
   ],
   "pushTestRequests": [],
@@ -193020,8 +193020,8 @@
       "platform": "Android / Mobil"
     }
   ],
-  "updatedAt": "2026-10-16T12:49:48.287313",
-  "stateRevision": 42,
+  "updatedAt": "2026-10-16T09:56:15.971Z",
+  "stateRevision": 45,
   "cities": [
     "Adana",
     "Adıyaman",
@@ -193188,13 +193188,5 @@
     "source": "Logo ERP Canlı Veritabanı (192.168.1.200:1433 LKSDB)",
     "realtimeSyncChannel": "GitHub Live API & Raw CDN",
     "status": "Aktif & Güncel (Sorgu Tarihindeki Son An: 15.10.2026)"
-  },
-  "appVersion": "1.5.2",
-  "latestVersion": {
-    "version": "1.5.2",
-    "releaseNotes": "Ziyaret planı ve saha aksiyonlarında ekleyen ve değişiklik yapan personel, tarih ve saat izleme (Audit) alanları eklendi",
-    "releasedAt": "2026-10-16 12:49:48"
-  },
-  "versionUpdatedAt": "2026-10-16 12:49:48",
-  "versionReleaseNotes": "Ziyaret planı ve saha aksiyonlarında ekleyen ve değişiklik yapan personel, tarih ve saat izleme (Audit) alanları eklendi"
+  }
 }
