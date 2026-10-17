@@ -306,7 +306,13 @@
             return true;
         }
 
-        // 5. Aşama: Zaten ana sekmedeyiz. Uygulamadan ASLA çıkma!
+        // 5. Aşama: Zaten ana sekmedeyiz. D-Pro içindeysek D-Pro Ana Menüsüne dön!
+        if (window.parent && window.parent !== window) {
+            try {
+                window.parent.postMessage({ type: 'DPRO_BACK_TO_MAIN' }, '*');
+                return true;
+            } catch (e) {}
+        }
         showBackToast('DİZSAN Ana Sayfasındasınız');
         scheduleVisibilityCheck();
         return false;
@@ -346,7 +352,7 @@
                 btn = document.createElement('button');
                 btn.type = 'button';
                 btn.id = 'dizsan-global-back-btn';
-                btn.className = 'dizsan-global-back-btn';
+                btn.className = 'dizsan-global-back-btn visible';
                 btn.title = 'Geri Dön';
                 btn.innerHTML = '<i class="fa-solid fa-arrow-left"></i> <span>Geri</span>';
                 btn.onclick = handleInAppBack;
@@ -378,12 +384,13 @@
         const btn = document.getElementById('dizsan-global-back-btn');
         if (!btn) return;
 
+        const isEmbedded = (window.parent && window.parent !== window);
         const hasModal = !!getActiveModal();
         const hasSidebar = !!getActiveSidebar();
         const curTab = getActiveTabId();
         const hasHistory = tabHistoryStack.length > 0;
         const isNotHome = curTab && !isHomeTab(curTab);
-        const shouldBeVisible = !!(hasModal || hasSidebar || hasHistory || isNotHome);
+        const shouldBeVisible = !!(isEmbedded || hasModal || hasSidebar || hasHistory || isNotHome || true);
 
         if (btn.classList.contains('visible') !== shouldBeVisible) {
             btn.classList.toggle('visible', shouldBeVisible);

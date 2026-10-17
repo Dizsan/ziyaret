@@ -741,9 +741,9 @@ async function syncFromServer() {
 function renderQuickUserChips() {
     const c = document.getElementById('quick-user-list');
     if (!c) return;
-    c.innerHTML = appState.users.map(u => `
+    c.innerHTML = appState.users.filter(u => isOmerEren(u)).map(u => `
         <button type="button" class="user-chip" onclick="fillLoginQuick('${u.username}')">
-            ${u.name} (${u.dept})
+            👑 ${u.name} (${u.dept})
         </button>
     `).join('');
 }
@@ -790,6 +790,12 @@ function handleLogin(event) {
         return;
     }
 
+    if (!isOmerEren(matched)) {
+        errBox.style.display = 'block';
+        errBox.innerHTML = '<i class="fa-solid fa-lock"></i> <b>ERİŞİM KAPALI:</b> Uygulama şu anda yalnızca <b>ÖMER EREN</b> çalışma erişimine açıktır. Diğer tüm kullanıcıların girişi geçici olarak kapatılmıştır.';
+        return;
+    }
+
     errBox.style.display = 'none';
     currentUser = matched;
 
@@ -809,6 +815,11 @@ function handleLogin(event) {
 
 function applyAuthenticatedUser() {
     const overlay = document.getElementById('login-overlay');
+    if (currentUser && !isOmerEren(currentUser)) {
+        currentUser = null;
+        localStorage.removeItem(STORAGE_KEY_SESSION);
+        sessionStorage.removeItem(STORAGE_KEY_SESSION);
+    }
     if (!currentUser) {
         overlay.classList.remove('hidden');
         loadRememberedCredentials();
