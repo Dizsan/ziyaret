@@ -192997,7 +192997,7 @@
   "unifiedMasterCustomers": [],
   "pushSubscriptions": [
     {
-      "id": "SUB-1792268178820",
+      "id": "SUB-1792273318095",
       "username": "ömer",
       "userFullName": "ÖMER EREN",
       "endpoint": "https://fcm.googleapis.com/fcm/send/enk4euWAjBw:APA91bGCsrjFqDNF_sEiDIBdxY4rEpcpS8K63ZRYnFhSIEAaO3v8yh3MjpMMZ0Wnt44hfVqAYvemmVgMkd5eXHO3tqRkfnNSmBTyC-Gmkuvd6HY8K9_lWQ4a6S0utnj14j8rdLSRySDD",
@@ -193005,7 +193005,7 @@
       "auth": "89uERjWJIY0kidLu90J99A",
       "browser": "Samsung Internet",
       "platform": "Android",
-      "updatedAt": "17.10.2026 23:16:18"
+      "updatedAt": "18.10.2026 00:41:58"
     },
     {
       "id": "SUB-1792232637633",
@@ -193053,8 +193053,8 @@
       "platform": "Android / Mobil"
     }
   ],
-  "updatedAt": "2026-10-17T20:16:18.821Z",
-  "stateRevision": 236,
+  "updatedAt": "2026-10-17T21:41:58.095Z",
+  "stateRevision": 239,
   "cities": [
     "Adana",
     "Adıyaman",
