@@ -143,14 +143,6 @@
                     <span class="nav-badge">434</span>
                 </div>
 
-                <div id="nav-item-kredi" class="nav-item" data-tab="kredi-tab" onclick="switchTab('kredi-tab')">
-                    <div class="nav-item-left">
-                        <i class="fa-solid fa-building-columns" style="color:#f59e0b;"></i>
-                        <span>💳 Kredi Ödemeleri Takip</span>
-                    </div>
-                    <span class="nav-badge" style="background:rgba(16,185,129,0.2); color:#34d399; border:1px solid rgba(16,185,129,0.4);">Canlı</span>
-                </div>
-
                 <div id="nav-item-approvals" class="nav-item" onclick="openApprovalCenterModal()" style="display:none;">
                     <div class="nav-item-left">
                         <i class="fa-solid fa-user-shield" style="color:#f59e0b;"></i>
@@ -686,15 +678,6 @@
                     </div>
                 </section>
 
-                <!-- ==============================================================
-                     SEKME 8: KREDİ ÖDEMELERİ TAKİP (KREDI-TAB)
-                     ============================================================== -->
-                <section id="kredi-tab" class="tab-section" style="padding:0;">
-                    <div style="width:100%; height:calc(100vh - 76px); min-height:680px; border-radius:14px; overflow:hidden; border:1px solid var(--border-color);">
-                        <iframe id="kredi-takip-iframe" data-src="kredi-takip.html" style="width:100%; height:100%; border:none; background:#090d16;" title="Dizsan Kredi Ödemeleri Takip"></iframe>
-                    </div>
-                </section>
-
             </main>
         </div>
     </div>
@@ -713,9 +696,9 @@
             <i class="fa-solid fa-plus"></i>
             <span>Ekle</span>
         </div>
-        <div class="mobile-nav-item" data-tab="kredi-tab" onclick="switchTab('kredi-tab')">
-            <i class="fa-solid fa-building-columns" style="color:#f59e0b;"></i>
-            <span>Krediler</span>
+        <div class="mobile-nav-item" data-tab="active-tab" onclick="switchTab('active-tab')">
+            <i class="fa-solid fa-car-side"></i>
+            <span>Saha</span>
         </div>
         <div class="mobile-nav-item" onclick="toggleMobileSidebar()" title="Diğer Menüler">
             <i class="fa-solid fa-bars"></i>

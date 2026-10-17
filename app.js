@@ -1095,20 +1095,12 @@ function switchTab(tabId) {
         'ai-match-tab': '<i class="fa-solid fa-wand-magic-sparkles" style="color:#c084fc;"></i> 🤖 Yapay Zeka Tekleştirme &amp; Churn Analizi',
         'tasks-tab': '<i class="fa-solid fa-list-check" style="color:#fbbf24;"></i> Aksiyon &amp; Çift Aşamalı Hatırlatıcılar',
         'strategy-tab': '<i class="fa-solid fa-map-location-dot" style="color:#34d399;"></i> İlçe Rut Strateji Rehberi',
-        'kredi-tab': '<i class="fa-solid fa-building-columns" style="color:#f59e0b;"></i> 💳 Kredi Ödemeleri Takip (Canlı GitHub Senkron)',
         'logs-tab': '<i class="fa-solid fa-shield-halved" style="color:#f59e0b;"></i> 🛡️ Yönetici Denetim İzi'
     };
 
     const titleEl = document.getElementById('page-title');
     if (titleEl && pageTitleMap[tabId]) {
         titleEl.innerHTML = pageTitleMap[tabId];
-    }
-
-    if (tabId === 'kredi-tab') {
-        const krediFrame = document.getElementById('kredi-takip-iframe');
-        if (krediFrame && !krediFrame.getAttribute('src')) {
-            krediFrame.setAttribute('src', 'kredi-takip.html');
-        }
     }
 
     const sidebar = document.getElementById('sidebar');
