@@ -114,36 +114,6 @@
         "payment_date": "2026-04-27",
         "source": "Otomatik (Planlanan)",
         "notes": "Sistem başlangıcı öncesi yapılan ödeme."
-      },
-      "20": {
-        "is_paid": true,
-        "payment_date": "2026-10-16",
-        "source": "Merkez Kasa",
-        "notes": ""
-      },
-      "21": {
-        "is_paid": true,
-        "payment_date": "2026-10-16",
-        "source": "Merkez Kasa",
-        "notes": ""
-      },
-      "22": {
-        "is_paid": true,
-        "payment_date": "2026-10-16",
-        "source": "Merkez Kasa",
-        "notes": ""
-      },
-      "23": {
-        "is_paid": true,
-        "payment_date": "2026-10-16",
-        "source": "Merkez Kasa",
-        "notes": ""
-      },
-      "24": {
-        "is_paid": true,
-        "payment_date": "2026-10-16",
-        "source": "Merkez Kasa",
-        "notes": ""
       }
     },
     "ziraat_bankasi": {
@@ -189,5 +159,5 @@
     "vakifbank_otomotiv": {}
   },
   "customLoans": {},
-  "lastUpdated": "2026-10-16T19:18:23.063Z"
+  "lastUpdated": "2026-10-17T09:59:36.106Z"
 }
