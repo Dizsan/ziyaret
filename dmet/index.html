@@ -1,0 +1,751 @@
+<!DOCTYPE html>
+<html lang="tr" data-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta name="theme-color" content="#0284c7">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="D-Met">
+    <title>D-Met | Dizsan Entegre Medya Takip & Scania Kaza Radarı v1.0.0</title>
+
+    <link rel="manifest" href="manifest.json">
+    <link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon.png">
+    <link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
+    <link rel="icon" type="image/jpeg" href="dizsan_logo.jpg">
+
+    <!-- Fonts & Icons -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Outfit:wght@600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+
+    <link rel="stylesheet" href="style.css?v=1.0.0">
+</head>
+<body>
+
+    <!-- ==========================================================================
+         ŞİFRELİ PERSONEL & YÖNETİCİ GİRİŞ EKRANI (LOGIN OVERLAY)
+         ========================================================================== -->
+    <div id="login-overlay" class="login-overlay">
+        <div class="login-card">
+            <div class="login-brand">
+                <img src="dizsan_logo.jpg" alt="DİZSAN Logo" class="login-logo">
+                <h1>D-Met</h1>
+                <p>Dizsan Entegre Medya Takip &bull; Ağır Vasıta &amp; Scania Kaza Radarı</p>
+                <span class="version-pill">
+                    <i class="fa-solid fa-satellite-dish"></i> Sürüm <span class="dynamic-version-text">v1.0.0</span> &bull; iOS / Android / Windows
+                </span>
+            </div>
+
+            <form id="login-form" onsubmit="handleLogin(event)">
+                <div class="login-form-group">
+                    <label for="login-username">Personel Kullanıcı Adı veya E-Posta</label>
+                    <div class="login-input-wrap">
+                        <i class="fa-solid fa-user-shield"></i>
+                        <input type="text" id="login-username" class="login-input" placeholder="Örn: ömer, hakan.aydin, rafet.canbek" required autocomplete="username">
+                    </div>
+                </div>
+
+                <div class="login-form-group">
+                    <label for="login-password">Şifre</label>
+                    <div class="login-input-wrap">
+                        <i class="fa-solid fa-lock"></i>
+                        <input type="password" id="login-password" class="login-input" placeholder="••••••" required autocomplete="current-password">
+                    </div>
+                </div>
+
+                <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:12px; font-size:0.78rem;">
+                    <label style="display:flex; align-items:center; gap:6px; color:#cbd5e1; cursor:pointer;">
+                        <input type="checkbox" id="login-remember-me" checked style="width:15px; height:15px; accent-color:#38bdf8;">
+                        <span>Beni Hatırla</span>
+                    </label>
+                    <span style="color:#38bdf8; font-size:0.74rem;"><i class="fa-solid fa-shield-halved"></i> SHA-256 &amp; Log Korumalı</span>
+                </div>
+
+                <div id="login-error" style="display:none; color:#fca5a5; background:rgba(239,68,68,0.16); border:1px solid rgba(239,68,68,0.4); padding:8px 10px; border-radius:9px; font-size:0.78rem; margin-bottom:10px;"></div>
+
+                <button type="submit" class="btn-login">
+                    <i class="fa-solid fa-right-to-bracket"></i> D-Met Radarına Giriş Yap
+                </button>
+            </form>
+
+            <div style="margin-top:10px;">
+                <button type="button" onclick="openInstallModal()" class="btn" style="width:100%; background:rgba(56,189,248,0.12); border-color:rgba(56,189,248,0.35); color:#e0f2fe;">
+                    <i class="fa-solid fa-mobile-screen-button" style="color:#38bdf8;"></i>
+                    <span>iOS / Android / Windows Uygulama Kurulum Rehberi</span>
+                </button>
+            </div>
+
+            <div class="quick-user-chips">
+                <span><i class="fa-solid fa-users"></i> Hızlı Personel Seçimi (Kullanıcı adını doldurur):</span>
+                <div id="quick-user-list" class="chip-list"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ==========================================================================
+         ÜST BAR (HEADER)
+         ========================================================================== -->
+    <header class="app-header">
+        <div class="header-inner">
+            <div class="brand-group">
+                <img src="dizsan_logo.jpg" alt="Dizsan" class="brand-logo">
+                <div class="brand-title-wrap">
+                    <h2>
+                        <span>D-Met</span>
+                        <span style="font-size:0.78rem; font-weight:600; color:var(--dizsan-cyan);">Dizsan Entegre Medya Takip</span>
+                        <span class="radar-live-badge"><span class="pulse-dot"></span> CANLI OSINT RADAR</span>
+                    </h2>
+                    <div class="brand-subtitle">
+                        <span><i class="fa-solid fa-location-crosshairs" style="color:var(--dizsan-cyan);"></i> Çorum &bull; Çankırı &bull; Amasya &bull; Tokat &bull; Yozgat (55 İlçe &amp; Geçitler)</span>
+                        <span>&bull;</span>
+                        <span>Son Tarama: <strong id="last-scan-time">Az önce</strong></span>
+                        <span>&bull;</span>
+                        <span id="active-user-badge" style="color:var(--emerald-ok); font-weight:600;"></span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="header-actions">
+                <button type="button" class="btn btn-danger" onclick="runLiveOsintScan(true)" id="btn-live-scan" title="5 İl ve 55 İlçede Canlı Haber & Sosyal Medya Taraması Başlat">
+                    <i class="fa-solid fa-radar fa-spin" id="scan-icon"></i>
+                    <span id="scan-btn-text">Şimdi Tara (Canlı OSINT)</span>
+                </button>
+                <button type="button" class="btn btn-purple" onclick="switchTab('ai-lab')">
+                    <i class="fa-solid fa-eye"></i>
+                    <span>Görsel/Video AI Analiz</span>
+                </button>
+                <button type="button" class="btn" onclick="openManualReportModal()">
+                    <i class="fa-solid fa-plus-circle" style="color:var(--emerald-ok);"></i>
+                    <span>Saha İhbar Ekle</span>
+                </button>
+                <button type="button" class="btn" onclick="toggleTheme()" id="theme-toggle-btn" title="Açık / Koyu Mod Değiştir">
+                    <i class="fa-solid fa-sun" id="theme-icon"></i>
+                    <span id="theme-label">Açık Mod</span>
+                </button>
+                <button type="button" class="btn" onclick="openVersionModal()" title="Sürüm Güncelleme & D-Pro / DizGün Köprüsü">
+                    <i class="fa-solid fa-code-branch" style="color:var(--dizsan-cyan);"></i>
+                    <span class="dynamic-version-text">v1.0.0</span>
+                </button>
+                <button type="button" class="btn btn-sm" onclick="handleLogout()" title="Güvenli Çıkış">
+                    <i class="fa-solid fa-power-off" style="color:var(--scania-red);"></i>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- ==========================================================================
+         NAVİGASYON SEKMELERİ
+         ========================================================================== -->
+    <nav class="nav-tabs-bar">
+        <div class="nav-tabs-inner">
+            <button class="nav-tab active" data-tab="radar" onclick="switchTab('radar')">
+                <i class="fa-solid fa-tower-broadcast"></i> Canlı Kaza &amp; Scania Radarı
+                <span class="tab-badge" id="badge-red-count">0</span>
+            </button>
+            <button class="nav-tab" data-tab="ai-lab" onclick="switchTab('ai-lab')">
+                <i class="fa-solid fa-microchip"></i> Yapay Zeka Görsel / Video &amp; Metin Denetçisi
+            </button>
+            <button class="nav-tab" data-tab="hinterland" onclick="switchTab('hinterland')">
+                <i class="fa-solid fa-route"></i> 5 İl / 55 İlçe &amp; Kara Nokta Haritası
+            </button>
+            <button class="nav-tab" data-tab="sources" onclick="switchTab('sources')">
+                <i class="fa-solid fa-globe"></i> Sosyal Medya &amp; Haber Kaynak Havuzu
+                <span class="tab-badge" style="background:rgba(56,189,248,0.2); color:#38bdf8;" id="badge-sources-count">0</span>
+            </button>
+            <button class="nav-tab" data-tab="notifications" onclick="switchTab('notifications')">
+                <i class="fa-brands fa-telegram"></i> Bildirim &amp; Telegram/WhatsApp Alarm Köprüsü
+            </button>
+            <button class="nav-tab" data-tab="logs" onclick="switchTab('logs')">
+                <i class="fa-solid fa-clipboard-list"></i> Denetim Kayıtları (Audit Logs) &amp; Entegrasyon
+            </button>
+        </div>
+    </nav>
+
+    <!-- ==========================================================================
+         ANA İÇERİK ALANI
+         ========================================================================== -->
+    <main class="main-container">
+
+        <!-- SEKME 1: CANLI KAZA & SCANIA RADARI -->
+        <section id="tab-radar" class="tab-section">
+            <!-- Asimetrik Hero Metrik & KPI Kartları -->
+            <div class="hero-kpi-layout">
+                <div class="hero-radar-card">
+                    <div>
+                        <div style="display:flex; align-items:center; gap:8px; margin-bottom:4px;">
+                            <span class="alarm-pill red"><i class="fa-solid fa-triangle-exclamation"></i> KIRMIZI ALARM (SCANIA TESPİTİ)</span>
+                            <span style="font-size:0.72rem; color:#94a3b8;">Metin + Vision AI + Plaka OCR</span>
+                        </div>
+                        <div style="font-family:'Outfit',sans-serif; font-size:2rem; font-weight:800; color:#fff; line-height:1.1;" id="kpi-scania-red">0</div>
+                        <div style="font-size:0.75rem; color:#cbd5e1; margin-top:4px;">
+                            Hinterland içinde doğrudan <strong>Scania</strong> yazısı veya <strong>Scania kabin/panjur</strong> görseli tespit edilen kazalar
+                        </div>
+                    </div>
+                    <div style="display:flex; flex-direction:column; gap:6px; align-items:flex-end;">
+                        <button class="btn btn-danger btn-sm" onclick="testEmergencyAlarm()">
+                            <i class="fa-solid fa-volume-high"></i> Sesli Alarm Testi
+                        </button>
+                        <button class="btn btn-sm" style="background:rgba(255,255,255,0.08); color:#fff;" onclick="filterByAlarm('RED')">
+                            Sadece Kırmızı Alarmlar
+                        </button>
+                    </div>
+                </div>
+
+                <div class="kpi-box" onclick="filterByAlarm('YELLOW')" style="cursor:pointer;">
+                    <div class="kpi-top">
+                        <span>SARI ALARM (AĞIR VASITA)</span>
+                        <i class="fa-solid fa-truck-moving" style="color:var(--amber-warn); font-size:1.1rem;"></i>
+                    </div>
+                    <div class="kpi-val" style="color:var(--amber-warn);" id="kpi-yellow-count">0</div>
+                    <div class="kpi-sub">Markası belirsiz tır/çekici kazası (Görsel inceleme / Potansiyel Scania)</div>
+                </div>
+
+                <div class="kpi-box" onclick="filterByErpMatch()" style="cursor:pointer;">
+                    <div class="kpi-top">
+                        <span>LOGO ERP / D-PRO EŞLEŞEN</span>
+                        <i class="fa-solid fa-address-card" style="color:var(--emerald-ok); font-size:1.1rem;"></i>
+                    </div>
+                    <div class="kpi-val" style="color:var(--emerald-ok);" id="kpi-erp-matched">0</div>
+                    <div class="kpi-sub">Plaka veya firma adından Dizsan kayıtlı müşterisi çıkan kazalar</div>
+                </div>
+
+                <div class="kpi-box" onclick="filterByStatus('CONVERTED')" style="cursor:pointer;">
+                    <div class="kpi-top">
+                        <span>SERVİSE KAZANDIRILAN İŞ</span>
+                        <i class="fa-solid fa-screwdriver-wrench" style="color:var(--dizsan-cyan); font-size:1.1rem;"></i>
+                    </div>
+                    <div class="kpi-val" style="color:var(--dizsan-cyan);" id="kpi-converted-count">0</div>
+                    <div class="kpi-sub" id="kpi-estimated-revenue">Tahmini Hasar Hacmi: 0 ₺</div>
+                </div>
+            </div>
+
+            <!-- 5 İl Hızlı Seçim Barı -->
+            <div class="hinterland-bar">
+                <div class="province-pills" id="province-pills-bar">
+                    <button class="prov-pill active" data-prov="ALL" onclick="selectProvince('ALL')">
+                        <i class="fa-solid fa-layer-group"></i> Tüm Hinterland (5 İl / 55 İlçe) <span class="prov-count" id="cnt-ALL">0</span>
+                    </button>
+                    <button class="prov-pill" data-prov="Çorum" onclick="selectProvince('Çorum')">
+                        <i class="fa-solid fa-location-dot" style="color:#ef4444;"></i> Çorum (14 İlçe) <span class="prov-count" id="cnt-Çorum">0</span>
+                    </button>
+                    <button class="prov-pill" data-prov="Çankırı" onclick="selectProvince('Çankırı')">
+                        <i class="fa-solid fa-location-dot" style="color:#f59e0b;"></i> Çankırı (12 İlçe) <span class="prov-count" id="cnt-Çankırı">0</span>
+                    </button>
+                    <button class="prov-pill" data-prov="Amasya" onclick="selectProvince('Amasya')">
+                        <i class="fa-solid fa-location-dot" style="color:#10b981;"></i> Amasya (7 İlçe) <span class="prov-count" id="cnt-Amasya">0</span>
+                    </button>
+                    <button class="prov-pill" data-prov="Tokat" onclick="selectProvince('Tokat')">
+                        <i class="fa-solid fa-location-dot" style="color:#38bdf8;"></i> Tokat (12 İlçe) <span class="prov-count" id="cnt-Tokat">0</span>
+                    </button>
+                    <button class="prov-pill" data-prov="Yozgat" onclick="selectProvince('Yozgat')">
+                        <i class="fa-solid fa-location-dot" style="color:#a855f7;"></i> Yozgat (14 İlçe) <span class="prov-count" id="cnt-Yozgat">0</span>
+                    </button>
+                </div>
+
+                <div style="display:flex; align-items:center; gap:8px;">
+                    <label style="font-size:0.75rem; color:var(--text-secondary); display:flex; align-items:center; gap:5px; cursor:pointer;">
+                        <input type="checkbox" id="auto-scan-toggle" checked onchange="toggleAutoScan(this.checked)" style="accent-color:var(--emerald-ok);">
+                        <span>Otomatik Periyodik Tarama (3 dk)</span>
+                    </label>
+                </div>
+            </div>
+
+            <!-- Arama ve Detaylı Filtre Araç Çubuğu -->
+            <div class="filter-toolbar">
+                <input type="text" id="search-input" class="form-control" placeholder="Haber başlığı, ilçe (Osmancık, Sungurlu, Merzifon, Sorgun...), plaka, Scania modeli veya firma ara..." oninput="renderIncidents()">
+                
+                <select id="filter-district" class="form-control" onchange="renderIncidents()">
+                    <option value="ALL">Tüm İlçeler &amp; Geçitler (55 İlçe)</option>
+                </select>
+
+                <select id="filter-platform" class="form-control" onchange="renderIncidents()">
+                    <option value="ALL">Tüm Sosyal Medya &amp; Haber Kaynakları</option>
+                    <option value="Instagram">Instagram (Açık Hesap &amp; Reels)</option>
+                    <option value="Facebook">Facebook (Yerel Sayfa &amp; Gruplar)</option>
+                    <option value="TikTok">TikTok (Saha &amp; Çekici Videoları)</option>
+                    <option value="X (Twitter)">X / Twitter (Son Dakika &amp; Trafik)</option>
+                    <option value="Telegram">Telegram (Radar &amp; Çevirme Kanalları)</option>
+                    <option value="Yerel Basın / Ajans">Yerel Haber Siteleri &amp; İHA/DHA</option>
+                    <option value="Resmi Kurum">Resmi Kurum / İtfaiye / KGM</option>
+                </select>
+
+                <select id="filter-detection" class="form-control" onchange="renderIncidents()">
+                    <option value="ALL">Tüm Tespit Türleri (Metin + Görsel)</option>
+                    <option value="TEXT_SCANIA">Metinde 'Scania' Geçenler</option>
+                    <option value="VISION_SCANIA">Metinde Yok -> Görsel/Videoda Scania Yakalananlar</option>
+                    <option value="YELLOW_TRUCK">Sarı Alarm (Markası Belirsiz Tır/Kamyon Kazası)</option>
+                </select>
+
+                <button class="btn" onclick="resetFilters()" title="Filtreleri Temizle">
+                    <i class="fa-solid fa-rotate-left"></i> Sıfırla
+                </button>
+            </div>
+
+            <!-- Kaza / Haber Olay Kartları Grid -->
+            <div id="incidents-grid" class="incidents-grid"></div>
+        </section>
+
+        <!-- SEKME 2: YAPAY ZEKA GÖRSEL / VİDEO & METİN DENETÇİSİ (AI VISION LAB) -->
+        <section id="tab-ai-lab" class="tab-section" style="display:none;">
+            <div class="panel-card">
+                <div class="panel-header">
+                    <h3><i class="fa-solid fa-eye" style="color:var(--purple-ai);"></i> D-Met 4 Aşamalı Yapay Zeka (Metin NLP + Görsel Vision AI + Video Kare + Plaka OCR) Denetçisi</h3>
+                    <span class="alarm-pill red">Canlı Test &amp; Manuel Haber Çözümleyici</span>
+                </div>
+                <p style="font-size:0.8rem; color:var(--text-secondary); margin-bottom:14px;">
+                    Sosyal medyada (Instagram, Facebook, TikTok, WhatsApp) gördüğünüz bir kaza haberinin metnini, linkini veya kaza fotoğrafını/videosunu buraya yükleyin. 
+                    <strong>Yazıda "Scania" geçmese bile</strong> D-Met Vision AI motoru fotoğraf/video karelerindeki <strong>Scania V8/R/S/G ön panjur ızgarasını, Griffin logosunu, far geometrisini ve araç plakasını</strong> analiz ederek sonucu üretir ve radara ekler.
+                </p>
+
+                <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap:16px;">
+                    <!-- Sol: Giriş Formu -->
+                    <div style="background:var(--bg-input); border:1px solid var(--border-subtle); border-radius:14px; padding:15px;">
+                        <h4 style="font-size:0.9rem; margin-bottom:10px; color:var(--dizsan-cyan);"><i class="fa-solid fa-upload"></i> 1. Haber Metni, Sosyal Medya Linki veya Görsel/Video Yükle</h4>
+                        
+                        <div style="margin-bottom:10px;">
+                            <label style="font-size:0.75rem; font-weight:600; display:block; margin-bottom:4px;">Kaynak Platform &amp; Link</label>
+                            <div style="display:grid; grid-template-columns: 140px 1fr; gap:6px;">
+                                <select id="ai-test-platform" class="form-control">
+                                    <option value="Instagram">Instagram</option>
+                                    <option value="TikTok">TikTok</option>
+                                    <option value="Facebook">Facebook</option>
+                                    <option value="X (Twitter)">X (Twitter)</option>
+                                    <option value="Telegram">Telegram</option>
+                                    <option value="Yerel Basın / Ajans">Yerel Haber Sitesi</option>
+                                </select>
+                                <input type="url" id="ai-test-url" class="form-control" placeholder="https://instagram.com/p/... veya haber linki">
+                            </div>
+                        </div>
+
+                        <div style="margin-bottom:10px;">
+                            <label style="font-size:0.75rem; font-weight:600; display:block; margin-bottom:4px;">Haber / Paylaşım Metni (İçinde Scania yazmasa da olur)</label>
+                            <textarea id="ai-test-text" rows="4" class="form-control" placeholder="Örn: Çorum Osmancık D-100 karayolu Kırkdilim mevkiinde yağış nedeniyle kontrolden çıkan 19 LH 268 plakalı çekici tır şarampole devrildi..."></textarea>
+                        </div>
+
+                        <div style="margin-bottom:12px;">
+                            <label style="font-size:0.75rem; font-weight:600; display:block; margin-bottom:4px;">Kaza Fotoğrafı veya Video Karesi Yükle (Vision AI + Plaka OCR)</label>
+                            <input type="file" id="ai-test-file" accept="image/*,video/*" class="form-control" onchange="previewAiTestMedia(event)">
+                            <div style="display:flex; gap:6px; margin-top:6px; flex-wrap:wrap;">
+                                <button type="button" class="btn btn-sm" onclick="loadSampleAiScenario(1)">
+                                    <i class="fa-solid fa-bolt" style="color:#ef4444;"></i> Örnek 1: Metinde Yok, Görselde Scania R450
+                                </button>
+                                <button type="button" class="btn btn-sm" onclick="loadSampleAiScenario(2)">
+                                    <i class="fa-solid fa-bolt" style="color:#f59e0b;"></i> Örnek 2: Metinde Scania + Kayıtlı Müşteri Plakası
+                                </button>
+                            </div>
+                        </div>
+
+                        <button type="button" class="btn btn-purple" style="width:100%; padding:10px;" onclick="executeAiDeepInspection()">
+                            <i class="fa-solid fa-wand-magic-sparkles"></i> 4 Aşamalı D-Met Yapay Zeka Analizini Başlat
+                        </button>
+                    </div>
+
+                    <!-- Sağ: Canlı AI Rapor Çıktısı -->
+                    <div style="background:var(--bg-input); border:1px solid var(--border-subtle); border-radius:14px; padding:15px; display:flex; flex-direction:column; justify-content:space-between;">
+                        <div>
+                            <h4 style="font-size:0.9rem; margin-bottom:10px; color:var(--emerald-ok);"><i class="fa-solid fa-microchip"></i> 2. Yapay Zeka Denetim &amp; Görsel Tanıma Sonucu</h4>
+                            <div id="ai-preview-box" style="position:relative; height:190px; background:#050811; border-radius:10px; overflow:hidden; margin-bottom:12px; display:flex; align-items:center; justify-content:center; border:1px dashed var(--border-subtle);">
+                                <span style="color:var(--text-muted); font-size:0.78rem;"><i class="fa-regular fa-image"></i> Görsel veya örnek senaryo seçildiğinde burada Vision AI taraması görünür</span>
+                            </div>
+                            <div id="ai-analysis-steps" style="font-size:0.78rem; display:flex; flex-direction:column; gap:6px;">
+                                <div style="padding:8px; border-radius:8px; background:rgba(255,255,255,0.03); color:var(--text-muted);">
+                                    Analiz bekleniyor...
+                                </div>
+                            </div>
+                        </div>
+                        <div id="ai-result-actions" style="display:none; margin-top:12px; padding-top:10px; border-top:1px solid var(--border-subtle); gap:8px;">
+                            <button type="button" class="btn btn-danger" style="flex:1;" onclick="promoteAiTestToRadar()">
+                                <i class="fa-solid fa-bell"></i> Radara Düşür &amp; Bildirim Gönder
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- SEKME 3: 5 İL / 55 İLÇE & KARAYOLU KARA NOKTA SÖZLÜĞÜ -->
+        <section id="tab-hinterland" class="tab-section" style="display:none;">
+            <div class="panel-card">
+                <div class="panel-header">
+                    <h3><i class="fa-solid fa-map-location-dot" style="color:var(--dizsan-cyan);"></i> Dizsan Hinterlandı: 5 İl, 55 İlçe ve Ağır Vasıta Karayolu Koridorları</h3>
+                    <span style="font-size:0.76rem; color:var(--text-secondary);">Haberde il adı yazmasa bile ilçe veya geçit adından otomatik yakalar</span>
+                </div>
+                <div id="hinterland-dictionary-grid" style="display:grid; grid-template-columns: repeat(auto-fit, minmax(290px, 1fr)); gap:12px;"></div>
+            </div>
+        </section>
+
+        <!-- SEKME 4: SOSYAL MEDYA & HABER KAYNAK HAVUZU -->
+        <section id="tab-sources" class="tab-section" style="display:none;">
+            <div class="panel-card">
+                <div class="panel-header">
+                    <div>
+                        <h3><i class="fa-solid fa-satellite" style="color:var(--dizsan-cyan);"></i> Taranan Halka Açık Sosyal Medya, Yerel Basın, Resmi Kurum &amp; Bireysel/Sayfa Havuzu</h3>
+                        <p style="font-size:0.76rem; color:var(--text-secondary); margin-top:2px;">
+                            Yasal OSINT prensibiyle sadece halka açık (public) sosyal medya sayfaları, yerel haber ajansları, RSS kanalları ve resmi kurum bültenleri taranır.
+                        </p>
+                    </div>
+                    <button class="btn btn-primary" onclick="openAddSourceModal()">
+                        <i class="fa-solid fa-plus"></i> Yeni Hesap / Haber Kaynağı Ekle
+                    </button>
+                </div>
+
+                <div class="data-table-wrap">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>Kaynak / Hesap Adı</th>
+                                <th>Platform</th>
+                                <th>Bölge (İl / Kapsam)</th>
+                                <th>Kategori</th>
+                                <th>Tarama Yöntemi</th>
+                                <th>Durum</th>
+                                <th>İşlem</th>
+                            </tr>
+                        </thead>
+                        <tbody id="sources-tbody"></tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+        <!-- SEKME 5: BİLDİRİM & TELEGRAM / WHATSAPP ALARM KÖPRÜSÜ -->
+        <section id="tab-notifications" class="tab-section" style="display:none;">
+            <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(360px, 1fr)); gap:16px;">
+                <div class="panel-card">
+                    <div class="panel-header">
+                        <h3><i class="fa-brands fa-telegram" style="color:#38bdf8;"></i> Telegram &amp; WhatsApp Anlık Kırmızı Alarm Bot Köprüsü</h3>
+                    </div>
+                    <p style="font-size:0.78rem; color:var(--text-secondary); margin-bottom:12px;">
+                        iOS, Android ve Windows cihazlarda uygulama arka plandayken veya telefon kilitliyken bile <strong>Scania Kaza Tespiti</strong> anında belirlediğiniz Telegram grubuna / kanalına fotoğraflı ve konumlu olarak düşer.
+                    </p>
+                    <div style="display:flex; flex-direction:column; gap:10px;">
+                        <div>
+                            <label style="font-size:0.75rem; font-weight:600; display:block; margin-bottom:4px;">Telegram Bot Token (HTTP API)</label>
+                            <input type="text" id="cfg-tg-token" class="form-control" placeholder="Örn: 7123456789:AAH_dizsan_dmet_bot_token">
+                        </div>
+                        <div>
+                            <label style="font-size:0.75rem; font-weight:600; display:block; margin-bottom:4px;">Telegram Grup / Kanal Chat ID</label>
+                            <input type="text" id="cfg-tg-chatid" class="form-control" placeholder="Örn: -1001987654321 (Dizsan Acil Saha Grubu)">
+                        </div>
+                        <div>
+                            <label style="font-size:0.75rem; font-weight:600; display:block; margin-bottom:4px;">Hızlı Saha WhatsApp Paylaşım Numarası (Servis / Kurtarıcı Hattı)</label>
+                            <input type="text" id="cfg-wa-phone" class="form-control" placeholder="Örn: 905320000000">
+                        </div>
+                        <div style="display:flex; gap:8px; margin-top:4px; flex-wrap:wrap;">
+                            <button class="btn btn-primary" onclick="saveNotificationConfig()">
+                                <i class="fa-solid fa-floppy-disk"></i> Ayarları Kaydet
+                            </button>
+                            <button class="btn btn-success" onclick="sendTestTelegramAlert()">
+                                <i class="fa-solid fa-paper-plane"></i> Telegram Test Alarmı Gönder
+                            </button>
+                            <button class="btn" onclick="requestBrowserPushPermission()">
+                                <i class="fa-solid fa-bell"></i> Cihaz Bildirim İzni Ver (iOS/Android/PC)
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="panel-card">
+                    <div class="panel-header">
+                        <h3><i class="fa-solid fa-sliders" style="color:var(--amber-warn);"></i> Alarm &amp; Yapay Zeka Hassasiyet Kuralları</h3>
+                    </div>
+                    <div style="display:flex; flex-direction:column; gap:10px; font-size:0.8rem;">
+                        <label style="display:flex; align-items:center; justify-content:space-between; padding:10px; border-radius:10px; background:var(--bg-input); border:1px solid var(--border-subtle);">
+                            <span><strong>Kırmızı Alarm:</strong> Haberde veya görselde Scania tespit edildiğinde sesli siren çal</span>
+                            <input type="checkbox" id="rule-red-sound" checked onchange="saveNotificationConfig()" style="width:18px; height:18px; accent-color:var(--scania-red);">
+                        </label>
+                        <label style="display:flex; align-items:center; justify-content:space-between; padding:10px; border-radius:10px; background:var(--bg-input); border:1px solid var(--border-subtle);">
+                            <span><strong>Sarı Alarm:</strong> Markası seçilemeyen ağır vasıta (Tır/Kamyon) kazalarını da radara düşür</span>
+                            <input type="checkbox" id="rule-yellow-enable" checked onchange="saveNotificationConfig()" style="width:18px; height:18px; accent-color:var(--amber-warn);">
+                        </label>
+                        <label style="display:flex; align-items:center; justify-content:space-between; padding:10px; border-radius:10px; background:var(--bg-input); border:1px solid var(--border-subtle);">
+                            <span><strong>Logo ERP &amp; D-Pro Eşleştirme:</strong> Okunan plakayı otomatik müşteri veritabanında sorgula</span>
+                            <input type="checkbox" id="rule-erp-lookup" checked onchange="saveNotificationConfig()" style="width:18px; height:18px; accent-color:var(--emerald-ok);">
+                        </label>
+                        <label style="display:flex; align-items:center; justify-content:space-between; padding:10px; border-radius:10px; background:var(--bg-input); border:1px solid var(--border-subtle);">
+                            <span><strong>Mükerrer Haber Tekilleştirme:</strong> Aynı kazayı farklı sitelerden tek kartta birleştir</span>
+                            <input type="checkbox" id="rule-dedup" checked onchange="saveNotificationConfig()" style="width:18px; height:18px; accent-color:var(--dizsan-cyan);">
+                        </label>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- SEKME 6: DENETİM KAYITLARI (AUDIT LOGS) & D-PRO / DİZGÜN ENTEGRASYON -->
+        <section id="tab-logs" class="tab-section" style="display:none;">
+            <div class="panel-card">
+                <div class="panel-header">
+                    <div>
+                        <h3><i class="fa-solid fa-shield-halved" style="color:var(--emerald-ok);"></i> Güvenlik &amp; Operasyon Denetim Kayıtları (Audit Trail Logs)</h3>
+                        <p style="font-size:0.75rem; color:var(--text-secondary);">Kullanıcı girişleri, yapılan taramalar, incelenen haberler, sahiplenilen kazalar ve versiyon güncellemeleri değiştirilemez zaman damgasıyla tutulur.</p>
+                    </div>
+                    <div style="display:flex; gap:8px;">
+                        <button class="btn btn-sm" onclick="exportLogsCsv()">
+                            <i class="fa-solid fa-file-csv"></i> Logları Dışa Aktar (CSV)
+                        </button>
+                    </div>
+                </div>
+                <div class="data-table-wrap">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>Tarih &amp; Saat (GG.AA.YYYY)</th>
+                                <th>Kullanıcı</th>
+                                <th>Rol / Birim</th>
+                                <th>İşlem Tipi</th>
+                                <th>Detay Açıklama</th>
+                                <th>Cihaz / Platform</th>
+                            </tr>
+                        </thead>
+                        <tbody id="audit-logs-tbody"></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- D-Pro ve DizGün Gömülü Entegrasyon Köprüsü Bilgisi -->
+            <div class="panel-card">
+                <div class="panel-header">
+                    <h3><i class="fa-solid fa-plug-circle-check" style="color:var(--dizsan-cyan);"></i> D-Pro &amp; DizGün Sistem Entegrasyon Köprüsü Durumu</h3>
+                    <span class="alarm-pill" style="background:rgba(16,185,129,0.2); color:#34d399;">Çift Yönlü Köprü Aktif</span>
+                </div>
+                <p style="font-size:0.79rem; color:var(--text-secondary); margin-bottom:10px;">
+                    D-Met, <code>localStorage</code> (<code>dizsan_dmet_shared_state_v4</code> ve <code>dizgun_demet_bridge</code>) ile sunucu <code>/api/demet-state</code> uç noktası üzerinden hem <strong>D-Pro Birleşik Platform</strong> hem de <strong>DizGün Sistem</strong> içine sıfır veri kaybıyla gömülmeye hazır mimaride çalışmaktadır.
+                </p>
+                <div style="display:flex; gap:8px; flex-wrap:wrap;">
+                    <a href="../D-Pro/index.html" class="btn btn-primary"><i class="fa-solid fa-layer-group"></i> D-Pro Platformuna Git</a>
+                    <a href="../DizGün C%CC%A7al%C4%B1s%CC%A7ma/dizgun-app/index.html" class="btn"><i class="fa-solid fa-briefcase"></i> DizGün Sisteme Git</a>
+                    <a href="../index.html" class="btn"><i class="fa-solid fa-grip"></i> Merkezi Portala Dön</a>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- ==========================================================================
+         MODAL 1: HABER TAM DETAYI, GÖRSEL AI RAPORU VE SAHA AKSİYON EKRANI
+         ========================================================================== -->
+    <div id="incident-detail-modal" class="modal-backdrop">
+        <div class="modal-box">
+            <div class="modal-header">
+                <h3 id="modal-inc-title"><i class="fa-solid fa-triangle-exclamation" style="color:var(--scania-red);"></i> Kaza Haberi &amp; Scania AI Raporu</h3>
+                <button class="modal-close" onclick="closeIncidentModal()">&times;</button>
+            </div>
+            <div class="modal-body" id="modal-inc-body"></div>
+            <div class="modal-footer" id="modal-inc-footer"></div>
+        </div>
+    </div>
+
+    <!-- ==========================================================================
+         MODAL 2: MANUEL SAHA KAZA / İHBAR EKLEME MODALI
+         ========================================================================== -->
+    <div id="manual-report-modal" class="modal-backdrop">
+        <div class="modal-box" style="max-width:600px;">
+            <div class="modal-header">
+                <h3><i class="fa-solid fa-truck-medical" style="color:var(--emerald-ok);"></i> Yeni Saha Kaza İhbarı / Sosyal Medya Haberi Ekle</h3>
+                <button class="modal-close" onclick="closeManualReportModal()">&times;</button>
+            </div>
+            <form onsubmit="submitManualReport(event)">
+                <div class="modal-body" style="display:flex; flex-direction:column; gap:10px;">
+                    <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px;">
+                        <div>
+                            <label style="font-size:0.75rem; font-weight:600;">İl *</label>
+                            <select id="man-province" class="form-control" required onchange="populateManualDistricts()">
+                                <option value="Çorum">Çorum</option>
+                                <option value="Çankırı">Çankırı</option>
+                                <option value="Amasya">Amasya</option>
+                                <option value="Tokat">Tokat</option>
+                                <option value="Yozgat">Yozgat</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label style="font-size:0.75rem; font-weight:600;">İlçe / Karayolu Geçidi *</label>
+                            <select id="man-district" class="form-control" required></select>
+                        </div>
+                    </div>
+
+                    <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px;">
+                        <div>
+                            <label style="font-size:0.75rem; font-weight:600;">Kaynak Platform *</label>
+                            <select id="man-platform" class="form-control">
+                                <option value="Instagram">Instagram</option>
+                                <option value="Facebook">Facebook</option>
+                                <option value="TikTok">TikTok</option>
+                                <option value="X (Twitter)">X (Twitter)</option>
+                                <option value="Telegram">Telegram</option>
+                                <option value="Yerel Basın / Ajans">Yerel Haber Sitesi</option>
+                                <option value="Saha Çekici / Kurtarıcı İhbarı">Saha Çekici / Kurtarıcı İhbarı</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label style="font-size:0.75rem; font-weight:600;">Olay Tarihi (GG.AA.YYYY) *</label>
+                            <input type="date" id="man-date" class="form-control" required>
+                        </div>
+                    </div>
+
+                    <div>
+                        <label style="font-size:0.75rem; font-weight:600;">Haber Başlığı *</label>
+                        <input type="text" id="man-title" class="form-control" placeholder="Örn: Sungurlu-Çorum yolunda Scania çekici kazası" required>
+                    </div>
+
+                    <div>
+                        <label style="font-size:0.75rem; font-weight:600;">Haberin Tam Metni / Açıklama *</label>
+                        <textarea id="man-content" rows="4" class="form-control" placeholder="Haber içeriğini buraya yapıştırın..." required></textarea>
+                    </div>
+
+                    <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px;">
+                        <div>
+                            <label style="font-size:0.75rem; font-weight:600;">Tespit Edilen Plaka (Varsa)</label>
+                            <input type="text" id="man-plate" class="form-control" placeholder="Örn: 19 LH 268">
+                        </div>
+                        <div>
+                            <label style="font-size:0.75rem; font-weight:600;">Tahmini Scania Modeli &amp; Hasar</label>
+                            <input type="text" id="man-model" class="form-control" placeholder="Örn: Scania R450 - Ön Kabin Hasarlı">
+                        </div>
+                    </div>
+
+                    <div>
+                        <label style="font-size:0.75rem; font-weight:600;">Haber Kaynak Linki (URL)</label>
+                        <input type="url" id="man-url" class="form-control" placeholder="https://...">
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn" onclick="closeManualReportModal()">İptal</button>
+                    <button type="submit" class="btn btn-danger"><i class="fa-solid fa-bell"></i> Analiz Et &amp; Radara Ekle</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- ==========================================================================
+         MODAL 3: YENİ SOSYAL MEDYA / HABER KAYNAĞI EKLEME MODALI
+         ========================================================================== -->
+    <div id="add-source-modal" class="modal-backdrop">
+        <div class="modal-box" style="max-width:520px;">
+            <div class="modal-header">
+                <h3><i class="fa-solid fa-globe" style="color:var(--dizsan-cyan);"></i> Yeni Sosyal Medya Hesabı veya Haber Sitesi Ekle</h3>
+                <button class="modal-close" onclick="closeAddSourceModal()">&times;</button>
+            </div>
+            <form onsubmit="submitNewSource(event)">
+                <div class="modal-body" style="display:flex; flex-direction:column; gap:10px;">
+                    <div>
+                        <label style="font-size:0.75rem; font-weight:600;">Hesap / Sayfa / Site Adı *</label>
+                        <input type="text" id="src-name" class="form-control" placeholder="Örn: @corumtrafik19 veya Osmancık Haber" required>
+                    </div>
+                    <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px;">
+                        <div>
+                            <label style="font-size:0.75rem; font-weight:600;">Platform *</label>
+                            <select id="src-platform" class="form-control">
+                                <option value="Instagram">Instagram</option>
+                                <option value="Facebook">Facebook</option>
+                                <option value="TikTok">TikTok</option>
+                                <option value="X (Twitter)">X (Twitter)</option>
+                                <option value="Telegram">Telegram</option>
+                                <option value="Yerel Basın / Ajans">Yerel Haber Sitesi / RSS</option>
+                                <option value="Resmi Kurum">Resmi Kurum / Valilik / İtfaiye</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label style="font-size:0.75rem; font-weight:600;">İl Kapsamı *</label>
+                            <select id="src-province" class="form-control">
+                                <option value="Çorum">Çorum</option>
+                                <option value="Çankırı">Çankırı</option>
+                                <option value="Amasya">Amasya</option>
+                                <option value="Tokat">Tokat</option>
+                                <option value="Yozgat">Yozgat</option>
+                                <option value="Tüm Hinterland">Tüm Hinterland (Genel)</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div>
+                        <label style="font-size:0.75rem; font-weight:600;">Halka Açık Profil / RSS / Sayfa Linki *</label>
+                        <input type="text" id="src-url" class="form-control" placeholder="https://instagram.com/... veya site adresi" required>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn" onclick="closeAddSourceModal()">İptal</button>
+                    <button type="submit" class="btn btn-primary"><i class="fa-solid fa-check"></i> Kaynağı Radara Ekle</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- ==========================================================================
+         MODAL 4: VERSİYON GÜNCELLEME YÖNETİMİ & SÜRÜM GEÇMİŞİ
+         ========================================================================== -->
+    <div id="version-modal" class="modal-backdrop">
+        <div class="modal-box" style="max-width:600px;">
+            <div class="modal-header">
+                <h3><i class="fa-solid fa-code-branch" style="color:var(--dizsan-cyan);"></i> D-Met Versiyon Yönetimi &amp; Güncelleme Merkezi</h3>
+                <button class="modal-close" onclick="closeVersionModal()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div style="padding:12px; border-radius:12px; background:rgba(2,132,199,0.12); border:1px solid rgba(56,189,248,0.35); margin-bottom:14px; display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:10px;">
+                    <div>
+                        <div style="font-size:0.74rem; color:var(--text-secondary);">Aktif Çalışan Sürüm</div>
+                        <div style="font-family:'Outfit',sans-serif; font-size:1.3rem; font-weight:800; color:var(--dizsan-cyan);" class="dynamic-version-text">v1.0.0</div>
+                    </div>
+                    <button class="btn btn-primary btn-sm" onclick="checkRemoteVersionUpdate()">
+                        <i class="fa-solid fa-arrows-rotate"></i> Güncellemeleri Denetle
+                    </button>
+                </div>
+
+                <!-- Yeni Versiyon Yayınlama (Yönetici Yetkisi) -->
+                <div style="background:var(--bg-input); border:1px solid var(--border-subtle); border-radius:12px; padding:14px; margin-bottom:14px;">
+                    <h4 style="font-size:0.86rem; margin-bottom:8px; color:var(--emerald-ok);"><i class="fa-solid fa-rocket"></i> Yeni Sürüm Yayınla (Canlı Versiyon Yükseltme)</h4>
+                    <div style="display:grid; grid-template-columns: 140px 1fr; gap:8px; margin-bottom:8px;">
+                        <input type="text" id="new-version-code" class="form-control" placeholder="Örn: v1.1.0">
+                        <input type="text" id="new-version-notes" class="form-control" placeholder="Bu sürümde yapılan yenilikleri yazın...">
+                    </div>
+                    <button class="btn btn-success btn-sm" onclick="publishNewVersion()">
+                        <i class="fa-solid fa-cloud-arrow-up"></i> Versiyonu Güncelle &amp; Tüm Cihazlara Bildir
+                    </button>
+                </div>
+
+                <h4 style="font-size:0.85rem; margin-bottom:8px;">Sürüm Geçmişi (Changelog)</h4>
+                <div id="changelog-list" style="display:flex; flex-direction:column; gap:8px; max-height:220px; overflow-y:auto;"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ==========================================================================
+         MODAL 5: iOS / ANDROID / WINDOWS KURULUM REHBERİ
+         ========================================================================== -->
+    <div id="install-modal" class="modal-backdrop">
+        <div class="modal-box" style="max-width:540px;">
+            <div class="modal-header">
+                <h3><i class="fa-solid fa-mobile-screen-button" style="color:var(--dizsan-cyan);"></i> iOS, Android ve Windows Kurulum Rehberi</h3>
+                <button class="modal-close" onclick="closeInstallModal()">&times;</button>
+            </div>
+            <div class="modal-body" style="display:flex; flex-direction:column; gap:12px; font-size:0.82rem;">
+                <div style="padding:12px; border-radius:10px; background:var(--bg-input); border:1px solid var(--border-subtle);">
+                    <strong><i class="fa-brands fa-apple"></i> iPhone / iPad (iOS):</strong> Safari ile bu sayfayı açın &rarr; Alt ortadaki <strong>Paylaş</strong> ikonuna dokunun &rarr; <strong>"Ana Ekrana Ekle"</strong> seçeneğine basın.
+                </div>
+                <div style="padding:12px; border-radius:10px; background:var(--bg-input); border:1px solid var(--border-subtle);">
+                    <strong><i class="fa-brands fa-android" style="color:#10b981;"></i> Android Telefon / Tablet:</strong> Chrome veya Samsung Internet menüsünden <strong>"Uygulamayı Yükle / Ana Ekrana Ekle"</strong> seçeneğine dokunun.
+                </div>
+                <div style="padding:12px; border-radius:10px; background:var(--bg-input); border:1px solid var(--border-subtle);">
+                    <strong><i class="fa-brands fa-windows" style="color:#38bdf8;"></i> Windows / Mac Bilgisayar:</strong> Adres çubuğunun sağındaki <strong>"D-Met Uygulamasını Yükle"</strong> simgesine tıklayarak masaüstü uygulaması olarak çalıştırın.
+                </div>
+                <button id="pwa-install-trigger" class="btn btn-primary" style="display:none; width:100%;" onclick="triggerNativePwaInstall()">
+                    <i class="fa-solid fa-download"></i> Cihaza Şimdi Doğrudan Kur
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- TOAST CONTAINER -->
+    <div id="toast-container"></div>
+
+    <!-- Zorunlu Otomatik Tarih Geçiş Kütüphanesi (GG.AA.YYYY) -->
+    <script src="auto-date-helper.js"></script>
+    <script src="app.js?v=1.0.6"></script>
+    <script src="dizsan-back-navigation.js"></script>
+    <script src="dizsan-auto-updater.js" data-app-id="demet" data-app-name="D-Met // Dizsan Entegre Medya Takip" data-version="1.0.0"></script>
+</body>
+</html>

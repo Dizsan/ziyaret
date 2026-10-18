@@ -1,0 +1,12 @@
+{
+  "version": "1.0.7",
+  "build": 2026101907,
+  "releasedAt": "19.10.2026 02:03",
+  "releaseNotes": "D-Met (Dizsan Entegre Medya Takip) D-Pro sol menü entegrasyonu, sesli siren alarm motoru ve otomatik GitHub senkronizasyonu.",
+  "author": "Ömer Eren & DİZSAN Kurumsal Dijital Sistemler",
+  "bridgeTarget": {
+    "dpro": "../D-Pro/index.html",
+    "dizgun": "../DizGün Çalışma/dizgun-app/index.html",
+    "ziyaret": "../Dizsan Ziyaret/index.html"
+  }
+}
