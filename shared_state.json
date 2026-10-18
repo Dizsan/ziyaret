@@ -193053,8 +193053,8 @@
       "platform": "Android / Mobil"
     }
   ],
-  "updatedAt": "2026-10-17T21:41:58.095Z",
-  "stateRevision": 239,
+  "updatedAt": "2026-10-18T09:25:31.856439Z",
+  "stateRevision": 41,
   "cities": [
     "Adana",
     "Adıyaman",
@@ -193221,5 +193221,8 @@
     "source": "Logo ERP Canlı Veritabanı (192.168.1.200:1433 LKSDB)",
     "realtimeSyncChannel": "GitHub Live API & Raw CDN",
     "status": "Aktif & Güncel (Sorgu Tarihindeki Son An: 15.10.2026)"
-  }
+  },
+  "appVersion": "1.5.7",
+  "versionUpdatedAt": "2026-10-18 12:25:31",
+  "versionReleaseNotes": "D-Pro v1.3.0 Cari & Logo Ekstre, Fatura Kalemleri ve Sadece Omer Eren Ozel Canli Erisim Kalkani"
 }

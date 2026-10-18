@@ -1,7 +1,7 @@
 {
-  "version": "1.5.6",
-  "build": 156,
-  "releasedAt": "2026-10-16 22:38:36",
-  "releaseNotes": "Sonsuz otomatik yenileme (reload loop) ve Service Worker cakismasi tamamen giderildi",
+  "version": "1.5.7",
+  "build": 157,
+  "releasedAt": "2026-10-18 12:25:31",
+  "releaseNotes": "D-Pro v1.3.0 Cari & Logo Ekstre, Fatura Kalemleri ve Sadece Omer Eren Ozel Canli Erisim Kalkani",
   "author": "Ömer Eren & DİZSAN"
 }
