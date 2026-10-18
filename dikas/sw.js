@@ -1,4 +1,4 @@
-const CACHE_NAME = 'dikas-finans-cache-v1.0.5';
+const CACHE_NAME = 'dikas-finans-cache-v1.0.6';
 const ASSETS_TO_CACHE = [
   './',
   './index.html',
@@ -40,7 +40,7 @@ self.addEventListener('activate', (event) => {
 self.addEventListener('fetch', (event) => {
   if (event.request.method !== 'GET') return;
   const url = new URL(event.request.url);
-  if (url.pathname.includes('/api/') || url.pathname.endsWith('version.json') || url.pathname.endsWith('shared_state.json')) {
+  if (url.hostname.includes('github.com') || url.hostname.includes('githubusercontent.com') || url.pathname.includes('/api/') || url.pathname.endsWith('version.json') || url.pathname.endsWith('shared_state.json')) {
     event.respondWith(
       fetch(event.request).catch(() => caches.match(event.request))
     );

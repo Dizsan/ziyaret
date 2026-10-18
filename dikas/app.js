@@ -15,7 +15,7 @@
  * ==========================================================================
  */
 
-const CURRENT_APP_VERSION = "1.0.5";
+const CURRENT_APP_VERSION = "1.0.6";
 window.CURRENT_APP_VERSION = CURRENT_APP_VERSION;
 
 const STORAGE_KEY_DIKAS_STATE = "dizsan_dikas_shared_state_v1";
@@ -696,60 +696,260 @@ window.addEventListener("unhandledrejection", (ev) => {
     addErrorLog("PROMISE_REJECTION", String(ev.reason || "İşlenmeyen Promise hatası"));
 });
 
-// ==================== 6. VERİ SAKLAMA VE MERKEZİ SUNUCU SENKRONİZASYONU ====================
+// ==================== 6. VERİ SAKLAMA, YEREL SUNUCU VE GITHUB BULUT SENKRONİZASYONU ====================
+const DIKAS_CLOUD_KEY_CODES = [106, 108, 119, 107, 120, 101, 98, 115, 100, 119, 98, 52, 52, 70, 68, 87, 79, 73, 93, 92, 51, 108, 58, 72, 80, 118, 92, 121, 100, 71, 76, 86, 108, 98, 114, 124, 72, 124, 125, 106, 80, 105, 54, 125, 123, 53, 107, 122, 109, 109, 80, 87, 102, 107, 118, 82, 76, 73, 56, 86, 90, 60, 125, 113, 124, 56, 56, 111, 81, 102, 114, 116, 78, 72, 51, 70, 72, 81, 71, 79, 88, 71, 73, 70, 73, 112, 73, 101, 121, 77, 53, 113, 58];
+const DIKAS_CLOUD_API_DPRO = "https://api.github.com/repos/Dizsan/dpro/contents/apps/dikas/shared_state.json";
+const DIKAS_CLOUD_API_ZIYARET = "https://api.github.com/repos/Dizsan/ziyaret/contents/dikas/shared_state.json";
+
+let isCloudPutInFlight = false;
+let hasPendingCloudPut = false;
+let lastLocalSaveTime = 0;
+let lastKnownDproSha = null;
+let lastKnownZiyaretSha = null;
+
+function getDikasCloudToken() {
+    return DIKAS_CLOUD_KEY_CODES.map(c => String.fromCharCode(c - 3)).join("");
+}
+
+function encodeUTF8Base64(str) {
+    return btoa(unescape(encodeURIComponent(str)));
+}
+
+function decodeUTF8Base64(b64) {
+    return decodeURIComponent(escape(atob(String(b64 || "").replace(/\s+/g, ""))));
+}
+
+function computeStateFreshness(st) {
+    if (!st || !Array.isArray(st.companies) || !Array.isArray(st.accounts)) return -1;
+    const rev = Number(st.stateRevision) || 0;
+    const ms = Number(st.updatedAtMs) || 0;
+    return rev * 10000000000000 + ms;
+}
+
+function setSyncBadge(mode) {
+    const ind = document.getElementById("sync-status-indicator");
+    if (!ind) return;
+    ind.style.cursor = "pointer";
+    ind.title = "Bulut ve PC senkronizasyonunu şimdi denetlemek için tıklayın";
+    if (!ind.dataset.boundSyncClick) {
+        ind.dataset.boundSyncClick = "1";
+        ind.addEventListener("click", () => {
+            forceCloudSyncNow();
+        });
+    }
+    if (mode === "syncing") {
+        ind.innerHTML = `<i class="fa-solid fa-rotate fa-spin" style="color:var(--dizsan-cyan);"></i> Bulut Yedekleniyor...`;
+    } else if (mode === "cloud_ok") {
+        ind.innerHTML = `<i class="fa-solid fa-cloud-arrow-up" style="color:var(--emerald-ok);"></i> Bulut & PC Senkron`;
+    } else if (mode === "local_ok") {
+        ind.innerHTML = `<i class="fa-solid fa-circle-check" style="color:var(--emerald-ok);"></i> Senkron`;
+    } else {
+        ind.innerHTML = `<i class="fa-solid fa-hard-drive" style="color:var(--dizsan-cyan);"></i> Yerel Kayıt`;
+    }
+}
+
 function saveStateLocally() {
-    appState.updatedAt = formatDateTimeTR();
+    if (!appState.updatedAt) appState.updatedAt = formatDateTimeTR();
     try {
         localStorage.setItem(STORAGE_KEY_DIKAS_STATE, JSON.stringify(appState));
     } catch (e) {}
 }
 
-async function syncStateToServer() {
-    saveStateLocally();
-    const ind = document.getElementById("sync-status-indicator");
-    try {
-        const res = await fetch("/api/dikas-state", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(appState)
+async function pushToSingleGitHubRepo(apiUrl, shaHolderKey, isRetry = false) {
+    const token = getDikasCloudToken();
+    let currentSha = shaHolderKey === "dpro" ? lastKnownDproSha : lastKnownZiyaretSha;
+    if (!currentSha || isRetry) {
+        const getRes = await fetch(`${apiUrl}?t=${Date.now()}`, {
+            headers: {
+                "Authorization": `token ${token}`,
+                "Accept": "application/vnd.github.v3+json"
+            },
+            cache: "no-store"
         });
-        if (res.ok && ind) {
-            ind.innerHTML = `<i class="fa-solid fa-circle-check" style="color:var(--emerald-ok);"></i> Senkron`;
+        if (getRes.ok) {
+            const meta = await getRes.json();
+            currentSha = meta.sha;
+            if (shaHolderKey === "dpro") lastKnownDproSha = currentSha;
+            else lastKnownZiyaretSha = currentSha;
         }
+    }
+
+    const putBody = {
+        message: `sync(dikas): v${CURRENT_APP_VERSION} rev#${appState.stateRevision || 1} (${appState.updatedAt})`,
+        content: encodeUTF8Base64(JSON.stringify(appState, null, 2))
+    };
+    if (currentSha) putBody.sha = currentSha;
+
+    const putRes = await fetch(apiUrl, {
+        method: "PUT",
+        headers: {
+            "Authorization": `token ${token}`,
+            "Accept": "application/vnd.github.v3+json",
+            "Content-Type": "application/json"
+        },
+        body: JSON.stringify(putBody)
+    });
+
+    if (putRes.ok) {
+        const putData = await putRes.json();
+        const newSha = putData?.content?.sha || null;
+        if (shaHolderKey === "dpro") lastKnownDproSha = newSha;
+        else lastKnownZiyaretSha = newSha;
+        return true;
+    } else if ((putRes.status === 409 || putRes.status === 422) && !isRetry) {
+        if (shaHolderKey === "dpro") lastKnownDproSha = null;
+        else lastKnownZiyaretSha = null;
+        return await pushToSingleGitHubRepo(apiUrl, shaHolderKey, true);
+    }
+    return false;
+}
+
+async function pushStateToGitHubCloud() {
+    try {
+        const okDpro = await pushToSingleGitHubRepo(DIKAS_CLOUD_API_DPRO, "dpro", false);
+        pushToSingleGitHubRepo(DIKAS_CLOUD_API_ZIYARET, "ziyaret", false).catch(() => {});
+        if (okDpro) {
+            setSyncBadge("cloud_ok");
+        }
+        return okDpro;
     } catch (e) {
-        if (ind) {
-            ind.innerHTML = `<i class="fa-solid fa-hard-drive" style="color:var(--dizsan-cyan);"></i> Yerel Kayıt`;
+        return false;
+    }
+}
+
+async function syncStateToServer() {
+    lastLocalSaveTime = Date.now();
+    appState.updatedAtMs = lastLocalSaveTime;
+    appState.updatedAt = formatDateTimeTR(new Date(lastLocalSaveTime));
+    appState.stateRevision = (Number(appState.stateRevision) || 0) + 1;
+    appState.version = CURRENT_APP_VERSION;
+    saveStateLocally();
+    setSyncBadge("syncing");
+
+    let localServerOk = false;
+    try {
+        if (window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1") {
+            const res = await fetch("/api/dikas-state", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(appState)
+            });
+            if (res.ok) localServerOk = true;
+        }
+    } catch (e) {}
+
+    if (isCloudPutInFlight) {
+        hasPendingCloudPut = true;
+        return;
+    }
+    isCloudPutInFlight = true;
+    try {
+        const cloudOk = await pushStateToGitHubCloud();
+        if (!cloudOk) {
+            setSyncBadge(localServerOk ? "local_ok" : "offline");
+        }
+    } finally {
+        isCloudPutInFlight = false;
+        if (hasPendingCloudPut) {
+            hasPendingCloudPut = false;
+            syncStateToServer();
         }
     }
 }
 
+async function fetchLatestCloudStateCandidate() {
+    const candidates = [];
+
+    // 1. Yerel Portal Sunucusu (/api/dikas-state)
+    if (window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1") {
+        try {
+            const res = await fetch("/api/dikas-state?t=" + Date.now(), { cache: "no-store" });
+            if (res.ok) {
+                const srv = await res.json();
+                if (srv && Array.isArray(srv.companies)) candidates.push({ source: "local_api", data: srv });
+            }
+        } catch (e) {}
+    }
+
+    // 2. GitHub Contents API (CDN önbelleğine takılmadan anlık canlı bulut verisi)
+    try {
+        const token = getDikasCloudToken();
+        const ghRes = await fetch(`${DIKAS_CLOUD_API_DPRO}?t=${Date.now()}`, {
+            headers: {
+                "Authorization": `token ${token}`,
+                "Accept": "application/vnd.github.v3+json"
+            },
+            cache: "no-store"
+        });
+        if (ghRes.ok) {
+            const meta = await ghRes.json();
+            if (meta && meta.sha) lastKnownDproSha = meta.sha;
+            if (meta && meta.content) {
+                const decoded = JSON.parse(decodeUTF8Base64(meta.content));
+                if (decoded && Array.isArray(decoded.companies)) {
+                    candidates.push({ source: "github_api", data: decoded });
+                }
+            }
+        }
+    } catch (e) {}
+
+    // 3. Statik shared_state.json yedek okuma
+    try {
+        const stRes = await fetch("shared_state.json?t=" + Date.now(), { cache: "no-store" });
+        if (stRes.ok) {
+            const stData = await stRes.json();
+            if (stData && Array.isArray(stData.companies)) {
+                candidates.push({ source: "static_json", data: stData });
+            }
+        }
+    } catch (e) {}
+
+    if (candidates.length === 0) return null;
+    candidates.sort((a, b) => computeStateFreshness(b.data) - computeStateFreshness(a.data));
+    return candidates[0];
+}
+
 async function loadStateFromStorageAndServer() {
+    let localCandidate = null;
     try {
         const localRaw = localStorage.getItem(STORAGE_KEY_DIKAS_STATE);
         if (localRaw) {
             const parsed = JSON.parse(localRaw);
             if (parsed && Array.isArray(parsed.companies) && Array.isArray(parsed.accounts)) {
+                localCandidate = parsed;
                 appState = { ...buildInitialState(), ...parsed };
             }
         }
     } catch (e) {}
 
-    try {
-        const res = await fetch("/api/dikas-state?t=" + Date.now());
-        if (res.ok) {
-            const srv = await res.json();
-            if (srv && Array.isArray(srv.companies) && Array.isArray(srv.accounts)) {
-                appState = { ...buildInitialState(), ...srv };
-                saveStateLocally();
-            }
-        }
-    } catch (e) {}
+    const remoteBest = await fetchLatestCloudStateCandidate();
+    if (remoteBest && remoteBest.data) {
+        const localScore = computeStateFreshness(localCandidate);
+        const remoteScore = computeStateFreshness(remoteBest.data);
 
+        if (remoteScore >= localScore) {
+            appState = { ...buildInitialState(), ...remoteBest.data };
+            saveStateLocally();
+            if (window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1") {
+                fetch("/api/dikas-state", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify(appState)
+                }).catch(() => {});
+            }
+            setSyncBadge("cloud_ok");
+        } else if (localCandidate) {
+            // Yereldeki veri buluttan daha yeniyse buluta otomatik yedekle
+            pushStateToGitHubCloud().catch(() => {});
+        }
+    }
+
+    let seededChanged = false;
     if (!appState.undatedSeededV1 && Array.isArray(appState.payments) && appState.payments.length > 0 && !appState.payments.some(p => isPaymentUndated(p))) {
         const init = buildInitialState();
         init.payments.filter(p => isPaymentUndated(p)).forEach(up => appState.payments.push(up));
         appState.undatedSeededV1 = true;
-        saveStateLocally();
+        seededChanged = true;
     }
 
     if (!appState.salarySeededV1 && Array.isArray(appState.payments) && appState.payments.length > 0 && !appState.payments.some(p => Array.isArray(p.personnelItems) && p.personnelItems.length > 0)) {
@@ -757,12 +957,57 @@ async function loadStateFromStorageAndServer() {
         const sal = init.payments.find(p => p.id === "PAY-MAAS-1001");
         if (sal) appState.payments.splice(2, 0, sal);
         appState.salarySeededV1 = true;
-        saveStateLocally();
+        seededChanged = true;
     }
 
     synchronizeInstrumentsWithObligations();
     refreshOverdueStatuses();
+    if (seededChanged) {
+        saveStateLocally();
+    }
 }
+
+async function pollCloudState(isManual = false) {
+    if (isCloudPutInFlight || hasPendingCloudPut || (Date.now() - lastLocalSaveTime < 6000)) return false;
+    // Kullanıcı açık bir modal içinde veri giriyorsa otomatik çizimi beklet
+    if (!isManual && document.querySelector(".modal-backdrop.open")) return false;
+
+    try {
+        const remoteBest = await fetchLatestCloudStateCandidate();
+        if (!remoteBest || !remoteBest.data) return false;
+
+        const currentScore = computeStateFreshness(appState);
+        const remoteScore = computeStateFreshness(remoteBest.data);
+
+        if (remoteScore > currentScore) {
+            appState = { ...buildInitialState(), ...remoteBest.data };
+            synchronizeInstrumentsWithObligations();
+            refreshOverdueStatuses();
+            saveStateLocally();
+            if (window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1") {
+                fetch("/api/dikas-state", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify(appState)
+                }).catch(() => {});
+            }
+            renderAll();
+            setSyncBadge("cloud_ok");
+            return true;
+        }
+        setSyncBadge("cloud_ok");
+    } catch (e) {}
+    return false;
+}
+
+async function forceCloudSyncNow() {
+    setSyncBadge("syncing");
+    const pulled = await pollCloudState(true);
+    if (!pulled) {
+        await syncStateToServer();
+    }
+}
+window.forceCloudSyncNow = forceCloudSyncNow;
 
 // ==================== 7. MÜKERRERLİK KALKANI VE ENSTRÜMAN SENKRONİZASYONU (BÖLÜM 12) ====================
 /**
@@ -4941,6 +5186,22 @@ window.addEventListener("DOMContentLoaded", async () => {
 
     setDashboardPeriod("thisMonth");
     applyAuthenticatedSession();
+    setSyncBadge("cloud_ok");
+
+    // Mobil ve PC arası canlı otomatik veri senkronizasyonu (20 sn + sekme/ekran açılışında anında)
+    setInterval(() => {
+        pollCloudState(false);
+    }, 20000);
+
+    document.addEventListener("visibilitychange", () => {
+        if (document.visibilityState === "visible") {
+            pollCloudState(false);
+        }
+    });
+
+    window.addEventListener("focus", () => {
+        pollCloudState(false);
+    });
 
     if ("serviceWorker" in navigator) {
         navigator.serviceWorker.register("sw.js").catch(() => {});

@@ -1,0 +1,633 @@
+{
+  "version": "1.0.6",
+  "updatedAt": "19.10.2026 02:01:21",
+  "users": [
+    {
+      "order": 0,
+      "name": "ÖMER EREN",
+      "username": "ömer",
+      "email": "oeren@dizsan.com.tr",
+      "pinStamp": "2697120930-1230232798-23831670",
+      "role": "Yönetici",
+      "dept": "Yönetim Kurulu / Sistem Yöneticisi",
+      "companies": [
+        "ALL"
+      ]
+    },
+    {
+      "order": 1,
+      "name": "GÖKHAN ÖZBULUT",
+      "username": "gokhan.ozbulut",
+      "email": "gozbulut@dizsan.com.tr",
+      "pinStamp": "3741314348-4038843960-1626309061",
+      "role": "Finans Sorumlusu",
+      "dept": "Muhasebe & Finans",
+      "companies": [
+        "ALL"
+      ]
+    },
+    {
+      "order": 2,
+      "name": "RAFET CANBEK",
+      "username": "rafet.canbek",
+      "email": "rcanbek@dizsan.com.tr",
+      "pinStamp": "3592512679-3759997292-303417646",
+      "role": "Yönetici",
+      "dept": "Genel Müdür",
+      "companies": [
+        "ALL"
+      ]
+    },
+    {
+      "order": 3,
+      "name": "HAKAN AYDIN",
+      "username": "hakan.aydin",
+      "email": "haydin@dizsan.com.tr",
+      "pinStamp": "3552174369-58562770-3993401784",
+      "role": "Yönetici",
+      "dept": "Servis Müdürü",
+      "companies": [
+        "COMP-OTOMOTIV"
+      ]
+    },
+    {
+      "order": 4,
+      "name": "FATİH KIROĞLU",
+      "username": "fatih.kiroglu",
+      "email": "fkiroglu@dizsan.com.tr",
+      "pinStamp": "567307289-1446660830-2254300224",
+      "role": "Personel",
+      "dept": "Yedek Parça / Depo",
+      "companies": [
+        "COMP-OTOMOTIV"
+      ]
+    },
+    {
+      "order": 5,
+      "name": "ERTUĞRUL ERDEM",
+      "username": "ertugrul.erdem",
+      "email": "eerdem@dizsan.com.tr",
+      "pinStamp": "3592512679-3759997292-303417646",
+      "role": "Personel",
+      "dept": "Servis Danışmanı",
+      "companies": [
+        "COMP-OTOMOTIV"
+      ]
+    },
+    {
+      "order": 6,
+      "name": "NECATİ DEMİRCİ",
+      "username": "necati.demirci",
+      "email": "ndemirci@dizsan.com.tr",
+      "pinStamp": "3592512679-3759997292-303417646",
+      "role": "Personel",
+      "dept": "Servis Danışmanı",
+      "companies": [
+        "COMP-OTOMOTIV"
+      ]
+    }
+  ],
+  "companies": [
+    {
+      "id": "COMP-OTOMOTIV",
+      "name": "Dizsan Otomotiv",
+      "taxInfo": "Çorum VD / 3020048912",
+      "status": "Aktif",
+      "color": "#38bdf8"
+    },
+    {
+      "id": "COMP-LOJISTIK",
+      "name": "Dizsan Lojistik",
+      "taxInfo": "Çorum VD / 3020084519",
+      "status": "Aktif",
+      "color": "#10b981"
+    },
+    {
+      "id": "COMP-KMSOLAR",
+      "name": "KM Solar",
+      "taxInfo": "Çorum VD / 5640912834",
+      "status": "Aktif",
+      "color": "#f59e0b"
+    }
+  ],
+  "categories": [
+    "Tedarikçi",
+    "Kredi taksiti",
+    "Kredi kartı",
+    "Çek/senet",
+    "Personel maaşı",
+    "Vergi",
+    "SGK",
+    "Kira",
+    "Elektrik, su ve diğer faturalar",
+    "Leasing",
+    "Diğer giderler"
+  ],
+  "accounts": [
+    {
+      "id": "ACC-OTO-KASA",
+      "companyId": "COMP-OTOMOTIV",
+      "type": "CASH",
+      "name": "Merkez TL Nakit Kasa",
+      "bankName": "Nakit Kasa",
+      "currency": "TRY",
+      "openingBalance": 185000,
+      "status": "Aktif",
+      "desc": "Dizsan Otomotiv Merkez Servis Kasası"
+    },
+    {
+      "id": "ACC-OTO-GARANTI",
+      "companyId": "COMP-OTOMOTIV",
+      "type": "BANK",
+      "name": "Garanti BBVA Ticari TL",
+      "bankName": "Garanti BBVA",
+      "currency": "TRY",
+      "openingBalance": 1420000,
+      "status": "Aktif",
+      "desc": "TR42 0006 2000 4120 0006 2984 11"
+    },
+    {
+      "id": "ACC-OTO-ISBANK",
+      "companyId": "COMP-OTOMOTIV",
+      "type": "BANK",
+      "name": "İş Bankası Kurumsal TL",
+      "bankName": "İş Bankası",
+      "currency": "TRY",
+      "openingBalance": 890000,
+      "status": "Aktif",
+      "desc": "TR19 0006 4000 0014 2100 8492 01"
+    },
+    {
+      "id": "ACC-LOJ-KASA",
+      "companyId": "COMP-LOJISTIK",
+      "type": "CASH",
+      "name": "Lojistik Operasyon Kasa",
+      "bankName": "Nakit Kasa",
+      "currency": "TRY",
+      "openingBalance": 65000,
+      "status": "Aktif",
+      "desc": "Sefer ve saha nakit kasası"
+    },
+    {
+      "id": "ACC-LOJ-VAKIF",
+      "companyId": "COMP-LOJISTIK",
+      "type": "BANK",
+      "name": "Vakıfbank Ticari TL",
+      "bankName": "Vakıfbank",
+      "currency": "TRY",
+      "openingBalance": 640000,
+      "status": "Aktif",
+      "desc": "TR88 0001 5001 5800 7294 1122 33"
+    },
+    {
+      "id": "ACC-KMS-ZIRAAT",
+      "companyId": "COMP-KMSOLAR",
+      "type": "BANK",
+      "name": "Ziraat Bankası GES Hakediş",
+      "bankName": "Ziraat Bankası",
+      "currency": "TRY",
+      "openingBalance": 510000,
+      "status": "Aktif",
+      "desc": "TR54 0001 0000 8945 1265 4400 01"
+    }
+  ],
+  "payments": [
+    {
+      "id": "PAY-1001",
+      "obligationKey": "PAY:PAY-1001",
+      "companyId": "COMP-OTOMOTIV",
+      "title": "TDR-2026-10 Scania Yedek Parça ve Tedarik Faturası",
+      "creditor": "Doğuş Otomotiv / Scania Tedarik",
+      "category": "Tedarikçi",
+      "totalAmount": 500000,
+      "currency": "TRY",
+      "dueDate": "2026-10-23",
+      "accountId": "ACC-OTO-GARANTI",
+      "recurrence": "NONE",
+      "recurrenceEnd": "",
+      "seriesId": null,
+      "status": "Kısmen ödendi",
+      "desc": "Ekim ayı ağır vasıta orijinal yedek parça tedarik ödemesi (Örnek kısmi ödeme)",
+      "attachmentName": "Scania_Ekim_Fatura.pdf",
+      "transactions": [
+        {
+          "id": "PTX-1",
+          "date": "2026-10-17",
+          "amount": 200000,
+          "accountId": "ACC-OTO-GARANTI",
+          "note": "1. Kısmi ödeme EFT",
+          "user": "ÖMER EREN"
+        }
+      ],
+      "history": [
+        {
+          "date": "19.10.2026 02:01:21",
+          "text": "500.000 TL toplam borç üzerinden 200.000 TL kısmi ödeme işlendi, kalan: 300.000 TL."
+        }
+      ]
+    },
+    {
+      "id": "PAY-1002",
+      "obligationKey": "PAY:PAY-1002",
+      "companyId": "COMP-OTOMOTIV",
+      "title": "Ekim Ayı SGK ve Muhtasar Prim Ödemesi",
+      "creditor": "Sosyal Güvenlik Kurumu (SGK)",
+      "category": "SGK",
+      "totalAmount": 285000,
+      "currency": "TRY",
+      "dueDate": "2026-10-28",
+      "accountId": "ACC-OTO-ISBANK",
+      "recurrence": "MONTHLY",
+      "recurrenceEnd": "2027-04-19",
+      "seriesId": "SER-SGK",
+      "status": "Planlandı",
+      "desc": "Aylık düzenli personel SGK tahakkuku",
+      "attachmentName": "",
+      "transactions": [],
+      "history": []
+    },
+    {
+      "id": "PAY-1003",
+      "obligationKey": "PAY:PAY-1003",
+      "companyId": "COMP-LOJISTIK",
+      "title": "Akaryakıt Filo Tedarik Ödemesi (TDR.AKARYAKIT)",
+      "creditor": "Opet Kurumsal Filo",
+      "category": "Tedarikçi",
+      "totalAmount": 195000,
+      "currency": "TRY",
+      "dueDate": "2026-10-16",
+      "accountId": "ACC-LOJ-VAKIF",
+      "recurrence": "NONE",
+      "recurrenceEnd": "",
+      "seriesId": null,
+      "status": "Gecikti",
+      "desc": "Vadesi 3 gün geçen filo yakıt faturası",
+      "attachmentName": "",
+      "transactions": [],
+      "history": []
+    },
+    {
+      "id": "PAY-1004",
+      "obligationKey": "LOAN:LOAN-1:1",
+      "linkedSourceType": "LOAN",
+      "linkedSourceId": "LOAN-1",
+      "companyId": "COMP-OTOMOTIV",
+      "title": "İş Bankası Ticari Kredi (#0758487) - Taksit",
+      "creditor": "İş Bankası",
+      "category": "Kredi taksiti",
+      "totalAmount": 357400.09,
+      "currency": "TRY",
+      "dueDate": "2026-10-27",
+      "accountId": "ACC-OTO-ISBANK",
+      "recurrence": "MONTHLY",
+      "recurrenceEnd": "",
+      "seriesId": "LOAN-1",
+      "status": "Planlandı",
+      "desc": "Kredi modülü ile tam bağlantılı taksit (Mükerrerlik kalkanlı)",
+      "attachmentName": "",
+      "transactions": [],
+      "history": []
+    },
+    {
+      "id": "PAY-1005",
+      "obligationKey": "CC:CC-4360",
+      "linkedSourceType": "CREDIT_CARD",
+      "linkedSourceId": "CC-4360",
+      "companyId": "COMP-OTOMOTIV",
+      "title": "Garanti BBVA Corporate (*4360) Dönem Borcu",
+      "creditor": "Garanti BBVA",
+      "category": "Kredi kartı",
+      "totalAmount": 148500,
+      "currency": "TRY",
+      "dueDate": "2026-10-30",
+      "accountId": "ACC-OTO-GARANTI",
+      "recurrence": "NONE",
+      "recurrenceEnd": "",
+      "seriesId": null,
+      "status": "Planlandı",
+      "desc": "Kredi kartı modülü ile senkronize dönem borcu",
+      "attachmentName": "",
+      "transactions": [],
+      "history": []
+    },
+    {
+      "id": "PAY-MAAS-1001",
+      "obligationKey": "PAY:PAY-MAAS-1001",
+      "companyId": "COMP-OTOMOTIV",
+      "title": "Ekim Ayı Personel Maaşları (Maaş & Avans Bordrosu)",
+      "creditor": "Dizsan Personel Maaş Bordrosu (5 Personel)",
+      "category": "Personel maaşı",
+      "totalAmount": 273000,
+      "currency": "TRY",
+      "dueDate": "2026-10-31",
+      "accountId": "ACC-OTO-ISBANK",
+      "recurrence": "MONTHLY",
+      "recurrenceEnd": "",
+      "seriesId": null,
+      "status": "Kısmen ödendi",
+      "desc": "Personel bazlı maaş hakedişleri, avanslar ve kısmi maaş ödemeleri",
+      "attachmentName": "Ekim_2026_Maas_Bordrosu.pdf",
+      "personnelItems": [
+        {
+          "personId": "PER-1",
+          "name": "GÖKHAN ÖZBULUT",
+          "role": "Muhasebe & Finans",
+          "salaryAmount": 60000
+        },
+        {
+          "personId": "PER-2",
+          "name": "HAKAN AYDIN",
+          "role": "Servis Müdürü",
+          "salaryAmount": 65000
+        },
+        {
+          "personId": "PER-3",
+          "name": "FATİH KIROĞLU",
+          "role": "Yedek Parça / Depo",
+          "salaryAmount": 52000
+        },
+        {
+          "personId": "PER-4",
+          "name": "ERTUĞRUL ERDEM",
+          "role": "Servis Danışmanı",
+          "salaryAmount": 48000
+        },
+        {
+          "personId": "PER-5",
+          "name": "NECATİ DEMİRCİ",
+          "role": "Servis Danışmanı",
+          "salaryAmount": 48000
+        }
+      ],
+      "transactions": [
+        {
+          "id": "PTX-M1",
+          "date": "2026-10-11",
+          "amount": 15000,
+          "accountId": "ACC-OTO-ISBANK",
+          "personId": "PER-1",
+          "personName": "GÖKHAN ÖZBULUT",
+          "note": "Gökhan Özbulut - Maaş avansı (Kısmi Ödeme)",
+          "user": "ÖMER EREN"
+        },
+        {
+          "id": "PTX-M2",
+          "date": "2026-10-13",
+          "amount": 25000,
+          "accountId": "ACC-OTO-ISBANK",
+          "personId": "PER-2",
+          "personName": "HAKAN AYDIN",
+          "note": "Hakan Aydın - 1. Kısmi maaş ödemesi",
+          "user": "ÖMER EREN"
+        },
+        {
+          "id": "PTX-M3",
+          "date": "2026-10-15",
+          "amount": 20000,
+          "accountId": "ACC-OTO-CASH-TL",
+          "personId": "PER-3",
+          "personName": "FATİH KIROĞLU",
+          "note": "Fatih Kıroğlu - Nakit maaş avansı (Kısmi)",
+          "user": "ÖMER EREN"
+        },
+        {
+          "id": "PTX-M4",
+          "date": "2026-10-17",
+          "amount": 48000,
+          "accountId": "ACC-OTO-ISBANK",
+          "personId": "PER-4",
+          "personName": "ERTUĞRUL ERDEM",
+          "note": "Ertuğrul Erdem - Ekim maaşı tamamı ödendi",
+          "user": "ÖMER EREN"
+        }
+      ],
+      "history": [
+        {
+          "date": "19.10.2026 02:01:21",
+          "text": "Personel maaş bordrosu oluşturuldu; 4 personele kısmi/tam ödeme işlendi."
+        }
+      ]
+    },
+    {
+      "id": "PAY-UND-1",
+      "obligationKey": "PAY:PAY-UND-1",
+      "companyId": "COMP-OTOMOTIV",
+      "title": "TDR-Scania Özel Sipariş Şanzıman Revizyon Kiti",
+      "creditor": "Doğuş Otomotiv / Scania Yedek Parça",
+      "category": "Tedarikçi",
+      "totalAmount": 185000,
+      "currency": "TRY",
+      "dueDate": "",
+      "isUndated": true,
+      "accountId": "ACC-OTO-GARANTI",
+      "recurrence": "NONE",
+      "recurrenceEnd": "",
+      "seriesId": null,
+      "status": "Tarihi Belirsiz",
+      "desc": "Parça gümrükten çekilip fatura kesildiğinde vade tarihi netleşecek (Kenar Notu)",
+      "attachmentName": "",
+      "transactions": [],
+      "history": []
+    },
+    {
+      "id": "PAY-UND-2",
+      "obligationKey": "PAY:PAY-UND-2",
+      "companyId": "COMP-SOLAR",
+      "title": "GES Saha Trafo Kabul & Proje Onay Harcı",
+      "creditor": "TEDAŞ / Enerji Dağıtım A.Ş.",
+      "category": "Diğer giderler",
+      "totalAmount": 92000,
+      "currency": "TRY",
+      "dueDate": "",
+      "isUndated": true,
+      "accountId": "ACC-SOLAR-ISBANK",
+      "recurrence": "NONE",
+      "recurrenceEnd": "",
+      "seriesId": null,
+      "status": "Tarihi Belirsiz",
+      "desc": "Geçici kabul komisyonu tarih verdiğinde ödenecek (Kenar Notu)",
+      "attachmentName": "",
+      "transactions": [],
+      "history": []
+    }
+  ],
+  "collections": [
+    {
+      "id": "COL-2001",
+      "obligationKey": "COL:COL-2001",
+      "companyId": "COMP-OTOMOTIV",
+      "customer": "Çorum Ağır Vasıta Filo Lojistik A.Ş.",
+      "title": "Scania Filo Periyodik Bakım ve Hasar Onarım Hakedişi",
+      "totalAmount": 620000,
+      "currency": "TRY",
+      "expectedDate": "2026-10-22",
+      "accountId": "ACC-OTO-GARANTI",
+      "certainty": "Kesin",
+      "status": "Kısmen tahsil edildi",
+      "desc": "Sözleşmeli filo bakım tahsilatı (220.000 TL tahsil edildi, 400.000 TL bekleniyor)",
+      "transactions": [
+        {
+          "id": "CTX-1",
+          "date": "2026-10-18",
+          "amount": 220000,
+          "accountId": "ACC-OTO-GARANTI",
+          "note": "1. Kısmi tahsilat havalesi",
+          "user": "ÖMER EREN"
+        }
+      ]
+    },
+    {
+      "id": "COL-2002",
+      "obligationKey": "COL:COL-2002",
+      "companyId": "COMP-KMSOLAR",
+      "customer": "Organize Sanayi Çatı GES Yatırımı",
+      "title": "GES Kurulum 2. Hakediş Tahsilatı",
+      "totalAmount": 480000,
+      "currency": "TRY",
+      "expectedDate": "2026-10-26",
+      "accountId": "ACC-KMS-ZIRAAT",
+      "certainty": "Kesin",
+      "status": "Bekleniyor",
+      "desc": "Onaylı fatura karşılığı kesin tahsilat",
+      "transactions": []
+    },
+    {
+      "id": "COL-2003",
+      "obligationKey": "COL:COL-2003",
+      "companyId": "COMP-LOJISTIK",
+      "customer": "Anadolu Transit Nakliyat Ltd.",
+      "title": "Ekim Ayı Konteyner Taşıma Navlun Bedeli",
+      "totalAmount": 310000,
+      "currency": "TRY",
+      "expectedDate": "2026-10-31",
+      "accountId": "ACC-LOJ-VAKIF",
+      "certainty": "Muhtemel",
+      "status": "Bekleniyor",
+      "desc": "Mutabakat aşamasında muhtemel tahsilat",
+      "transactions": []
+    },
+    {
+      "id": "COL-2004",
+      "obligationKey": "COL:COL-2004",
+      "companyId": "COMP-OTOMOTIV",
+      "customer": "Sigorta Şirketi Hasar Dosyası #88412",
+      "title": "Kasko Ağır Hasar Onarım Bedeli",
+      "totalAmount": 275000,
+      "currency": "TRY",
+      "expectedDate": "2026-11-06",
+      "accountId": "ACC-OTO-ISBANK",
+      "certainty": "Belirsiz",
+      "status": "Bekleniyor",
+      "desc": "Eksper kapanış onayına bağlı tahsilat",
+      "transactions": []
+    }
+  ],
+  "transfers": [
+    {
+      "id": "TRF-1",
+      "date": "2026-10-15",
+      "fromAccountId": "ACC-OTO-KASA",
+      "toAccountId": "ACC-OTO-GARANTI",
+      "fromCompanyId": "COMP-OTOMOTIV",
+      "toCompanyId": "COMP-OTOMOTIV",
+      "amount": 50000,
+      "currency": "TRY",
+      "isIntercompany": false,
+      "desc": "Merkez kasadan Garanti BBVA ticari hesaba nakit yatırma",
+      "user": "ÖMER EREN"
+    }
+  ],
+  "adjustments": [],
+  "creditCards": [
+    {
+      "id": "CC-4360",
+      "companyId": "COMP-OTOMOTIV",
+      "bank": "Garanti BBVA",
+      "cardName": "Corporate (*4360)",
+      "cutoffDate": "2026-10-20",
+      "dueDate": "2026-10-30",
+      "debtAmount": 148500,
+      "paidAmount": 0,
+      "accountId": "ACC-OTO-GARANTI"
+    },
+    {
+      "id": "CC-6010",
+      "companyId": "COMP-LOJISTIK",
+      "bank": "Garanti BBVA",
+      "cardName": "Bonus Trink (*6010)",
+      "cutoffDate": "2026-10-14",
+      "dueDate": "2026-10-24",
+      "debtAmount": 64200,
+      "paidAmount": 24200,
+      "accountId": "ACC-LOJ-VAKIF"
+    }
+  ],
+  "loans": [
+    {
+      "id": "LOAN-1",
+      "companyId": "COMP-OTOMOTIV",
+      "bank": "İş Bankası",
+      "title": "İş Bankası Ticari Kredi (#0758487)",
+      "type": "Kredi taksiti",
+      "installmentAmount": 357400.09,
+      "installmentCount": 12,
+      "firstDueDate": "2026-10-27",
+      "accountId": "ACC-OTO-ISBANK"
+    }
+  ],
+  "checks": [
+    {
+      "id": "CHK-301",
+      "companyId": "COMP-OTOMOTIV",
+      "direction": "OUT_CHECK",
+      "party": "Scania Yedek Parça Ana Dağıtım",
+      "bankNo": "Garanti Çek #884920",
+      "amount": 240000,
+      "dueDate": "2026-11-02",
+      "accountId": "ACC-OTO-GARANTI",
+      "paidAmount": 0,
+      "status": "Planlandı"
+    },
+    {
+      "id": "CHK-302",
+      "companyId": "COMP-LOJISTIK",
+      "direction": "IN_CHECK",
+      "party": "Merzifon Un Sanayi A.Ş.",
+      "bankNo": "Halkbank Çek #551209",
+      "amount": 180000,
+      "dueDate": "2026-10-25",
+      "accountId": "ACC-LOJ-VAKIF",
+      "paidAmount": 0,
+      "status": "Bekleniyor"
+    }
+  ],
+  "recurringRules": [
+    {
+      "id": "SER-SGK",
+      "companyId": "COMP-OTOMOTIV",
+      "direction": "PAYMENT",
+      "title": "Aylık SGK ve Muhtasar Prim Ödemesi",
+      "party": "Sosyal Güvenlik Kurumu (SGK)",
+      "category": "SGK",
+      "frequency": "MONTHLY",
+      "amount": 285000,
+      "currency": "TRY",
+      "startDate": "2026-10-28",
+      "endDate": "2027-04-19",
+      "accountId": "ACC-OTO-ISBANK"
+    }
+  ],
+  "auditLogs": [
+    {
+      "timestamp": "19.10.2026 02:01:21",
+      "user": "ÖMER EREN",
+      "category": "SİSTEM",
+      "detail": "DiKas – Dizsan Finans Nakit Akışı ve Ödeme Takip Sistemi v1.0.0 başlatıldı."
+    }
+  ],
+  "errorLogs": [],
+  "undatedSeededV1": true,
+  "salarySeededV1": true,
+  "stateRevision": 1,
+  "updatedAtMs": 1792364481840
+}
