@@ -1,7 +1,7 @@
 /**
  * ==========================================================================
  * DİZSAN KURUMSAL MÜŞTERİ ZİYARET, SAHA VE GÖRÜŞME SİSTEMİ - v1.0.0
- * - 120 Kodlu Kayıp Müşteri Ziyaret Planı (2.682 Müşteri & 434 İlçe Stratejisi)
+ * - 120 Kodlu Kayıp Müşteri Ziyaret Planı (1.990 Müşteri & 434 İlçe Stratejisi)
  * - Güncel Saha Ziyareti & Telefon Görüşmesi Kayıt Motoru (Fotoğraf/Belge Ekli)
  * - Yapay Zeka Destekli Akıllı Tekleştirme & Churn Kurtarma Analizörü
  * - 1 Gün Önce ve Aynı Gün Çift Aşamalı Hatırlatıcı & VAPID Web Push Motoru
@@ -176,6 +176,7 @@ let appState = {
     users: [...OFFICIAL_PERSONNEL_LIST],
     customers: [],
     districtStrategies: {},
+    customRoutes: [],
     visits: [],
     tasks: [],
     approvalRequests: [],
@@ -508,9 +509,12 @@ function computeStateSignature(stateObj) {
     const cLen = Array.isArray(stateObj.customers) ? stateObj.customers.length : 0;
     const vLen = Array.isArray(stateObj.visits) ? stateObj.visits.length : 0;
     const tLen = Array.isArray(stateObj.tasks) ? stateObj.tasks.length : 0;
+    const rLen = Array.isArray(stateObj.customRoutes) ? stateObj.customRoutes.length : 0;
+    const sLen = stateObj.districtStrategies ? Object.keys(stateObj.districtStrategies).length : 0;
+    const invLen = Array.isArray(stateObj.customers) ? stateObj.customers.filter(c => Array.isArray(c.serviceHistory) && c.serviceHistory.length > 0).length : 0;
     const qDate = (stateObj.logoMetadata && stateObj.logoMetadata.queryDateFormatted) || '';
     const upd = stateObj.updatedAt || '';
-    return `${cLen}|${vLen}|${tLen}|${qDate}|${upd}`;
+    return `${cLen}|${vLen}|${tLen}|${rLen}|${sLen}|${invLen}|${qDate}|${upd}`;
 }
 
 async function loadInitialData() {
@@ -522,6 +526,9 @@ async function loadInitialData() {
             if (parsed && Array.isArray(parsed.customers) && parsed.customers.length > 0) {
                 parsed.users = migrateOfficialUserEmails(parsed.users);
                 appState = { ...appState, ...parsed };
+                if (!Array.isArray(appState.customRoutes)) appState.customRoutes = [];
+                ensureDistrictStrategiesPopulated();
+                syncCustomRoutesToCustomers();
                 lastSyncedSignature = computeStateSignature(appState);
                 updateLogoLiveIndicator();
             }
@@ -531,8 +538,8 @@ async function loadInitialData() {
     // 2. Aşama: DizGün ekosistem köprüsünü senkronize et
     syncWithDizGunBridge();
 
-    // 3. Aşama: Logo ERP ve müşteri verilerini GitHub'dan çek (yalnızca fark varsa ekranı günceller)
-    fetchLiveGitHubData(true);
+    // 3. Aşama: Logo ERP ve müşteri verilerini yerel/GitHub'dan çek
+    await fetchLiveGitHubData(true);
 }
 
 function updateLogoLiveIndicator() {
@@ -596,7 +603,11 @@ async function fetchLiveGitHubData(isInitial = false) {
         } catch (e) {}
     }
 
-    if (!liveData) return false;
+    if (!liveData) {
+        ensureDistrictStrategiesPopulated();
+        syncCustomRoutesToCustomers();
+        return false;
+    }
 
     const incomingSignature = computeStateSignature(liveData);
     const hasActualDiff = incomingSignature !== lastSyncedSignature;
@@ -616,6 +627,8 @@ async function fetchLiveGitHubData(isInitial = false) {
     }
     if (liveData.districtStrategies && Object.keys(liveData.districtStrategies).length > 0) {
         appState.districtStrategies = liveData.districtStrategies;
+    } else {
+        ensureDistrictStrategiesPopulated();
     }
     if (liveData.logoMetadata) {
         appState.logoMetadata = liveData.logoMetadata;
@@ -624,14 +637,21 @@ async function fetchLiveGitHubData(isInitial = false) {
         appState.users = migrateOfficialUserEmails(liveData.users);
     }
 
-    // Cihazdaki bekleyen yerel kayıtları koruyarak bulut ziyaretlerini birleştir
+    // Cihazdaki bekleyen yerel kayıtları koruyarak bulut ziyaretlerini ve özel rut planlarını birleştir
     if (Array.isArray(liveData.visits) && liveData.visits.length >= (appState.visits || []).length) {
         appState.visits = liveData.visits;
     }
     if (Array.isArray(liveData.tasks) && liveData.tasks.length >= (appState.tasks || []).length) {
         appState.tasks = liveData.tasks;
     }
+    if (Array.isArray(liveData.customRoutes)) {
+        const localRoutes = Array.isArray(appState.customRoutes) ? appState.customRoutes : [];
+        if (liveData.customRoutes.length >= localRoutes.length) {
+            appState.customRoutes = liveData.customRoutes;
+        }
+    }
 
+    syncCustomRoutesToCustomers();
     saveStateLocally();
     updateLogoLiveIndicator();
     renderAll();
@@ -641,7 +661,22 @@ async function fetchLiveGitHubData(isInitial = false) {
 
 function saveStateLocally() {
     appState.users = migrateOfficialUserEmails(appState.users);
-    localStorage.setItem(STORAGE_KEY_STATE, JSON.stringify(sanitizeStateForCloud(appState)));
+    try {
+        localStorage.setItem(STORAGE_KEY_STATE, JSON.stringify(sanitizeStateForCloud(appState)));
+    } catch (e) {
+        try {
+            // Safari 5MB localStorage kotası aşılırsa fatura alt kalemlerini (serviceHistory) hariç tutarak kaydet
+            const sanitized = sanitizeStateForCloud(appState);
+            const lightState = {
+                ...sanitized,
+                customers: (sanitized.customers || []).map(c => {
+                    const { serviceHistory, ...rest } = c;
+                    return rest;
+                })
+            };
+            localStorage.setItem(STORAGE_KEY_STATE, JSON.stringify(lightState));
+        } catch (err2) {}
+    }
     syncWithDizGunBridge();
 }
 
@@ -653,6 +688,7 @@ function syncWithDizGunBridge() {
             totalCustomers: (appState.customers || []).length,
             totalVisits: (appState.visits || []).length,
             totalTasks: (appState.tasks || []).length,
+            totalCustomRoutes: (appState.customRoutes || []).length,
             recentVisits: (appState.visits || []).slice(0, 5),
             personnel: appState.users.map(u => ({ name: u.name, username: u.username, dept: u.dept }))
         };
@@ -668,6 +704,17 @@ async function syncToServer() {
     appState.updatedAt = new Date(lastLocalSaveTime).toISOString();
     appState.stateRevision = (Number(appState.stateRevision) || 0) + 1;
     saveStateLocally();
+
+    // Yerel portal sunucusu (/api/ziyaret-state) açıksa diske anında kaydet
+    try {
+        if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
+            fetch('/api/ziyaret-state', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(sanitizeStateForCloud(appState))
+            }).catch(() => {});
+        }
+    } catch (e) {}
 
     if (isCloudPutInFlight) {
         hasPendingCloudPut = true;
@@ -897,36 +944,13 @@ function closeForgotPasswordModal() {
 }
 
 function sendPasswordResetCode() {
-    const idVal = normalizeTR(document.getElementById('forgot-user-identifier').value);
-    const emailVal = (document.getElementById('forgot-manual-email').value || '').trim();
     const msgEl = document.getElementById('forgot-step1-msg');
-
-    if (!idVal || !emailVal) {
+    if (msgEl) {
         msgEl.style.display = 'block';
         msgEl.style.background = 'rgba(239,68,68,0.2)';
         msgEl.style.color = '#fca5a5';
-        msgEl.textContent = 'Lütfen kullanıcı adınızı ve e-posta adresinizi eksiksiz girin.';
-        return;
+        msgEl.innerHTML = '<i class="fa-solid fa-shield-halved"></i> <b>Özel Güvenlik Kalkanı Aktif:</b> Uygulama yalnızca <b>ÖMER EREN</b> kişisel erişimine açık olduğundan dışarıdan şifre sıfırlama kapalıdır.';
     }
-
-    const matched = appState.users.find(u => normalizeTR(u.username) === idVal || normalizeTR(u.name) === idVal);
-    if (!matched) {
-        msgEl.style.display = 'block';
-        msgEl.style.background = 'rgba(239,68,68,0.2)';
-        msgEl.style.color = '#fca5a5';
-        msgEl.textContent = 'Bu kullanıcı adına ait personel bulunamadı.';
-        return;
-    }
-
-    const code = String(Math.floor(100000 + Math.random() * 900000));
-    activePasswordResetRequest = { username: matched.username, email: emailVal, code };
-
-    document.getElementById('forgot-step-1').style.display = 'none';
-    document.getElementById('forgot-step-2').style.display = 'block';
-    document.getElementById('forgot-sent-info').innerHTML = `
-        <i class="fa-solid fa-circle-check"></i> <strong>${emailVal}</strong> adresine şifre sıfırlama doğrulama kodu tanımlandı.<br>
-        <span style="color:#fde68a; font-size:0.75rem;">(Hızlı Doğrulama Kodu: <strong style="color:#fff; font-size:0.95rem; letter-spacing:2px;">${code}</strong>)</span>
-    `;
 }
 
 function verifyAndResetPassword() {
@@ -1080,11 +1104,14 @@ window.closeChangePasswordModal = closeChangePasswordModal;
 window.handleChangePasswordSubmit = handleChangePasswordSubmit;
 
 // ==========================================================================
-// 3. SEKME GEÇİŞLERİ VE GÖRÜNÜM YÖNETİMİ
+// 3. SEKME GEÇİŞLERİ VE GÖRÜNÜM YÖNETİMİ (D-PRO EMBED SENKRONLU)
 // ==========================================================================
 function switchTab(tabId) {
     if (tabId === 'logs-tab' && !isOmerEren(currentUser)) {
         tabId = 'dashboard-tab';
+    }
+    if (window.DizsanBackNav && typeof window.DizsanBackNav.trackTabSwitch === 'function') {
+        window.DizsanBackNav.trackTabSwitch(tabId);
     }
 
     document.querySelectorAll('.tab-section').forEach(sec => {
@@ -1101,12 +1128,13 @@ function switchTab(tabId) {
 
     const pageTitleMap = {
         'dashboard-tab': '<i class="fa-solid fa-chart-pie" style="color:var(--dizsan-light);"></i> Genel Bakış &amp; Kokpit',
+        'cari-ekstre-tab': '<i class="fa-solid fa-file-invoice-dollar" style="color:#38bdf8;"></i> D-Pro Cari &amp; Logo Ekstre (Borç / Alacak / Fatura Detayı)',
         'legacy-tab': '<i class="fa-solid fa-database" style="color:var(--dizsan-light);"></i> Kayıp Müşteri Ziyaret Planı (1998-2026)',
         'active-tab': '<i class="fa-solid fa-car-side" style="color:var(--dizsan-light);"></i> Güncel Saha &amp; Telefon Görüşmeleri',
-        'ai-match-tab': '<i class="fa-solid fa-wand-magic-sparkles" style="color:#c084fc;"></i> 🤖 Yapay Zeka Tekleştirme &amp; Churn Analizi',
+        'ai-match-tab': '<i class="fa-solid fa-wand-magic-sparkles" style="color:#c084fc;"></i> Yapay Zeka Tekleştirme &amp; Churn Analizi',
         'tasks-tab': '<i class="fa-solid fa-list-check" style="color:#fbbf24;"></i> Aksiyon &amp; Çift Aşamalı Hatırlatıcılar',
         'strategy-tab': '<i class="fa-solid fa-map-location-dot" style="color:#34d399;"></i> İlçe Rut Strateji Rehberi',
-        'logs-tab': '<i class="fa-solid fa-shield-halved" style="color:#f59e0b;"></i> 🛡️ Yönetici Denetim İzi'
+        'logs-tab': '<i class="fa-solid fa-shield-halved" style="color:#f59e0b;"></i> Yönetici Denetim İzi'
     };
 
     const titleEl = document.getElementById('page-title');
@@ -1114,11 +1142,34 @@ function switchTab(tabId) {
         titleEl.innerHTML = pageTitleMap[tabId];
     }
 
+    if (tabId === 'cari-ekstre-tab') {
+        populateFilterOptions();
+        renderCariEkstreTable(false);
+    } else if (tabId === 'legacy-tab') {
+        populateFilterOptions();
+        renderLegacyCustomers();
+    } else if (tabId === 'strategy-tab') {
+        populateStrategyFilters(false);
+        renderDistrictStrategies();
+    }
+
     const sidebar = document.getElementById('sidebar');
     if (sidebar) sidebar.classList.remove('mobile-open');
 
+    if (window.DizsanBackNav && typeof window.DizsanBackNav.updateBackButtonVisibility === 'function') {
+        window.DizsanBackNav.updateBackButtonVisibility();
+    }
+
     window.scrollTo({ top: 0, behavior: 'smooth' });
 }
+
+// D-Pro üst menüsünden gelen sekme geçiş mesajlarını dinle
+window.addEventListener('message', (event) => {
+    if (!event.data || typeof event.data !== 'object') return;
+    if (event.data.type === 'DPRO_SWITCH_SUBMODULE' && event.data.targetTab) {
+        switchTab(event.data.targetTab);
+    }
+});
 
 function toggleMobileSidebar() {
     const sidebar = document.getElementById('sidebar');
@@ -1126,58 +1177,210 @@ function toggleMobileSidebar() {
 }
 
 // ==========================================================================
-// 4. KOKPİT VE ESKİ KAYITLAR (1998-2026 ARŞİV)
+// 4. KOKPİT, D-PRO CARİ & LOGO EKSTRE VE ESKİ KAYITLAR (1998-2026 ARŞİV)
 // ==========================================================================
+function getCustomerAccountingSummary(c) {
+    const history = Array.isArray(c.serviceHistory) ? c.serviceHistory : [];
+    const invoiceSum = history.reduce((sum, h) => sum + Number(h.tutar || 0), 0);
+    const rawRev = Math.max(Number(c.totalRevenue || 0), invoiceSum);
+    const bal = Number(c.balance || 0);
+
+    // Logo ERP Borç (Debit) & Alacak (Credit) hesabı:
+    // Bakiye > 0 ise (B) Borçlu, Bakiye < 0 ise (A) Alacaklı
+    let debit = rawRev;
+    let credit = rawRev;
+    if (bal > 0) {
+        debit = Math.max(rawRev, bal);
+        credit = Math.max(0, debit - bal);
+    } else if (bal < 0) {
+        const absBal = Math.abs(bal);
+        credit = Math.max(rawRev, absBal);
+        debit = Math.max(0, credit - absBal);
+    }
+    const absBalance = Math.abs(bal);
+    const baCode = bal > 0.009 ? '(B)' : (bal < -0.009 ? '(A)' : '-');
+    const baLabel = bal > 0.009 ? '(B) Borçlu' : (bal < -0.009 ? '(A) Alacaklı' : 'Kapalı / Sıfır');
+    return {
+        debit,
+        credit,
+        balance: bal,
+        borc: debit,
+        alacak: credit,
+        bakiye: bal,
+        absBalance,
+        baCode,
+        baLabel,
+        invoiceCount: history.length
+    };
+}
+
 function renderDashboard() {
     const customers = appState.customers || [];
     const visits = appState.visits || [];
     const tasks = appState.tasks || [];
 
     const totalCust = customers.length;
-    const churnCust = customers.filter(c => (c.priority || '').includes('P1') || (c.churnDuration || '').includes('Yıl')).length;
+    // P1 Acil Churn grubu (1.990 ile aynı olmaması için gerçek P1 öncelikli portföy)
+    const p1CustList = customers.filter(c => (c.priority || '').startsWith('P1'));
+    const churnCust = p1CustList.length;
+    const churnPct = totalCust > 0 ? ((churnCust / totalCust) * 100).toFixed(1) : '0.0';
+
+    // Kazanılan / Aktif (P3 Düzenli + Olumlu/Randevu alınan ziyaretler)
+    const positiveVisitTitles = new Set(
+        visits
+            .filter(v => v.result === 'Olumlu' || v.result === 'Randevu Alındı' || v.result === 'Teklif Verildi')
+            .map(v => normalizeTR(v.customerTitle))
+    );
+    const activeOrRecoveredList = customers.filter(c =>
+        (c.priority || '').startsWith('P3') || positiveVisitTitles.has(normalizeTR(c.title))
+    );
+    const recoveredCount = activeOrRecoveredList.length;
+    const recoveredRev = activeOrRecoveredList.reduce((acc, c) => acc + Number(c.totalRevenue || 0), 0);
+
     const completedVisits = visits.length;
     const pendingTasks = tasks.filter(t => t.status !== 'Tamamlandı').length;
-    const totalRev = customers.reduce((acc, c) => acc + (c.totalRevenue || 0), 0);
+    const totalRev = customers.reduce((acc, c) => acc + Number(c.totalRevenue || 0), 0);
+
+    let totalDebit = 0;
+    let totalCredit = 0;
+    customers.forEach(c => {
+        const acc = getCustomerAccountingSummary(c);
+        totalDebit += acc.debit;
+        totalCredit += acc.credit;
+    });
+    const netBal = totalDebit - totalCredit;
 
     const elTotal = document.getElementById('kpi-total-customers');
     const elChurn = document.getElementById('kpi-churn-customers');
+    const elChurnSub = document.getElementById('kpi-churn-sub');
+    const elRecCount = document.getElementById('kpi-recovered-customers');
+    const elRecRev = document.getElementById('kpi-recovered-revenue');
     const elVisits = document.getElementById('kpi-completed-visits');
     const elTasks = document.getElementById('kpi-pending-tasks');
     const elRev = document.getElementById('kpi-total-revenue');
+    const elNetSub = document.getElementById('kpi-net-balance-sub');
 
     if (elTotal) elTotal.textContent = totalCust.toLocaleString('tr-TR');
     if (elChurn) elChurn.textContent = churnCust.toLocaleString('tr-TR');
+    if (elChurnSub) elChurnSub.textContent = `%${churnPct} Acil Müdahale Portföyü`;
+    if (elRecCount) elRecCount.textContent = recoveredCount.toLocaleString('tr-TR');
+    if (elRecRev) elRecRev.textContent = `Aktif Ciro: ₺${(recoveredRev / 1000000).toFixed(1)}M`;
     if (elVisits) elVisits.textContent = completedVisits.toLocaleString('tr-TR');
     if (elTasks) elTasks.textContent = pendingTasks.toLocaleString('tr-TR');
     if (elRev) elRev.textContent = '₺' + (totalRev / 1000000).toFixed(1) + 'M';
+    if (elNetSub) {
+        const netLabel = netBal >= 0 ? `${formatMoney(Math.abs(netBal))} (B)` : `${formatMoney(Math.abs(netBal))} (A)`;
+        elNetSub.textContent = `Net Bakiye: ${netLabel}`;
+    }
 
     const p1Vip = customers.filter(c => (c.priority || '').includes('VIP') || Number(c.totalRevenue || 0) >= 1000000).length;
     const p1Churn = customers.filter(c => (c.priority || '').includes('Acil Churn')).length;
     const p1Vefa = customers.filter(c => (c.priority || '').includes('Vefa')).length;
+    const p2Arch = customers.filter(c => (c.priority || '').startsWith('P2')).length;
 
     const elVip = document.getElementById('kpi-p1-vip-count');
     const elP1Ch = document.getElementById('kpi-p1-churn-count');
     const elVefa = document.getElementById('kpi-p1-vefa-count');
+    const elP2Ar = document.getElementById('kpi-p2-archive-count');
     if (elVip) elVip.textContent = `${p1Vip} Müşteri`;
-    if (elP1Ch) elP1Ch.textContent = `${p1Churn} Müşteri`;
+    if (elP1Ch) elP1Ch.textContent = `${p1Churn.toLocaleString('tr-TR')} Müşteri`;
     if (elVefa) elVefa.textContent = `${p1Vefa} Müşteri`;
+    if (elP2Ar) elP2Ar.textContent = `${p2Arch.toLocaleString('tr-TR')} Müşteri`;
 
-    // Son Ziyaretler Listesi
+    // 1. Günlük Akıllı Saha Ajandası: Bugün Aranacak / Ziyaret Edilecek Önerilen 5 VIP Müşteri
+    const agendaBox = document.getElementById('dashboard-smart-agenda');
+    if (agendaBox) {
+        const visitedTitles = new Set(visits.map(v => normalizeTR(v.customerTitle)));
+        const topVipCandidates = customers
+            .filter(c => !visitedTitles.has(normalizeTR(c.title)) && ((c.priority || '').includes('P1') || Number(c.totalRevenue || 0) >= 400000))
+            .sort((a, b) => (Number(b.recoveryScore || 0) * 100000 + Number(b.totalRevenue || 0)) - (Number(a.recoveryScore || 0) * 100000 + Number(a.totalRevenue || 0)))
+            .slice(0, 5);
+
+        agendaBox.innerHTML = topVipCandidates.map(c => {
+            const cleanPh = (c.phone || '').replace(/[^0-9]/g, '');
+            const hasPhone = c.phone && c.phone !== 'YOK' && cleanPh.length >= 10;
+            const acc = getCustomerAccountingSummary(c);
+            return `
+                <div class="smart-agenda-card">
+                    <div style="flex:1; min-width:190px;">
+                        <div style="display:flex; align-items:center; gap:0.4rem; margin-bottom:2px;">
+                            <span style="font-family:monospace; font-size:0.72rem; color:#38bdf8; font-weight:700;">${c.code}</span>
+                            <span class="badge badge-p1" style="font-size:0.65rem; padding:1px 6px;">Skor: ${c.recoveryScore || 90}</span>
+                            ${acc.baCode !== '-' ? `<span class="${acc.baCode === '(B)' ? 'ba-badge-b' : 'ba-badge-a'}" style="font-size:0.65rem; padding:1px 5px;">${formatMoney(acc.absBalance)} ${acc.baCode}</span>` : ''}
+                        </div>
+                        <strong style="color:#fff; font-size:0.83rem; display:block; cursor:pointer;" onclick="openCustomerDetailModal('${c.code}')">${c.title}</strong>
+                        <div style="font-size:0.72rem; color:var(--text-sec); margin-top:2px;">
+                            <i class="fa-solid fa-location-dot" style="color:#38bdf8;"></i> ${c.city} / ${c.district} &bull; Ciro: <strong style="color:#34d399;">${formatMoney(c.totalRevenue)}</strong> &bull; Son: ${c.lastDate || '-'}
+                        </div>
+                    </div>
+                    <div style="display:flex; align-items:center; gap:0.35rem; flex-wrap:wrap;">
+                        ${hasPhone ? `
+                            <a href="tel:${c.phone}" class="btn btn-secondary btn-sm" style="padding:0.32rem 0.55rem;" title="Hemen Ara: ${c.phone}">
+                                <i class="fa-solid fa-phone" style="color:#38bdf8;"></i>
+                            </a>
+                            <a href="https://wa.me/${cleanPh.startsWith('0') ? '9' + cleanPh : cleanPh}" target="_blank" class="btn btn-secondary btn-sm" style="padding:0.32rem 0.55rem;" title="WhatsApp Mesajı Gönder">
+                                <i class="fa-brands fa-whatsapp" style="color:#25d366;"></i>
+                            </a>
+                        ` : ''}
+                        <button type="button" class="btn btn-secondary btn-sm" style="padding:0.32rem 0.6rem;" onclick="openCustomerDetailModal('${c.code}')" title="Logo Cari Ekstre &amp; Fatura Kalemleri">
+                            <i class="fa-solid fa-file-invoice-dollar" style="color:#fbbf24;"></i> Ekstre
+                        </button>
+                        <button type="button" class="btn btn-primary btn-sm" style="padding:0.32rem 0.65rem;" onclick="quickStartVisitForCustomer('${c.code}')" title="Ziyaret veya Arama Kaydı Gir">
+                            <i class="fa-solid fa-plus"></i> Ziyaret
+                        </button>
+                    </div>
+                </div>
+            `;
+        }).join('');
+    }
+
+    // 2. Bölge / İl Bazlı Potansiyel Ciro Yoğunluğu Bar Grafiği
+    const regionBox = document.getElementById('dashboard-region-bars');
+    if (regionBox) {
+        const cityStats = {};
+        customers.forEach(c => {
+            const ct = c.city || 'Diğer';
+            if (!cityStats[ct]) cityStats[ct] = { count: 0, rev: 0 };
+            cityStats[ct].count += 1;
+            cityStats[ct].rev += Number(c.totalRevenue || 0);
+        });
+        const topCities = Object.entries(cityStats)
+            .sort((a, b) => b[1].rev - a[1].rev)
+            .slice(0, 5);
+        const maxRev = topCities.length > 0 ? Math.max(topCities[0][1].rev, 1) : 1;
+
+        regionBox.innerHTML = topCities.map(([cityName, st]) => {
+            const pct = Math.max(8, Math.round((st.rev / maxRev) * 100));
+            return `
+                <div style="cursor:pointer; background:rgba(255,255,255,0.02); border:1px solid var(--border-color); border-radius:9px; padding:0.55rem 0.8rem;" onclick="filterLegacyByCityQuick('${cityName}')" title="${cityName} müşterilerini filtrelemek için tıklayın">
+                    <div style="display:flex; justify-content:space-between; align-items:center; font-size:0.78rem; margin-bottom:4px;">
+                        <strong style="color:#f8fafc;"><i class="fa-solid fa-location-dot" style="color:#34d399; margin-right:4px;"></i>${cityName} <span style="color:var(--text-sec); font-weight:500;">(${st.count} Cari)</span></strong>
+                        <span style="font-weight:700; color:#38bdf8;">${formatMoney(st.rev)}</span>
+                    </div>
+                    <div style="width:100%; height:6px; background:rgba(255,255,255,0.06); border-radius:999px; overflow:hidden;">
+                        <div style="width:${pct}%; height:100%; background:linear-gradient(90deg, #0284c7, #34d399); border-radius:999px;"></div>
+                    </div>
+                </div>
+            `;
+        }).join('');
+    }
+
+    // 3. Son Ziyaretler Listesi
     const recentBox = document.getElementById('dashboard-recent-visits');
     if (recentBox) {
         if (visits.length === 0) {
             recentBox.innerHTML = `
-                <div style="text-align:center; padding:1.5rem; color:var(--text-sec); font-size:0.84rem;">
-                    <i class="fa-solid fa-car-side" style="font-size:1.8rem; color:var(--text-muted); margin-bottom:0.5rem; display:block;"></i>
-                    Henüz yeni ziyaret kaydı girilmedi. Yukarıdaki <strong>"Görüşme / Ziyaret Ekle"</strong> butonuna dokunarak ilk kaydı oluşturabilirsiniz.
+                <div style="text-align:center; padding:1.25rem; color:var(--text-sec); font-size:0.82rem;">
+                    <i class="fa-solid fa-car-side" style="font-size:1.6rem; color:var(--text-muted); margin-bottom:0.45rem; display:block;"></i>
+                    Henüz yeni ziyaret kaydı girilmedi. Yukarıdaki <strong>"Görüşme / Ziyaret Ekle"</strong> veya <strong>"Akıllı Günlük Ajanda"</strong> üzerinden ilk kaydı oluşturabilirsiniz.
                 </div>
             `;
         } else {
             recentBox.innerHTML = visits.slice(0, 4).map(v => `
-                <div style="background:rgba(255,255,255,0.03); border:1px solid var(--border-color); border-radius:10px; padding:0.75rem 0.9rem; display:flex; justify-content:space-between; align-items:center; gap:0.5rem; flex-wrap:wrap;">
+                <div style="background:rgba(255,255,255,0.03); border:1px solid var(--border-color); border-radius:10px; padding:0.65rem 0.85rem; display:flex; justify-content:space-between; align-items:center; gap:0.5rem; flex-wrap:wrap;">
                     <div>
-                        <strong style="color:#fff; font-size:0.88rem;">${v.type === 'ZİYARET' ? '🚗' : '📞'} ${v.customerTitle}</strong>
-                        <div style="font-size:0.75rem; color:var(--text-sec); margin-top:2px;">
+                        <strong style="color:#fff; font-size:0.84rem;">${v.type === 'ZİYARET' ? '<i class="fa-solid fa-car-side" style="color:#38bdf8;"></i>' : '<i class="fa-solid fa-phone" style="color:#34d399;"></i>'} ${v.customerTitle}</strong>
+                        <div style="font-size:0.73rem; color:var(--text-sec); margin-top:2px;">
                             ${v.personnel} &bull; ${v.date} &bull; ${v.location || 'Merkez'}
                         </div>
                     </div>
@@ -1185,6 +1388,15 @@ function renderDashboard() {
                 </div>
             `).join('');
         }
+    }
+}
+
+function filterLegacyByCityQuick(cityName) {
+    switchTab('legacy-tab');
+    const cityInput = document.getElementById('legacy-filter-city');
+    if (cityInput) {
+        cityInput.value = cityName;
+        handleCityFilterChange();
     }
 }
 
@@ -1202,6 +1414,17 @@ function populateFilterOptions() {
     const cities = Object.keys(cityCounts).sort((a, b) => a.localeCompare(b, 'tr'));
     appState.cities = cities;
     appState.cityCounts = cityCounts;
+
+    // D-Pro Cari Ekstre İl Filtresini doldur
+    const ekstreCityEl = document.getElementById('ekstre-filter-city');
+    if (ekstreCityEl && ekstreCityEl.options.length <= 1) {
+        cities.forEach(ct => {
+            const opt = document.createElement('option');
+            opt.value = ct;
+            opt.textContent = `${ct} (${cityCounts[ct]})`;
+            ekstreCityEl.appendChild(opt);
+        });
+    }
 
     // Datalist doldur (Klavyeden yazarken otomatik tamamlama)
     const dl = document.getElementById('legacy-filter-city-list');
@@ -1226,14 +1449,19 @@ function populateFilterOptions() {
         });
     }
 
-    if (rutSelect && rutSelect.options.length <= 1) {
-        const ruts = Array.from(new Set(customers.map(c => c.rut).filter(Boolean))).sort();
-        ruts.forEach(rt => {
-            const opt = document.createElement('option');
-            opt.value = rt;
-            opt.textContent = rt;
-            rutSelect.appendChild(opt);
-        });
+    if (rutSelect) {
+        const prevRut = rutSelect.value;
+        const customRouteNames = (appState.customRoutes || []).map(r => r.name).filter(Boolean);
+        const customerRuts = customers.map(c => c.rut).filter(r => r && !/^(RUT-\d+|DİĞER)$/i.test(String(r).trim()));
+        const ruts = Array.from(new Set([...customRouteNames, ...customerRuts])).sort((a, b) => a.localeCompare(b, 'tr'));
+        rutSelect.innerHTML = `<option value="">🚗 Tüm Rutlar (${ruts.length} Kayıtlı Rut)</option>` +
+            ruts.map(rt => {
+                const cnt = customers.filter(c => c.rut === rt).length;
+                return `<option value="${rt}">${rt} (${cnt} Cari)</option>`;
+            }).join('');
+        if (prevRut && ruts.includes(prevRut)) {
+            rutSelect.value = prevRut;
+        }
     }
 
     // Modal Personel Seçenekleri
@@ -1241,6 +1469,7 @@ function populateFilterOptions() {
     const visitAssignedTo = document.getElementById('visit-assigned-to');
     const taskAssignee = document.getElementById('task-assignee');
     const taskManager = document.getElementById('task-manager');
+    const customRutAssignee = document.getElementById('custom-rut-assignee');
 
     const fillSelect = (el) => {
         if (!el || el.options.length > 0) return;
@@ -1255,6 +1484,7 @@ function populateFilterOptions() {
     fillSelect(visitAssignedTo);
     fillSelect(taskAssignee);
     fillSelect(taskManager);
+    fillSelect(customRutAssignee);
 
     // Müşteri Otomatik Tamamlama (Datalist)
     const cdl = document.getElementById('customer-datalist');
@@ -1265,6 +1495,10 @@ function populateFilterOptions() {
             opt.label = `${c.code} - ${c.city}/${c.district}`;
             cdl.appendChild(opt);
         });
+    }
+
+    if (typeof initCustomRoutePlannerUI === 'function') {
+        initCustomRoutePlannerUI();
     }
 }
 
@@ -1483,7 +1717,7 @@ function renderLegacyCustomers() {
         if (balance && c.balanceStatus !== balance) return false;
 
         if (search) {
-            const hay = normalizeTR(`${c.code} ${c.title} ${c.authorized} ${c.phone} ${c.plates} ${c.city} ${c.district}`);
+            const hay = normalizeTR(`${c.code} ${c.title} ${c.authorized} ${c.phone} ${c.plates} ${c.city} ${c.district} ${c.rut || ''}`);
             if (!hay.includes(search)) return false;
         }
         return true;
@@ -1508,48 +1742,66 @@ function renderLegacyCustomers() {
         return;
     }
 
+    const selectedSet = (typeof customRouteDraftSelectedCodes !== 'undefined' && customRouteDraftSelectedCodes instanceof Set)
+        ? customRouteDraftSelectedCodes
+        : new Set();
+
     tbody.innerHTML = pageItems.map(c => {
         const isVip = (c.priority || '').includes('VIP');
         const isChurn = (c.priority || '').includes('Acil Churn');
         const badgeCls = isVip ? 'badge-p1' : isChurn ? 'badge-p2' : 'badge-p3';
+        const shortPriority = (c.priority || 'Normal')
+            .replace('P1 - VIP Kritik Filo', 'P1 • VIP Filo')
+            .replace('P1 - Vefa & Geri Kazanım', 'P1 • Vefa')
+            .replace('P3 - Rut Ziyareti / Aktif', 'P3 • Aktif / Rut')
+            .replace('P2 - Tarihsel Arşiv', 'P2 • Arşiv');
+
+        const isSelectedForDraft = selectedSet.has(c.code);
+        const hasSavedRut = c.rut && !/^(RUT-\d+|DİĞER)$/i.test(String(c.rut).trim());
 
         return `
-            <tr>
-                <td style="font-family:monospace; color:var(--dizsan-light); font-weight:700;">${c.code}</td>
-                <td>
-                    <strong style="color:#fff; font-size:0.86rem; display:block; cursor:pointer;" onclick="openCustomerDetailModal('${c.code}')" title="Detay ve Logo ERP Fatura/Servis Geçmişini Gör">${c.title}</strong>
-                    <span style="font-size:0.72rem; color:var(--text-muted); cursor:pointer;" onclick="openCustomerDetailModal('${c.code}')">${c.address || c.era || ''}</span>
+            <tr style="${isSelectedForDraft ? 'background:rgba(16,185,129,0.08);' : ''}">
+                <td style="font-family:monospace; color:var(--dizsan-light); font-weight:700; font-size:0.75rem; white-space:nowrap;">${c.code}</td>
+                <td style="max-width:210px;">
+                    <strong style="color:#fff; font-size:0.8rem; display:block; cursor:pointer; line-height:1.25;" onclick="openCustomerDetailModal('${c.code}')" title="Detay ve Logo ERP Fatura/Servis Geçmişini Gör">${c.title}</strong>
+                    <span style="font-size:0.68rem; color:var(--text-muted); cursor:pointer; display:block; margin-top:2px; line-height:1.2;" onclick="openCustomerDetailModal('${c.code}')">${c.address || c.era || ''}</span>
                 </td>
-                <td>
-                    <div style="font-weight:600; color:#e2e8f0;">${c.authorized || '-'}</div>
-                    <a href="tel:${c.phone}" style="color:#38bdf8; font-size:0.76rem; text-decoration:none;"><i class="fa-solid fa-phone"></i> ${c.phone || '-'}</a>
+                <td style="max-width:145px;">
+                    <div style="font-weight:600; color:#e2e8f0; font-size:0.75rem; line-height:1.25;">${c.authorized || '-'}</div>
+                    <a href="tel:${c.phone}" style="color:#38bdf8; font-size:0.72rem; text-decoration:none; display:inline-block; margin-top:2px;"><i class="fa-solid fa-phone"></i> ${c.phone || '-'}</a>
                 </td>
-                <td>
+                <td style="white-space:nowrap;">
                     <span class="badge badge-secondary">${c.city} / ${c.district}</span>
-                    <span style="display:block; font-size:0.7rem; color:var(--text-muted); margin-top:2px;">${c.rut || '-'}</span>
+                    ${hasSavedRut
+                        ? `<span style="display:block; font-size:0.68rem; font-weight:700; color:#34d399; margin-top:3px;"><i class="fa-solid fa-route"></i> ${c.rut}</span>`
+                        : `<span style="display:block; font-size:0.66rem; color:var(--text-muted); margin-top:2px;">Rut Planlanmadı</span>`
+                    }
                 </td>
-                <td>
-                    <div style="font-weight:600; font-size:0.78rem; color:#fde68a;">${c.plates || 'Plakasız'}</div>
-                    <span style="font-size:0.72rem; color:var(--text-sec);">${c.vehicleModel || 'Ağır Vasıta'}</span>
+                <td style="max-width:130px;">
+                    <div style="font-weight:600; font-size:0.74rem; color:#fde68a; line-height:1.25;">${c.plates || 'Plakasız'}</div>
+                    <span style="font-size:0.68rem; color:var(--text-sec); display:block; margin-top:1px;">${c.vehicleModel || 'Ağır Vasıta'}</span>
                 </td>
-                <td style="font-weight:700; color:#34d399;">${formatMoney(c.totalRevenue)}</td>
-                <td style="font-size:0.76rem;">
+                <td style="font-weight:700; color:#34d399; font-size:0.76rem; white-space:nowrap;">${formatMoney(c.totalRevenue)}</td>
+                <td style="font-size:0.72rem; white-space:nowrap;">
                     <div>${c.lastDate || '-'}</div>
-                    <span style="color:#f87171; font-size:0.7rem;">${c.churnDuration || ''}</span>
+                    <span style="color:#f87171; font-size:0.67rem;">${c.churnDuration || ''}</span>
                 </td>
-                <td>
+                <td style="white-space:nowrap;">
                     <span class="badge ${c.balance > 0 ? 'badge-p1' : c.balance < 0 ? 'badge-success' : 'badge-secondary'}">
                         ${formatMoney(c.balance)}
                     </span>
                 </td>
-                <td><span class="badge ${badgeCls}">${c.priority || 'Normal'}</span></td>
-                <td style="text-align:right;">
-                    <div style="display:flex; justify-content:flex-end; gap:0.35rem;">
-                        <button type="button" class="btn btn-secondary btn-sm" title="Logo ERP Fatura &amp; Servis Geçmişi" onclick="openCustomerDetailModal('${c.code}')">
-                            <i class="fa-solid fa-file-invoice"></i> Logo Detay
+                <td style="white-space:nowrap;"><span class="badge ${badgeCls}" title="${c.priority || 'Normal'}">${shortPriority}</span></td>
+                <td style="text-align:right; white-space:nowrap;">
+                    <div style="display:flex; justify-content:flex-end; gap:0.28rem;">
+                        <button type="button" class="btn ${isSelectedForDraft ? 'btn-success' : 'btn-secondary'} btn-sm" style="padding:0.28rem 0.5rem; font-size:0.71rem; ${isSelectedForDraft ? '' : 'border-color:rgba(56,189,248,0.4); color:#38bdf8;'}" title="Yeni Rut Planına Ekle / Çıkar" onclick="toggleCustomerInCustomRouteDraft('${c.code}')">
+                            <i class="fa-solid ${isSelectedForDraft ? 'fa-check' : 'fa-plus'}"></i> ${isSelectedForDraft ? 'Rutta' : 'Ruta Ekle'}
                         </button>
-                        <button type="button" class="btn btn-primary btn-sm" title="Ziyaret / Görüşme Başlat" onclick="quickStartVisitForCustomer('${c.code}')">
-                            <i class="fa-solid fa-phone"></i> Ziyaret / Ara
+                        <button type="button" class="btn btn-secondary btn-sm" style="padding:0.28rem 0.5rem; font-size:0.71rem;" title="Logo ERP Fatura &amp; Servis Geçmişi" onclick="openCustomerDetailModal('${c.code}')">
+                            <i class="fa-solid fa-file-invoice"></i> Detay
+                        </button>
+                        <button type="button" class="btn btn-primary btn-sm" style="padding:0.28rem 0.5rem; font-size:0.71rem;" title="Ziyaret / Görüşme Başlat" onclick="quickStartVisitForCustomer('${c.code}')">
+                            <i class="fa-solid fa-phone"></i> Ziyaret
                         </button>
                     </div>
                 </td>
@@ -1578,6 +1830,316 @@ function exportLegacyToExcel() {
     addAuditLog("DIŞA AKTARMA", "Kayıp müşteri ziyaret planı Excel (CSV) olarak indirildi.");
 }
 
+let currentCariEkstrePage = 1;
+let cariEkstrePage = 1;
+const CARI_EKSTRE_PAGE_SIZE = 50;
+
+function handleEkstreCityFilterChange(preselectedDistrict = '') {
+    const citySel = document.getElementById('ekstre-filter-city') || document.getElementById('ekstre-city-filter');
+    const distSel = document.getElementById('ekstre-filter-district');
+    const cityVal = citySel ? citySel.value : '';
+    if (distSel) {
+        distSel.innerHTML = '<option value="">🏘️ Tüm İlçeler</option>';
+        const customers = appState.customers || [];
+        const matched = cityVal && cityVal !== 'ALL'
+            ? customers.filter(c => normalizeTR(c.city) === normalizeTR(cityVal))
+            : customers;
+        const distCounts = {};
+        matched.forEach(c => {
+            if (c.district) distCounts[c.district] = (distCounts[c.district] || 0) + 1;
+        });
+        Object.keys(distCounts).sort((a, b) => a.localeCompare(b, 'tr')).forEach(d => {
+            const opt = document.createElement('option');
+            opt.value = d;
+            opt.textContent = `${d} (${distCounts[d]})`;
+            distSel.appendChild(opt);
+        });
+        if (preselectedDistrict) {
+            const matchOpt = Array.from(distSel.options).find(o => normalizeTR(o.value) === normalizeTR(preselectedDistrict));
+            if (matchOpt) {
+                distSel.value = matchOpt.value;
+            } else {
+                const opt = document.createElement('option');
+                opt.value = preselectedDistrict;
+                opt.textContent = preselectedDistrict;
+                distSel.appendChild(opt);
+                distSel.value = preselectedDistrict;
+            }
+        }
+    }
+    currentCariEkstrePage = 1;
+    cariEkstrePage = 1;
+    renderCariEkstreTable(true);
+}
+
+function renderCariEkstreTable(resetPage = true) {
+    const tbody = document.getElementById('ekstre-table-body') || document.getElementById('cari-ekstre-tbody');
+    if (!tbody) return;
+    if (resetPage) {
+        currentCariEkstrePage = 1;
+        cariEkstrePage = 1;
+    }
+
+    const searchVal = normalizeTR((document.getElementById('ekstre-search') || document.getElementById('ekstre-search-input'))?.value || '');
+    const cityVal = (document.getElementById('ekstre-filter-city') || document.getElementById('ekstre-city-filter'))?.value || '';
+    const districtVal = document.getElementById('ekstre-filter-district')?.value || '';
+    const statusVal = (document.getElementById('ekstre-filter-ba') || document.getElementById('ekstre-balance-filter'))?.value || '';
+    const sortVal = (document.getElementById('ekstre-sort') || document.getElementById('ekstre-sort-filter'))?.value || 'BALANCE_DESC';
+
+    const allCustomers = appState.customers || [];
+
+    // Genel KPI hesapla (Güncel Açık Borç (B) ve Açık Alacak (A) Cari Bakiye Toplamları)
+    let grandBorc = 0;
+    let grandAlacak = 0;
+    let borcluCariCount = 0;
+    let alacakliCariCount = 0;
+    let totalInvoiceCount = 0;
+    let withInvoiceCustomers = 0;
+
+    const enriched = allCustomers.map(c => {
+        const acc = getCustomerAccountingSummary(c);
+        if (acc.bakiye > 0.009) {
+            grandBorc += acc.bakiye;
+            borcluCariCount++;
+        } else if (acc.bakiye < -0.009) {
+            grandAlacak += Math.abs(acc.bakiye);
+            alacakliCariCount++;
+        }
+        const invCount = (c.serviceHistory || []).length;
+        totalInvoiceCount += invCount;
+        if (invCount > 0) withInvoiceCustomers++;
+        return { c, acc, invCount };
+    });
+    const grandNetBorc = grandBorc - grandAlacak;
+
+    const elTotalCount = document.getElementById('ekstre-kpi-count') || document.getElementById('ekstre-kpi-total-count');
+    if (elTotalCount) elTotalCount.textContent = allCustomers.length.toLocaleString('tr-TR');
+    const elBorc = document.getElementById('ekstre-kpi-debit') || document.getElementById('ekstre-kpi-borc');
+    if (elBorc) elBorc.textContent = formatMoney(grandBorc);
+    const elBorcSub = document.getElementById('ekstre-kpi-debit-sub');
+    if (elBorcSub) elBorcSub.textContent = `${borcluCariCount.toLocaleString('tr-TR')} Borçlu (B) Cari Açık Bakiye Toplamı`;
+    const elAlacak = document.getElementById('ekstre-kpi-credit') || document.getElementById('ekstre-kpi-alacak');
+    if (elAlacak) elAlacak.textContent = formatMoney(grandAlacak);
+    const elAlacakSub = document.getElementById('ekstre-kpi-credit-sub');
+    if (elAlacakSub) elAlacakSub.textContent = `${alacakliCariCount.toLocaleString('tr-TR')} Alacaklı (A) Cari Açık Bakiye Toplamı`;
+    const elBakiye = document.getElementById('ekstre-kpi-net') || document.getElementById('ekstre-kpi-bakiye');
+    if (elBakiye) elBakiye.textContent = formatMoney(grandNetBorc);
+    const elInvoices = document.getElementById('ekstre-kpi-invoices');
+    if (elInvoices) elInvoices.textContent = totalInvoiceCount.toLocaleString('tr-TR');
+    const elInvoicesSub = document.getElementById('ekstre-kpi-invoices-sub');
+    if (elInvoicesSub) elInvoicesSub.textContent = `${withInvoiceCustomers.toLocaleString('tr-TR')} caride tıklanabilir fatura kalemi`;
+
+    let filtered = enriched.filter(({ c, acc, invCount }) => {
+        if (cityVal && cityVal !== 'ALL' && normalizeTR(c.city) !== normalizeTR(cityVal)) return false;
+        if (districtVal && normalizeTR(c.district) !== normalizeTR(districtVal)) return false;
+        if ((statusVal === 'B' || statusVal === '(B)') && acc.baCode !== '(B)') return false;
+        if ((statusVal === 'A' || statusVal === '(A)') && acc.baCode !== '(A)') return false;
+        if (statusVal === 'ACTIVE_BAL' && acc.baCode === '-') return false;
+        if (statusVal === 'ZERO' && acc.baCode !== '-') return false;
+        if ((statusVal === 'WITH_INVOICE' || statusVal === 'HAS_INVOICE') && invCount === 0) return false;
+
+        if (searchVal) {
+            const hay = normalizeTR(`${c.code} ${c.title} ${c.address} ${c.district} ${c.city} ${c.plates} ${c.phone}`);
+            if (!hay.includes(searchVal)) return false;
+        }
+        return true;
+    });
+
+    filtered.sort((a, b) => {
+        if (sortVal === 'BAKIYE_DESC' || sortVal === 'BALANCE_DESC') return Math.abs(b.acc.bakiye) - Math.abs(a.acc.bakiye);
+        if (sortVal === 'BORC_DESC' || sortVal === 'DEBIT_DESC') return b.acc.borc - a.acc.borc;
+        if (sortVal === 'CREDIT_DESC') return b.acc.alacak - a.acc.alacak;
+        if (sortVal === 'REVENUE_DESC') return (Number(b.c.totalRevenue) || b.acc.borc) - (Number(a.c.totalRevenue) || a.acc.borc);
+        if (sortVal === 'CODE_ASC') return String(a.c.code || '').localeCompare(String(b.c.code || ''), 'tr');
+        if (sortVal === 'NAME_ASC' || sortVal === 'TITLE_ASC') return String(a.c.title || '').localeCompare(String(b.c.title || ''), 'tr');
+        return 0;
+    });
+
+    const countBadge = document.getElementById('ekstre-table-count-label') || document.getElementById('ekstre-filtered-count-badge');
+    if (countBadge) countBadge.textContent = `D-Pro Cari & Logo Ekstre Listesi (${filtered.length.toLocaleString('tr-TR')} Cari)`;
+
+    const totalPages = Math.max(1, Math.ceil(filtered.length / CARI_EKSTRE_PAGE_SIZE));
+    if (currentCariEkstrePage > totalPages) currentCariEkstrePage = totalPages;
+    const startIdx = (currentCariEkstrePage - 1) * CARI_EKSTRE_PAGE_SIZE;
+    const pageItems = filtered.slice(startIdx, startIdx + CARI_EKSTRE_PAGE_SIZE);
+
+    const pageInfo = document.getElementById('ekstre-page-indicator') || document.getElementById('ekstre-pagination-info');
+    if (pageInfo) {
+        pageInfo.textContent = `Sayfa ${currentCariEkstrePage} / ${totalPages} (${filtered.length.toLocaleString('tr-TR')} Cari)`;
+    }
+
+    if (pageItems.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="10" style="text-align:center; padding:2rem; color:var(--text-muted);">Filtre kriterlerine uygun cari hesap bulunamadı.</td></tr>`;
+        return;
+    }
+
+    tbody.innerHTML = pageItems.map(({ c, acc, invCount }) => {
+        const baBadge = acc.baCode === '(B)'
+            ? `<span class="badge" style="background:rgba(239,68,68,0.16); color:#f87171; border:1px solid rgba(239,68,68,0.35); font-weight:800;">(B) Borçlu</span>`
+            : acc.baCode === '(A)'
+                ? `<span class="badge" style="background:rgba(16,185,129,0.16); color:#34d399; border:1px solid rgba(16,185,129,0.35); font-weight:800;">(A) Alacaklı</span>`
+                : `<span class="badge badge-secondary" style="opacity:0.75;">- Kapalı</span>`;
+
+        const bakiyeColor = acc.baCode === '(B)' ? '#f87171' : acc.baCode === '(A)' ? '#34d399' : '#94a3b8';
+
+        return `
+            <tr style="cursor:pointer;" onclick="openCustomerDetailModal('${c.code}')">
+                <td style="font-family:monospace; font-weight:700; color:#38bdf8; white-space:nowrap;">${c.code}</td>
+                <td>
+                    <div style="font-weight:700; color:#fff; font-size:0.82rem;">${c.title}</div>
+                    <div style="font-size:0.69rem; color:var(--text-muted); display:flex; gap:0.45rem; align-items:center; margin-top:2px;">
+                        ${c.plates && c.plates !== 'Plakasız' ? `<span style="color:#fde68a;"><i class="fa-solid fa-truck"></i> ${c.plates}</span>` : ''}
+                        ${c.lastDate ? `<span>Son Fatura: ${c.lastDate}</span>` : ''}
+                    </div>
+                </td>
+                <td style="max-width:250px; font-size:0.74rem; color:#cbd5e1; white-space:normal; line-height:1.35;">${c.address || '-'}</td>
+                <td style="font-size:0.76rem; color:#e2e8f0; white-space:nowrap;">${c.district || '-'}</td>
+                <td style="font-size:0.76rem; font-weight:600; color:#38bdf8; white-space:nowrap;">${c.city || '-'}</td>
+                <td style="text-align:right; font-weight:700; color:#f87171; white-space:nowrap;">${formatMoney(acc.borc)}</td>
+                <td style="text-align:right; font-weight:700; color:#34d399; white-space:nowrap;">${formatMoney(acc.alacak)}</td>
+                <td style="text-align:right; font-weight:800; color:${bakiyeColor}; white-space:nowrap;">${formatMoney(Math.abs(acc.bakiye))}</td>
+                <td style="text-align:center; white-space:nowrap;">${baBadge}</td>
+                <td style="text-align:right; white-space:nowrap;" onclick="event.stopPropagation();">
+                    <button type="button" class="btn btn-sm ${invCount > 0 ? 'btn-primary' : 'btn-secondary'}" onclick="openCustomerDetailModal('${c.code}')" style="font-size:0.72rem; padding:0.3rem 0.6rem;">
+                        <i class="fa-solid fa-file-invoice"></i> ${invCount > 0 ? `${invCount} Fatura / Ekstre` : 'Cari Kart'}
+                    </button>
+                </td>
+            </tr>
+        `;
+    }).join('');
+}
+
+function changeCariEkstrePage(delta) {
+    currentCariEkstrePage = Math.max(1, currentCariEkstrePage + delta);
+    renderCariEkstreTable(false);
+}
+
+function exportCariEkstreToExcel() {
+    const allCustomers = appState.customers || [];
+    let csv = '\uFEFFCari Kodu;Cari Adı;Adresi;İlçe;İl;Borç;Alacak;Bakiye;Borç/Alacak;Fatura Sayısı;Son Fatura Tarihi\n';
+    allCustomers.forEach(c => {
+        const acc = getCustomerAccountingSummary(c);
+        const row = [
+            c.code || '',
+            (c.title || '').replace(/;/g, ' '),
+            (c.address || '').replace(/;/g, ' '),
+            c.district || '',
+            c.city || '',
+            acc.borc.toFixed(2).replace('.', ','),
+            acc.alacak.toFixed(2).replace('.', ','),
+            Math.abs(acc.bakiye).toFixed(2).replace('.', ','),
+            acc.baCode,
+            (c.serviceHistory || []).length,
+            c.lastDate || ''
+        ];
+        csv += row.join(';') + '\n';
+    });
+
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `D-Pro_Cari_Listesi_ve_Bakiye_${new Date().toISOString().slice(0, 10)}.csv`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    showToast('D-Pro Cari Çalışması Excel (CSV) formatında indirildi.', 'success');
+}
+
+function classifyInvoiceLineItem(kalem) {
+    const isStr = typeof kalem === 'string';
+    const code = isStr ? '' : String(kalem.kod || '').trim();
+    const upperCode = code.toUpperCase();
+    const upperDesc = String(isStr ? kalem : (kalem.aciklama || '')).toUpperCase();
+    const rawType = isStr ? '' : String(kalem.tur || '').trim();
+
+    // AGENTS.md Kuralı: TDR ile başlayan kodlar kesinlikle Tedarik (Tedarik Hizmetler / Supplied Services & Parts) kalemidir
+    if (upperCode.startsWith('TDR') || upperDesc.startsWith('TDR') || upperDesc.includes('TEDARİK') || upperDesc.includes('TEDARIK') || upperDesc.includes('DIŞ İŞÇİLİK') || upperDesc.includes('REKTİFİYE') || upperDesc.includes('TORNA')) {
+        return {
+            category: 'Tedarik (Tedarik Hizmetler)',
+            shortCodePrefix: 'TDR.HIZ',
+            unit: 'HİZMET',
+            badgeStyle: 'background:rgba(245,158,11,0.18); color:#fbbf24; border:1px solid rgba(245,158,11,0.4);'
+        };
+    }
+    if (rawType.toLowerCase().includes('hizmet') || upperCode.startsWith('SRH') || upperCode.startsWith('İŞÇ') || upperCode.startsWith('ISC') || upperDesc.includes('ONARIM') || upperDesc.includes('BAKIM') || upperDesc.includes('İŞÇİLİK') || upperDesc.includes('ISCILIK') || upperDesc.includes('ARIZA') || upperDesc.includes('REVİZYON') || upperDesc.includes('SÖKME') || upperDesc.includes('TAKMA') || upperDesc.includes('KONTROL') || upperDesc.includes('SERVİS')) {
+        return {
+            category: 'Servis / İşçilik Hizmeti',
+            shortCodePrefix: 'SRH.ISC',
+            unit: 'HİZMET',
+            badgeStyle: 'background:rgba(56,189,248,0.16); color:#38bdf8; border:1px solid rgba(56,189,248,0.35);'
+        };
+    }
+    return {
+        category: rawType || 'Yedek Parça / Malzeme',
+        shortCodePrefix: 'YP.MLZ',
+        unit: 'ADET',
+        badgeStyle: 'background:rgba(16,185,129,0.15); color:#34d399; border:1px solid rgba(16,185,129,0.35);'
+    };
+}
+
+function normalizeInvoiceLines(inv) {
+    const rawKalemler = Array.isArray(inv.kalemler) ? inv.kalemler : [];
+    const genelToplam = Number(inv.net_toplam || inv.tutar || 0);
+    const hasExplicitKdv = Number(inv.kdv_tutari || 0) > 0;
+    const kdvTutari = hasExplicitKdv ? Number(inv.kdv_tutari) : +(genelToplam - (genelToplam / 1.20)).toFixed(2);
+    const brutToplam = Number(inv.brut_toplam || 0) > 0 ? Number(inv.brut_toplam) : +(genelToplam - kdvTutari).toFixed(2);
+
+    const sourceList = rawKalemler.length > 0
+        ? rawKalemler
+        : [{ kod: 'SRH.PAKET.001', aciklama: inv.islem || 'Ağır Vasıta Servis Bakım & Yedek Parça Satış Faturası', miktar: 1, birim: 'PAKET' }];
+
+    const count = sourceList.length;
+    let allocatedSoFar = 0;
+
+    const lines = sourceList.map((item, idx) => {
+        const cls = classifyInvoiceLineItem(item);
+        const isLast = idx === count - 1;
+        if (typeof item === 'string') {
+            const lineTotal = isLast
+                ? Math.max(0, +(genelToplam - allocatedSoFar).toFixed(2))
+                : +(genelToplam / count).toFixed(2);
+            allocatedSoFar = +(allocatedSoFar + lineTotal).toFixed(2);
+            const lineUnitBrut = +(lineTotal / 1.20).toFixed(2);
+            return {
+                kod: `${cls.shortCodePrefix}.${String(idx + 1).padStart(3, '0')}`,
+                aciklama: item,
+                tur: cls.category,
+                miktar: 1,
+                birim: cls.unit,
+                birim_fiyat: lineUnitBrut,
+                iskonto: 0,
+                kdv: 20,
+                tutar: lineTotal,
+                cls
+            };
+        } else {
+            const hasLineTutar = Number(item.tutar || 0) > 0;
+            const lineTotal = hasLineTutar
+                ? Number(item.tutar)
+                : (isLast ? Math.max(0, +(genelToplam - allocatedSoFar).toFixed(2)) : +(genelToplam / count).toFixed(2));
+            if (!hasLineTutar) allocatedSoFar = +(allocatedSoFar + lineTotal).toFixed(2);
+            const miktar = Number(item.miktar || 1);
+            const birimFiyat = Number(item.birim_fiyat || 0) > 0 ? Number(item.birim_fiyat) : +((lineTotal / 1.20) / Math.max(1, miktar)).toFixed(2);
+            return {
+                kod: item.kod || `${cls.shortCodePrefix}.${String(idx + 1).padStart(3, '0')}`,
+                aciklama: item.aciklama || inv.islem || '-',
+                tur: item.tur || cls.category,
+                miktar,
+                birim: item.birim || cls.unit,
+                birim_fiyat: birimFiyat,
+                iskonto: Number(item.iskonto || 0),
+                kdv: item.kdv ?? 20,
+                tutar: lineTotal,
+                cls
+            };
+        }
+    });
+
+    return { lines, genelToplam, kdvTutari, brutToplam };
+}
+
 function openCustomerDetailModal(code) {
     const customer = (appState.customers || []).find(c => c.code === code);
     if (!customer) {
@@ -1593,11 +2155,13 @@ function openCustomerDetailModal(code) {
     const cdBody = document.getElementById('cd-modal-body');
     const cdFooter = document.getElementById('cd-modal-footer');
 
+    const acc = getCustomerAccountingSummary(customer);
+
     if (cdTitle) {
-        cdTitle.innerHTML = `<i class="fa-solid fa-file-invoice" style="color:var(--dizsan-light);"></i> ${customer.title}`;
+        cdTitle.innerHTML = `<i class="fa-solid fa-file-invoice-dollar" style="color:#38bdf8;"></i> ${customer.title}`;
     }
     if (cdSubtitle) {
-        cdSubtitle.innerHTML = `<span style="font-family:monospace; color:#38bdf8; font-weight:700;">${customer.code}</span> | ${customer.city} / ${customer.district} | ${customer.rut || 'RUT BELİRSİZ'} | Logo ERP: <span style="color:#34d399;">Canlı &amp; Doğrulanmış</span>`;
+        cdSubtitle.innerHTML = `<span style="font-family:monospace; color:#38bdf8; font-weight:700;">${customer.code}</span> | ${customer.city} / ${customer.district} | Durum: <strong style="color:${acc.baCode === '(B)' ? '#f87171' : acc.baCode === '(A)' ? '#34d399' : '#94a3b8'};">${acc.baLabel}</strong> | Logo ERP: <span style="color:#34d399;">Canlı &amp; Doğrulanmış</span>`;
     }
 
     const cleanPhone = (customer.phone || '').replace(/[^0-9]/g, '');
@@ -1607,30 +2171,59 @@ function openCustomerDetailModal(code) {
     const historyItems = customer.serviceHistory || [];
     let historyHtml = '';
     if (historyItems.length > 0) {
+        // Kronolojik yürüyen bakiye simülasyonu (fatura satırları + son bakiye uyumu)
+        let runningBalance = 0;
+        const chronological = [...historyItems].reverse().map((h, revIdx) => {
+            const borc = Number(h.net_toplam || h.tutar || 0);
+            runningBalance += borc;
+            return { ...h, borc, runningBalance, originalIndex: historyItems.length - 1 - revIdx };
+        }).reverse();
+
         historyHtml = `
-            <div style="overflow-x:auto; max-height:280px; border:1px solid var(--border-color); border-radius:var(--radius-md);">
+            <div style="margin-bottom:0.5rem; font-size:0.76rem; color:#94a3b8; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:0.5rem;">
+                <span><i class="fa-solid fa-hand-pointer" style="color:#38bdf8;"></i> <strong>İpucu:</strong> Fatura içindeki yedek parça, işçilik ve <strong>TDR Tedarik</strong> kalemlerini görmek için herhangi bir faturanın üzerine tıklayın.</span>
+                <span style="font-family:monospace; color:#fde68a;">Toplam ${historyItems.length} Resmi Logo Faturası</span>
+            </div>
+            <div style="overflow-x:auto; max-height:340px; border:1px solid var(--border-color); border-radius:var(--radius-md);">
                 <table class="service-history-table">
                     <thead>
                         <tr>
                             <th>Tarih</th>
                             <th>Fatura No</th>
-                            <th>Yapılan İşlem / Servis</th>
-                            <th>KM</th>
-                            <th style="text-align:right;">Tutar</th>
-                            <th>Vade / Ödeme</th>
+                            <th>Belge / Tür</th>
+                            <th>Yapılan İşlem &amp; Kalem Özeti</th>
+                            <th style="text-align:right;">Borç (Fatura ₺)</th>
+                            <th style="text-align:right;">KDV (₺)</th>
+                            <th style="text-align:center;">Kalem</th>
+                            <th style="text-align:right;">Detay</th>
                         </tr>
                     </thead>
                     <tbody>
-                        ${historyItems.map(h => `
-                            <tr>
-                                <td style="white-space:nowrap; font-weight:600; color:#38bdf8;">${h.tarih || '-'}</td>
-                                <td style="font-family:monospace; font-size:0.74rem;">${h.fatura_no || '-'}</td>
-                                <td style="max-width:240px; white-space:normal;">${h.islem || '-'}</td>
-                                <td>${h.km ? Number(h.km).toLocaleString('tr-TR') + ' KM' : '-'}</td>
-                                <td style="text-align:right; font-weight:700; color:#34d399;">${formatMoney(h.tutar || 0)}</td>
-                                <td style="font-size:0.72rem; color:var(--text-sec);">${h.odeme_tipi || '-'}</td>
+                        ${chronological.map(h => {
+                            const normInfo = normalizeInvoiceLines(h);
+                            const kalemCount = normInfo.lines.length;
+                            const hasTdr = normInfo.lines.some(l => l.cls.category.includes('Tedarik'));
+                            return `
+                            <tr style="cursor:pointer; transition:background 0.15s;" onmouseover="this.style.background='rgba(56,189,248,0.08)'" onmouseout="this.style.background='transparent'" onclick="openInvoiceDetailModal('${customer.code}', ${h.originalIndex})">
+                                <td style="white-space:nowrap; font-weight:700; color:#38bdf8;">${h.tarih || '-'}</td>
+                                <td style="font-family:monospace; font-weight:700; color:#fff; font-size:0.76rem;">${h.fatura_no || '-'}</td>
+                                <td style="font-size:0.72rem; color:#cbd5e1;">${h.fatura_turu || h.odeme_tipi || 'Satış Faturası'}</td>
+                                <td style="max-width:260px; white-space:normal; font-size:0.75rem; color:#e2e8f0;">
+                                    ${h.islem || '-'}
+                                    ${hasTdr ? `<span class="badge" style="background:rgba(245,158,11,0.18); color:#fbbf24; font-size:0.62rem; margin-left:4px;">TDR Tedarik</span>` : ''}
+                                </td>
+                                <td style="text-align:right; font-weight:800; color:#f87171; white-space:nowrap;">${formatMoney(normInfo.genelToplam)}</td>
+                                <td style="text-align:right; font-size:0.73rem; color:#94a3b8; white-space:nowrap;">${formatMoney(normInfo.kdvTutari)}</td>
+                                <td style="text-align:center;">
+                                    <span class="badge badge-secondary" style="font-size:0.68rem;">${kalemCount} Kalem</span>
+                                </td>
+                                <td style="text-align:right; white-space:nowrap;">
+                                    <button type="button" class="btn btn-primary btn-sm" style="padding:0.22rem 0.55rem; font-size:0.7rem;" onclick="event.stopPropagation(); openInvoiceDetailModal('${customer.code}', ${h.originalIndex})">
+                                        <i class="fa-solid fa-magnifying-glass-dollar"></i> Fatura Aç
+                                    </button>
+                                </td>
                             </tr>
-                        `).join('')}
+                        `}).join('')}
                     </tbody>
                 </table>
             </div>
@@ -1639,46 +2232,45 @@ function openCustomerDetailModal(code) {
         historyHtml = `
             <div style="background:rgba(255,255,255,0.02); border:1px dashed var(--border-color); border-radius:var(--radius-md); padding:1rem; text-align:center; color:var(--text-sec); font-size:0.82rem;">
                 <i class="fa-solid fa-circle-info" style="color:#38bdf8;"></i> Bu cari karta ait ayrıntılı servis fatura satırı bulunmamaktadır.<br>
-                Logo ERP son fatura tarihi: <strong style="color:#fff;">${customer.lastDate || '-'}</strong> | Bakiye: <strong style="color:#fff;">${formatMoney(customer.balance)}</strong> (${customer.balanceStatus || 'Kayıt Yok'})
+                Logo ERP son hareket tarihi: <strong style="color:#fff;">${customer.lastDate || '-'}</strong> | Bakiye: <strong style="color:#fff;">${formatMoney(Math.abs(acc.bakiye))} ${acc.baCode}</strong>
             </div>
         `;
     }
 
     cdBody.innerHTML = `
-        <div class="detail-kpi-grid">
+        <div class="detail-kpi-grid" style="grid-template-columns:repeat(auto-fit, minmax(175px, 1fr));">
             <div class="detail-kpi-card">
-                <span class="detail-kpi-title">Son Geliş / Fatura</span>
-                <span class="detail-kpi-value" style="color:#38bdf8;">${customer.lastDate || '-'}</span>
-                <span class="detail-kpi-sub" style="color:#f87171;">${customer.churnDuration || 'Kayıp Süresi Bilinmiyor'}</span>
+                <span class="detail-kpi-title">Toplam Borç (Faturalanan)</span>
+                <span class="detail-kpi-value" style="color:#f87171;">${formatMoney(acc.borc)}</span>
+                <span class="detail-kpi-sub">${customer.totalOperations || historyItems.length} Fatura / İşlem</span>
             </div>
             <div class="detail-kpi-card">
-                <span class="detail-kpi-title">Logo ERP Bakiyesi</span>
-                <span class="detail-kpi-value" style="color:${customer.balance > 0 ? '#f87171' : customer.balance < 0 ? '#34d399' : '#94a3b8'};">
-                    ${formatMoney(customer.balance)}
+                <span class="detail-kpi-title">Toplam Alacak (Tahsilat)</span>
+                <span class="detail-kpi-value" style="color:#34d399;">${formatMoney(acc.alacak)}</span>
+                <span class="detail-kpi-sub">Logo Kasa / Banka / Çek</span>
+            </div>
+            <div class="detail-kpi-card" style="border-color:rgba(56,189,248,0.35);">
+                <span class="detail-kpi-title">Net Cari Bakiye &amp; (B/A)</span>
+                <span class="detail-kpi-value" style="color:${acc.baCode === '(B)' ? '#f87171' : acc.baCode === '(A)' ? '#34d399' : '#94a3b8'};">
+                    ${formatMoney(Math.abs(acc.bakiye))} <small style="font-size:0.75rem;">${acc.baCode}</small>
                 </span>
-                <span class="detail-kpi-sub">${customer.balanceStatus || 'Bakiye Yok'}</span>
+                <span class="detail-kpi-sub">${acc.baLabel}</span>
             </div>
             <div class="detail-kpi-card">
-                <span class="detail-kpi-title">Tarihsel Ciro</span>
-                <span class="detail-kpi-value" style="color:#34d399;">${formatMoney(customer.totalRevenue)}</span>
-                <span class="detail-kpi-sub">${customer.totalOperations || 0} Fatura / İşlem</span>
-            </div>
-            <div class="detail-kpi-card">
-                <span class="detail-kpi-title">Kayıtlı Araç / Plaka</span>
-                <span class="detail-kpi-value" style="font-size:0.85rem; color:#fde68a;">${customer.plates || 'Plakasız'}</span>
-                <span class="detail-kpi-sub">${customer.vehicleModel || 'Ağır Vasıta'}</span>
+                <span class="detail-kpi-title">Son Fatura &amp; Araç</span>
+                <span class="detail-kpi-value" style="font-size:0.9rem; color:#fde68a;">${customer.lastDate || '-'}</span>
+                <span class="detail-kpi-sub">${customer.plates || 'Plakasız'} (${customer.churnDuration || '-'})</span>
             </div>
         </div>
 
-        <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(280px, 1fr)); gap:1rem; margin-bottom:1.25rem;">
+        <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(280px, 1fr)); gap:1rem; margin-bottom:1.15rem;">
             <div style="background:rgba(255,255,255,0.02); border:1px solid var(--border-color); border-radius:var(--radius-md); padding:0.85rem;">
                 <div class="detail-section-title"><i class="fa-solid fa-address-book"></i> Yetkili ve İletişim Bilgileri</div>
-                <div style="display:flex; flex-direction:column; gap:0.5rem; font-size:0.82rem;">
+                <div style="display:flex; flex-direction:column; gap:0.45rem; font-size:0.81rem;">
+                    <div><span style="color:var(--text-muted);">Cari Kodu:</span> <strong style="color:#38bdf8; font-family:monospace;">${customer.code}</strong></div>
                     <div><span style="color:var(--text-muted);">Yetkili / Şoför:</span> <strong style="color:#fff;">${customer.authorized || 'Bilinmiyor'}</strong></div>
                     <div><span style="color:var(--text-muted);">Telefon:</span> <strong style="color:#38bdf8;">${customer.phone || 'YOK'}</strong></div>
                     ${customer.loyaltyLevel ? `<div><span style="color:var(--text-muted);">Sadakat Seviyesi:</span> <span class="badge badge-success">${customer.loyaltyLevel}</span></div>` : ''}
-                    ${customer.lastKm ? `<div><span style="color:var(--text-muted);">Son Servis KM:</span> <strong style="color:#fde68a;">${Number(customer.lastKm).toLocaleString('tr-TR')} KM</strong></div>` : ''}
-                    ${customer.lastOperation ? `<div><span style="color:var(--text-muted);">Son İşlem:</span> <span style="color:#e2e8f0; font-size:0.75rem;">${customer.lastOperation}</span></div>` : ''}
                 </div>
                 <div style="display:flex; gap:0.5rem; margin-top:0.75rem; flex-wrap:wrap;">
                     ${customer.phone && customer.phone !== 'YOK' ? `
@@ -1689,14 +2281,14 @@ function openCustomerDetailModal(code) {
             </div>
 
             <div style="background:rgba(255,255,255,0.02); border:1px solid var(--border-color); border-radius:var(--radius-md); padding:0.85rem;">
-                <div class="detail-section-title"><i class="fa-solid fa-location-dot"></i> Resmi Logo CLCARD Adresi</div>
-                <div style="font-size:0.82rem; color:#e2e8f0; line-height:1.45; min-height:48px;">
+                <div class="detail-section-title"><i class="fa-solid fa-location-dot"></i> Resmi Logo CLCARD Adresi (D-Pro Cari)</div>
+                <div style="font-size:0.81rem; color:#e2e8f0; line-height:1.45; min-height:42px;">
                     ${customer.address || 'Kayıtlı açık adres bulunmuyor.'}
                 </div>
                 <div style="font-size:0.75rem; color:var(--text-muted); margin-top:0.4rem;">
-                    Bölge: <strong style="color:#fff;">${customer.city} / ${customer.district}</strong> (${customer.rut || '-'})
+                    İlçe / İl: <strong style="color:#fff;">${customer.district || '-'} / ${customer.city || '-'}</strong> (${customer.rut || '-'})
                 </div>
-                <div style="margin-top:0.75rem;">
+                <div style="margin-top:0.65rem;">
                     <a href="${mapsUrl}" target="_blank" class="btn btn-secondary btn-sm" style="display:inline-flex; align-items:center; gap:0.35rem;">
                         <i class="fa-solid fa-map-location-dot" style="color:#38bdf8;"></i> Google Haritalar Yol Tarifi
                     </a>
@@ -1706,8 +2298,8 @@ function openCustomerDetailModal(code) {
 
         <div>
             <div class="detail-section-title">
-                <i class="fa-solid fa-receipt"></i> Logo ERP Fatura ve Servis Hareketleri (Son Gelişler)
-                ${historyItems.length > 0 ? `<span class="badge badge-secondary" style="margin-left:auto;">${historyItems.length} Kayıt</span>` : ''}
+                <i class="fa-solid fa-receipt"></i> Logo ERP Cari Ekstre &amp; Tıklanabilir Fatura Hareketleri
+                ${historyItems.length > 0 ? `<span class="badge badge-secondary" style="margin-left:auto;">${historyItems.length} Fatura</span>` : ''}
             </div>
             ${historyHtml}
         </div>
@@ -1715,9 +2307,15 @@ function openCustomerDetailModal(code) {
 
     cdFooter.innerHTML = `
         <div style="display:flex; justify-content:space-between; width:100%; align-items:center; flex-wrap:wrap; gap:0.5rem;">
-            <button type="button" class="btn btn-primary" onclick="quickStartVisitForCustomer('${customer.code}'); closeCustomerDetailModal();">
-                <i class="fa-solid fa-phone-volume"></i> Ziyaret / Görüşme Başlat
-            </button>
+            <div style="display:flex; gap:0.5rem; flex-wrap:wrap;">
+                <button type="button" class="btn btn-primary" onclick="quickStartVisitForCustomer('${customer.code}'); closeCustomerDetailModal();">
+                    <i class="fa-solid fa-phone-volume"></i> Ziyaret / Görüşme Başlat
+                </button>
+                ${historyItems.length > 0 ? `
+                <button type="button" class="btn btn-secondary" onclick="openInvoiceDetailModal('${customer.code}', 0)">
+                    <i class="fa-solid fa-file-invoice-dollar" style="color:#38bdf8;"></i> Son Fatura Kalemlerini Aç
+                </button>` : ''}
+            </div>
             <button type="button" class="btn btn-secondary" onclick="closeCustomerDetailModal()">Kapat</button>
         </div>
     `;
@@ -1733,6 +2331,159 @@ function closeCustomerDetailModal() {
         modal.style.display = 'none';
     }
 }
+
+function openInvoiceDetailModal(customerCode, invoiceIdx) {
+    const customer = (appState.customers || []).find(c => c.code === customerCode);
+    if (!customer) return;
+    const historyList = customer.serviceHistory || [];
+    const idxNum = Number(invoiceIdx) || 0;
+    const inv = historyList[idxNum];
+    if (!inv) {
+        showToast('Fatura detayı bulunamadı.', 'warning');
+        return;
+    }
+
+    const modal = document.getElementById('invoice-detail-modal');
+    if (!modal) return;
+
+    const titleEl = document.getElementById('inv-modal-title');
+    const subEl = document.getElementById('inv-modal-subtitle');
+    const bodyEl = document.getElementById('inv-modal-body');
+    const footerEl = document.getElementById('inv-modal-footer');
+
+    if (titleEl) {
+        titleEl.innerHTML = `<i class="fa-solid fa-file-invoice-dollar" style="color:#38bdf8;"></i> Fatura No: <span style="font-family:monospace; color:#fde68a;">${inv.fatura_no || '-'}</span> — ${customer.title}`;
+    }
+    if (subEl) {
+        subEl.innerHTML = `Tarih: <strong>${inv.tarih || '-'}</strong> | Cari Kodu: <strong style="font-family:monospace; color:#38bdf8;">${customer.code}</strong> | Belge Türü: <strong>${inv.fatura_turu || inv.odeme_tipi || 'AÇIK HESAP'}</strong> | Fatura Sırası: <strong>${idxNum + 1} / ${historyList.length}</strong>`;
+    }
+
+    const norm = normalizeInvoiceLines(inv);
+    const kalemler = norm.lines;
+    let parcaTop = 0;
+    let iscilikTop = 0;
+    let tedarikTop = 0;
+
+    const rowsHtml = kalemler.map((k, idx) => {
+        const cls = k.cls || classifyInvoiceLineItem(k);
+        const tutar = Number(k.tutar || 0);
+        if (cls.category.includes('Tedarik')) tedarikTop += tutar;
+        else if (cls.category.includes('Servis')) iscilikTop += tutar;
+        else parcaTop += tutar;
+
+        return `
+            <tr>
+                <td style="color:var(--text-muted); font-family:monospace;">${idx + 1}</td>
+                <td style="font-family:monospace; font-weight:700; color:#38bdf8; white-space:nowrap;">${k.kod || '-'}</td>
+                <td style="color:#fff; font-weight:600;">${k.aciklama || '-'}</td>
+                <td><span class="badge" style="${cls.badgeStyle} font-size:0.68rem;">${cls.category}</span></td>
+                <td style="text-align:right; font-weight:700; color:#e2e8f0; white-space:nowrap;">${Number(k.miktar || 1).toLocaleString('tr-TR')} ${k.birim || 'ADET'}</td>
+                <td style="text-align:right; color:#cbd5e1; white-space:nowrap;">${formatMoney(k.birim_fiyat || 0)}</td>
+                <td style="text-align:right; color:${Number(k.iskonto || 0) > 0 ? '#fbbf24' : '#64748b'}; white-space:nowrap;">${formatMoney(k.iskonto || 0)}</td>
+                <td style="text-align:center; color:#94a3b8;">%${k.kdv ?? 20}</td>
+                <td style="text-align:right; font-weight:800; color:#34d399; white-space:nowrap;">${formatMoney(tutar)}</td>
+            </tr>
+        `;
+    }).join('');
+
+    const plakaStr = (inv.plaka && inv.plaka !== '-') ? inv.plaka : (customer.plates || 'PLAKASIZ');
+    const soforStr = (inv.sofor && inv.sofor !== '-') ? inv.sofor : (customer.authorized || 'Belirtilmedi');
+    const kmStr = (inv.km && Number(inv.km) > 0) ? `${Number(inv.km).toLocaleString('tr-TR')} KM` : 'Belirtilmedi';
+
+    bodyEl.innerHTML = `
+        <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(165px, 1fr)); gap:0.75rem; margin-bottom:0.85rem;">
+            <div style="background:rgba(15,23,42,0.75); border:1px solid rgba(148,163,184,0.18); border-radius:10px; padding:0.7rem;">
+                <div style="font-size:0.68rem; color:#94a3b8; text-transform:uppercase;">KDV Hariç Matrah (Ara Toplam)</div>
+                <div style="font-size:1.05rem; font-weight:800; color:#e2e8f0; margin-top:2px;">${formatMoney(norm.brutToplam)}</div>
+                <div style="font-size:0.68rem; color:#fbbf24;">İskonto: ${formatMoney(inv.toplam_iskonto || 0)}</div>
+            </div>
+            <div style="background:rgba(15,23,42,0.75); border:1px solid rgba(148,163,184,0.18); border-radius:10px; padding:0.7rem;">
+                <div style="font-size:0.68rem; color:#94a3b8; text-transform:uppercase;">Hesaplanan KDV (%20)</div>
+                <div style="font-size:1.05rem; font-weight:800; color:#38bdf8; margin-top:2px;">${formatMoney(norm.kdvTutari)}</div>
+                <div style="font-size:0.68rem; color:#94a3b8;">Resmi Logo KDV</div>
+            </div>
+            <div style="background:rgba(15,23,42,0.75); border:1px solid rgba(16,185,129,0.3); border-radius:10px; padding:0.7rem;">
+                <div style="font-size:0.68rem; color:#94a3b8; text-transform:uppercase;">Parça / İşçilik / Tedarik</div>
+                <div style="font-size:0.74rem; color:#34d399; font-weight:700; margin-top:2px;">Parça: ${formatMoney(parcaTop)}</div>
+                <div style="font-size:0.72rem; color:#38bdf8;">İşçilik: ${formatMoney(iscilikTop)} | <span style="color:#fbbf24;">TDR: ${formatMoney(tedarikTop)}</span></div>
+            </div>
+            <div style="background:rgba(239,68,68,0.1); border:1px solid rgba(239,68,68,0.35); border-radius:10px; padding:0.7rem;">
+                <div style="font-size:0.68rem; color:#fca5a5; text-transform:uppercase;">Genel Toplam (KDV Dahil)</div>
+                <div style="font-size:1.2rem; font-weight:900; color:#f87171; margin-top:2px;">${formatMoney(norm.genelToplam)}</div>
+                <div style="font-size:0.68rem; color:#cbd5e1;">${kalemler.length} Fatura Satırı</div>
+            </div>
+        </div>
+
+        <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(180px, 1fr)); gap:0.6rem; margin-bottom:0.9rem; padding:0.65rem 0.85rem; background:rgba(30,41,59,0.65); border:1px solid rgba(56,189,248,0.25); border-radius:10px; font-size:0.78rem;">
+            <div><span style="color:#94a3b8;"><i class="fa-solid fa-truck-front" style="color:#38bdf8;"></i> Araç Plakası:</span> <strong style="color:#fde68a; font-family:monospace;">${plakaStr}</strong></div>
+            <div><span style="color:#94a3b8;"><i class="fa-solid fa-id-card" style="color:#34d399;"></i> Şoför / Yetkili:</span> <strong style="color:#fff;">${soforStr}</strong></div>
+            <div><span style="color:#94a3b8;"><i class="fa-solid fa-gauge-high" style="color:#fbbf24;"></i> Araç KM:</span> <strong style="color:#e2e8f0; font-family:monospace;">${kmStr}</strong></div>
+            <div><span style="color:#94a3b8;"><i class="fa-solid fa-wrench" style="color:#a78bfa;"></i> İş Emri / Açıklama:</span> <strong style="color:#fff;">${inv.islem || '-'}</strong></div>
+        </div>
+
+        ${inv.aciklama ? `<div style="margin-bottom:0.85rem; padding:0.6rem 0.85rem; background:rgba(56,189,248,0.07); border-left:3px solid #38bdf8; border-radius:6px; font-size:0.78rem; color:#e2e8f0;"><strong>Fatura Notu / Açıklama:</strong> ${inv.aciklama}</div>` : ''}
+
+        <div style="overflow-x:auto; border:1px solid var(--border-color); border-radius:var(--radius-md);">
+            <table class="service-history-table">
+                <thead>
+                    <tr>
+                        <th>#</th>
+                        <th>Stok / Hizmet Kodu</th>
+                        <th>Malzeme / Hizmet Açıklaması</th>
+                        <th>Kategori (TDR Kuralı)</th>
+                        <th style="text-align:right;">Miktar</th>
+                        <th style="text-align:right;">Birim Fiyat (KDV Hariç)</th>
+                        <th style="text-align:right;">İskonto</th>
+                        <th style="text-align:center;">KDV</th>
+                        <th style="text-align:right;">Toplam Tutar (KDV Dahil)</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    ${rowsHtml || `<tr><td colspan="9" style="text-align:center; padding:1.5rem; color:var(--text-muted);">Bu faturaya ait alt satır detayı bulunamadı.</td></tr>`}
+                </tbody>
+            </table>
+        </div>
+    `;
+
+    const hasPrev = idxNum > 0;
+    const hasNext = idxNum < historyList.length - 1;
+
+    footerEl.innerHTML = `
+        <div style="display:flex; justify-content:space-between; width:100%; align-items:center; flex-wrap:wrap; gap:0.5rem;">
+            <div style="display:flex; align-items:center; gap:0.45rem; flex-wrap:wrap;">
+                <button type="button" class="btn btn-secondary btn-sm" ${hasPrev ? `onclick="openInvoiceDetailModal('${customer.code}', ${idxNum - 1})"` : 'disabled style="opacity:0.4; cursor:not-allowed;"'}>
+                    <i class="fa-solid fa-chevron-left"></i> Önceki Fatura
+                </button>
+                <button type="button" class="btn btn-secondary btn-sm" ${hasNext ? `onclick="openInvoiceDetailModal('${customer.code}', ${idxNum + 1})"` : 'disabled style="opacity:0.4; cursor:not-allowed;"'}>
+                    Sonraki Fatura <i class="fa-solid fa-chevron-right"></i>
+                </button>
+                <span style="font-size:0.72rem; color:#94a3b8; margin-left:0.35rem;"><i class="fa-solid fa-shield-check" style="color:#34d399;"></i> Dizsan Otomotiv Logo ERP (Salt-Okunur)</span>
+            </div>
+            <div style="display:flex; gap:0.5rem;">
+                <button type="button" class="btn btn-secondary" onclick="window.print()"><i class="fa-solid fa-print"></i> Yazdır / PDF</button>
+                <button type="button" class="btn btn-primary" onclick="closeInvoiceDetailModal()"><i class="fa-solid fa-arrow-left"></i> Ekstreye Dön / Kapat</button>
+            </div>
+        </div>
+    `;
+
+    modal.style.zIndex = '12000';
+    modal.classList.add('open');
+    modal.style.display = 'flex';
+}
+
+function closeInvoiceDetailModal() {
+    const modal = document.getElementById('invoice-detail-modal');
+    if (modal) {
+        modal.classList.remove('open');
+        modal.style.display = 'none';
+    }
+}
+window.renderCariEkstreTable = renderCariEkstreTable;
+window.changeCariEkstrePage = changeCariEkstrePage;
+window.exportCariEkstreToExcel = exportCariEkstreToExcel;
+window.openInvoiceDetailModal = openInvoiceDetailModal;
+window.closeInvoiceDetailModal = closeInvoiceDetailModal;
+window.normalizeInvoiceLines = normalizeInvoiceLines;
 
 // ==========================================================================
 // 5. GÜNCEL SAHA ZİYARETİ VE TELEFON GÖRÜŞMESİ KAYITLARI
@@ -3466,7 +4217,7 @@ function printVisitReport() {
         <div style="font-family:Arial, sans-serif; color:#000; padding:20px;">
             <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:2px solid #0284c7; padding-bottom:12px; margin-bottom:16px;">
                 <div style="display:flex; align-items:center; gap:12px;">
-                    <img src="dizsan_logo.jpg" style="width:60px; height:60px; object-fit:contain;">
+                    <img src="data:image/jpeg;base64,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" style="width:60px; height:60px; object-fit:contain;">
                     <div>
                         <h2 style="margin:0; color:#0284c7;">DİZSAN OTOMOTİV &amp; SERVİS</h2>
                         <h4 style="margin:4px 0 0;">RESMİ MÜŞTERİ SAHA ZİYARET VE TELEFON GÖRÜŞME RAPORU</h4>
@@ -3781,33 +4532,942 @@ function renderTasks() {
 }
 
 // ==========================================================================
-// 8. İLÇE RUT STRATEJİLERİ VE LOGLAR
+// 8. KULLANICI ÖZEL RUT PLANLAMA MOTORU & İLÇE STRATEJİ REHBERİ
 // ==========================================================================
+let customRouteDraftSelectedCodes = new Set();
+let customRouteDraftDistricts = [];
+
+function isLegacyAutoRutCode(val) {
+    if (!val) return false;
+    const s = String(val).trim();
+    return /^(RUT-\d+|DİĞER)$/i.test(s);
+}
+
+function syncCustomRoutesToCustomers() {
+    if (!Array.isArray(appState.customRoutes)) {
+        appState.customRoutes = [];
+    }
+    const customers = appState.customers || [];
+    const strategies = appState.districtStrategies || {};
+
+    // 1. Eski otomatik RUT-01..12 ve DİĞER kodlarını tamamen temizle
+    customers.forEach(c => {
+        if (isLegacyAutoRutCode(c.rut)) {
+            c.rut = '';
+        }
+    });
+    Object.values(strategies).forEach(s => {
+        if (isLegacyAutoRutCode(s.rut)) {
+            s.rut = '';
+        }
+    });
+
+    // 2. Kullanıcının kaydettiği özel rut planlarındaki müşteri ve güzergah eşleşmelerini uygula
+    const codeToRutMap = new Map();
+    const distKeyToRutMap = new Map();
+
+    appState.customRoutes.forEach(rt => {
+        if (!rt || !rt.name) return;
+        const rName = String(rt.name).trim();
+        if (Array.isArray(rt.customerCodes)) {
+            rt.customerCodes.forEach(code => {
+                if (code) codeToRutMap.set(String(code).trim(), rName);
+            });
+        }
+        if (Array.isArray(rt.districts)) {
+            rt.districts.forEach(dStr => {
+                if (dStr) distKeyToRutMap.set(normalizeTR(dStr), rName);
+            });
+        }
+    });
+
+    customers.forEach(c => {
+        if (codeToRutMap.has(c.code)) {
+            c.rut = codeToRutMap.get(c.code);
+        } else {
+            const cDistKey = normalizeTR(`${c.city || ''} / ${c.district || ''}`);
+            const cCityOnlyKey = normalizeTR(`${c.city || ''}`);
+            if (distKeyToRutMap.has(cDistKey)) {
+                c.rut = distKeyToRutMap.get(cDistKey);
+            } else if (distKeyToRutMap.has(cCityOnlyKey)) {
+                c.rut = distKeyToRutMap.get(cCityOnlyKey);
+            } else if (c.rut && !appState.customRoutes.some(r => r.name === c.rut)) {
+                // Silinmiş bir ruta aitse temizle
+                c.rut = '';
+            }
+        }
+    });
+
+    Object.values(strategies).forEach(s => {
+        const sDistKey = normalizeTR(`${s.city || ''} / ${s.district || ''}`);
+        const sCityKey = normalizeTR(`${s.city || ''}`);
+        if (distKeyToRutMap.has(sDistKey)) {
+            s.rut = distKeyToRutMap.get(sDistKey);
+        } else if (distKeyToRutMap.has(sCityKey)) {
+            s.rut = distKeyToRutMap.get(sCityKey);
+        } else {
+            const matchedCustWithRut = customers.find(c =>
+                normalizeTR(c.city) === normalizeTR(s.city) &&
+                normalizeTR(c.district) === normalizeTR(s.district) &&
+                c.rut
+            );
+            s.rut = matchedCustWithRut ? matchedCustWithRut.rut : '';
+        }
+    });
+}
+
+function initCustomRoutePlannerUI() {
+    const citySel = document.getElementById('custom-rut-city-select');
+    const dateInput = document.getElementById('custom-rut-date');
+    const customers = appState.customers || [];
+
+    if (dateInput && !dateInput.value) {
+        const now = new Date();
+        const pad = n => String(n).padStart(2, '0');
+        dateInput.value = `${pad(now.getDate())}.${pad(now.getMonth() + 1)}.${now.getFullYear()}`;
+    }
+
+    if (citySel && citySel.options.length <= 1 && customers.length > 0) {
+        const cityCounts = {};
+        customers.forEach(c => {
+            if (c.city) cityCounts[c.city] = (cityCounts[c.city] || 0) + 1;
+        });
+        const sortedCities = Object.keys(cityCounts).sort((a, b) => a.localeCompare(b, 'tr'));
+        citySel.innerHTML = `<option value="">📍 İl Seçin (${sortedCities.length} İl)</option>` +
+            sortedCities.map(ct => `<option value="${ct}">${ct} (${cityCounts[ct]} Cari)</option>`).join('');
+    }
+
+    renderCustomRouteDistrictBadges();
+    renderCustomRouteCustomerPicker();
+    renderCustomRouteSelectedChips();
+    renderSavedCustomRoutesList();
+}
+
+function handleCustomRouteCityChange() {
+    const citySel = document.getElementById('custom-rut-city-select');
+    const distSel = document.getElementById('custom-rut-district-select');
+    const cityVal = citySel ? citySel.value : '';
+    const customers = appState.customers || [];
+
+    if (distSel) {
+        distSel.innerHTML = '<option value="">🏘️ Tüm İlçeler</option>';
+        if (cityVal) {
+            const distCounts = {};
+            customers.filter(c => normalizeTR(c.city) === normalizeTR(cityVal)).forEach(c => {
+                if (c.district) distCounts[c.district] = (distCounts[c.district] || 0) + 1;
+            });
+            Object.keys(distCounts).sort((a, b) => a.localeCompare(b, 'tr')).forEach(d => {
+                const opt = document.createElement('option');
+                opt.value = d;
+                opt.textContent = `${d} (${distCounts[d]} Cari)`;
+                distSel.appendChild(opt);
+            });
+        }
+    }
+    renderCustomRouteCustomerPicker();
+}
+
+function addDistrictToCustomRouteDraft() {
+    const citySel = document.getElementById('custom-rut-city-select');
+    const distSel = document.getElementById('custom-rut-district-select');
+    const routeInput = document.getElementById('custom-rut-route-text');
+    const nameInput = document.getElementById('custom-rut-name');
+
+    const city = citySel ? citySel.value.trim() : '';
+    const dist = distSel ? distSel.value.trim() : '';
+
+    if (!city) {
+        showToast('Lütfen güzergaha eklemek için önce bir İl seçin.', 'warning');
+        return;
+    }
+
+    const label = dist ? `${city} / ${dist}` : city;
+    if (!customRouteDraftDistricts.includes(label)) {
+        customRouteDraftDistricts.push(label);
+    }
+
+    if (routeInput) {
+        const curText = routeInput.value.trim();
+        if (!curText) {
+            routeInput.value = label;
+        } else if (!curText.includes(label)) {
+            routeInput.value = `${curText} -> ${label}`;
+        }
+    }
+
+    if (nameInput && !nameInput.value.trim()) {
+        nameInput.value = `${label} Rutu`;
+    }
+
+    renderCustomRouteDistrictBadges();
+    renderCustomRouteCustomerPicker();
+    showToast(`${label} güzergaha eklendi. Aşağıdan müşterileri seçebilirsiniz.`, 'success');
+}
+
+function removeDistrictFromCustomRouteDraft(idx) {
+    customRouteDraftDistricts.splice(idx, 1);
+    const routeInput = document.getElementById('custom-rut-route-text');
+    if (routeInput) {
+        routeInput.value = customRouteDraftDistricts.join(' -> ');
+    }
+    renderCustomRouteDistrictBadges();
+    renderCustomRouteCustomerPicker();
+}
+
+function renderCustomRouteDistrictBadges() {
+    const box = document.getElementById('custom-rut-districts-badges');
+    if (!box) return;
+    if (customRouteDraftDistricts.length === 0) {
+        box.innerHTML = `<span style="font-size:0.7rem; color:var(--text-muted);">Güzergah kutusuna doğrudan yazabilir veya İl/İlçe seçip <strong>"+ Güzergaha Ekle"</strong> diyebilirsiniz.</span>`;
+        return;
+    }
+    box.innerHTML = customRouteDraftDistricts.map((d, idx) => `
+        <span class="badge" style="background:rgba(56,189,248,0.16); color:#38bdf8; border:1px solid rgba(56,189,248,0.35); font-size:0.71rem; display:inline-flex; align-items:center; gap:0.35rem; padding:0.22rem 0.55rem;">
+            <i class="fa-solid fa-location-dot"></i> ${d}
+            <i class="fa-solid fa-xmark" style="cursor:pointer; color:#f87171;" title="Çıkar" onclick="removeDistrictFromCustomRouteDraft(${idx})"></i>
+        </span>
+    `).join('');
+}
+
+function getFilteredCustomersForCustomRoutePicker() {
+    const customers = appState.customers || [];
+    const searchVal = normalizeTR(document.getElementById('custom-rut-cust-search')?.value || '');
+    const cityVal = document.getElementById('custom-rut-city-select')?.value || '';
+    const distVal = document.getElementById('custom-rut-district-select')?.value || '';
+
+    return customers.filter(c => {
+        if (cityVal && normalizeTR(c.city) !== normalizeTR(cityVal)) return false;
+        if (distVal && normalizeTR(c.district) !== normalizeTR(distVal)) return false;
+        if (searchVal) {
+            const hay = normalizeTR(`${c.code} ${c.title} ${c.city} ${c.district} ${c.authorized} ${c.plates} ${c.phone}`);
+            if (!hay.includes(searchVal)) return false;
+        }
+        return true;
+    });
+}
+
+function renderCustomRouteCustomerPicker() {
+    const box = document.getElementById('custom-rut-cust-results');
+    if (!box) return;
+
+    const matched = getFilteredCustomersForCustomRoutePicker();
+    const displayList = matched.slice(0, 60);
+
+    if (displayList.length === 0) {
+        box.innerHTML = `<div style="padding:0.75rem; text-align:center; font-size:0.75rem; color:var(--text-muted);">Eşleşen müşteri bulunamadı.</div>`;
+        return;
+    }
+
+    box.innerHTML = displayList.map(c => {
+        const isChecked = customRouteDraftSelectedCodes.has(c.code);
+        return `
+            <div onclick="toggleCustomerInCustomRouteDraft('${c.code}')" style="display:flex; justify-content:space-between; align-items:center; gap:0.5rem; padding:0.35rem 0.55rem; border-bottom:1px solid rgba(148,163,184,0.08); cursor:pointer; border-radius:6px; background:${isChecked ? 'rgba(16,185,129,0.14)' : 'transparent'};">
+                <div style="display:flex; align-items:center; gap:0.45rem; min-width:0;">
+                    <input type="checkbox" ${isChecked ? 'checked' : ''} style="pointer-events:none; accent-color:#10b981;">
+                    <div style="min-width:0;">
+                        <div style="font-size:0.75rem; font-weight:700; color:${isChecked ? '#34d399' : '#f8fafc'}; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">
+                            ${c.title}
+                        </div>
+                        <div style="font-size:0.67rem; color:var(--text-sec);">
+                            <span style="font-family:monospace; color:#38bdf8;">${c.code}</span> &bull; ${c.city} / ${c.district} ${c.plates && c.plates !== 'Plakasız' ? `&bull; <span style="color:#fde68a;">${c.plates}</span>` : ''}
+                        </div>
+                    </div>
+                </div>
+                <span class="badge ${isChecked ? 'badge-success' : 'badge-secondary'}" style="font-size:0.65rem; white-space:nowrap;">
+                    ${isChecked ? '✓ Eklendi' : '+ Seç'}
+                </span>
+            </div>
+        `;
+    }).join('') + (matched.length > 60 ? `<div style="padding:0.4rem; text-align:center; font-size:0.69rem; color:#93c5fd;">+${matched.length - 60} cari daha var (Arama kutusundan daraltabilir veya "Listelenenleri Seç" diyebilirsiniz)</div>` : '');
+}
+
+function toggleCustomerInCustomRouteDraft(code) {
+    if (!code) return;
+    if (customRouteDraftSelectedCodes.has(code)) {
+        customRouteDraftSelectedCodes.delete(code);
+    } else {
+        customRouteDraftSelectedCodes.add(code);
+    }
+    renderCustomRouteCustomerPicker();
+    renderCustomRouteSelectedChips();
+    renderLegacyCustomers();
+}
+
+function selectAllFilteredForCustomRoute() {
+    const matched = getFilteredCustomersForCustomRoutePicker();
+    if (matched.length === 0) {
+        showToast('Seçilecek müşteri bulunamadı.', 'warning');
+        return;
+    }
+    matched.forEach(c => customRouteDraftSelectedCodes.add(c.code));
+    renderCustomRouteCustomerPicker();
+    renderCustomRouteSelectedChips();
+    renderLegacyCustomers();
+    showToast(`${matched.length} müşteri rut taslağına eklendi.`, 'success');
+}
+
+function clearCustomRouteSelectedCustomers() {
+    customRouteDraftSelectedCodes.clear();
+    renderCustomRouteCustomerPicker();
+    renderCustomRouteSelectedChips();
+    renderLegacyCustomers();
+}
+
+function renderCustomRouteSelectedChips() {
+    const counterEl = document.getElementById('custom-rut-selected-counter');
+    const chipsBox = document.getElementById('custom-rut-selected-chips');
+    const count = customRouteDraftSelectedCodes.size;
+
+    if (counterEl) {
+        counterEl.textContent = `Seçilen Müşteri: ${count} Cari`;
+    }
+    if (!chipsBox) return;
+
+    if (count === 0) {
+        chipsBox.innerHTML = `<span style="font-size:0.74rem; color:var(--text-muted);"><i class="fa-solid fa-circle-info" style="color:#38bdf8;"></i> Yukarıdaki müşteri listesinden veya aşağıdaki tablodaki <strong>"+ Ruta Ekle"</strong> butonuna basarak müşterileri seçip <strong>"Rut Kaydet"</strong> tuşuna basın.</span>`;
+        return;
+    }
+
+    const customers = appState.customers || [];
+    const selectedCodesArr = Array.from(customRouteDraftSelectedCodes);
+    const previewCodes = selectedCodesArr.slice(0, 25);
+
+    chipsBox.innerHTML = previewCodes.map(code => {
+        const c = customers.find(x => x.code === code);
+        const label = c ? `${c.title.slice(0, 26)} (${c.district || c.city})` : code;
+        return `
+            <span class="badge" style="background:rgba(16,185,129,0.15); color:#34d399; border:1px solid rgba(16,185,129,0.35); font-size:0.7rem; display:inline-flex; align-items:center; gap:0.3rem; padding:0.2rem 0.5rem;">
+                ${label}
+                <i class="fa-solid fa-xmark" style="cursor:pointer; color:#f87171;" title="Ruttan Çıkar" onclick="toggleCustomerInCustomRouteDraft('${code}')"></i>
+            </span>
+        `;
+    }).join('') + (count > 25 ? `<span class="badge badge-secondary" style="font-size:0.7rem;">+${count - 25} Cari Daha Seçildi</span>` : '');
+}
+
+function resetCustomRouteForm() {
+    const editIdEl = document.getElementById('custom-rut-edit-id');
+    const nameEl = document.getElementById('custom-rut-name');
+    const routeEl = document.getElementById('custom-rut-route-text');
+    const notesEl = document.getElementById('custom-rut-notes');
+    const citySel = document.getElementById('custom-rut-city-select');
+    const distSel = document.getElementById('custom-rut-district-select');
+    const searchEl = document.getElementById('custom-rut-cust-search');
+    const titleEl = document.getElementById('custom-rut-form-title');
+    const saveBtn = document.getElementById('custom-rut-save-btn');
+
+    if (editIdEl) editIdEl.value = '';
+    if (nameEl) nameEl.value = '';
+    if (routeEl) routeEl.value = '';
+    if (notesEl) notesEl.value = '';
+    if (citySel) citySel.value = '';
+    if (distSel) distSel.innerHTML = '<option value="">🏘️ Tüm İlçeler</option>';
+    if (searchEl) searchEl.value = '';
+    if (titleEl) titleEl.textContent = 'Yeni Rut Planla & Kaydet';
+    if (saveBtn) saveBtn.innerHTML = '<i class="fa-solid fa-floppy-disk"></i> Rut Kaydet';
+
+    customRouteDraftSelectedCodes.clear();
+    customRouteDraftDistricts = [];
+    renderCustomRouteDistrictBadges();
+    renderCustomRouteCustomerPicker();
+    renderCustomRouteSelectedChips();
+    renderLegacyCustomers();
+}
+
+async function saveCustomRoutePlan() {
+    const editId = (document.getElementById('custom-rut-edit-id')?.value || '').trim();
+    const nameInput = document.getElementById('custom-rut-name');
+    const routeInput = document.getElementById('custom-rut-route-text');
+    const dateInput = document.getElementById('custom-rut-date');
+    const assigneeInput = document.getElementById('custom-rut-assignee');
+    const notesInput = document.getElementById('custom-rut-notes');
+    const citySel = document.getElementById('custom-rut-city-select');
+    const distSel = document.getElementById('custom-rut-district-select');
+
+    const name = (nameInput?.value || '').trim();
+    let routeText = (routeInput?.value || '').trim();
+    const plannedDate = (dateInput?.value || '').trim() || formatNowTR().slice(0, 10);
+    const assignee = (assigneeInput?.value || '').trim() || (currentUser ? currentUser.name : 'ÖMER EREN');
+    const notes = (notesInput?.value || '').trim();
+
+    if (!name) {
+        showToast('Lütfen kaydedilecek Rut Adını / Kodunu yazın (Örn: Çorum - Sungurlu Rutu).', 'danger');
+        if (nameInput) nameInput.focus();
+        return;
+    }
+
+    // Eğer güzergah boş bırakıldıysa seçili il/ilçe veya seçili müşterilerin ilçelerinden otomatik oluştur
+    if (!routeText) {
+        if (customRouteDraftDistricts.length > 0) {
+            routeText = customRouteDraftDistricts.join(' -> ');
+        } else if (citySel && citySel.value) {
+            routeText = distSel && distSel.value ? `${citySel.value} / ${distSel.value}` : citySel.value;
+        }
+    }
+
+    let customerCodes = Array.from(customRouteDraftSelectedCodes);
+
+    // Kullanıcı müşteri seçmeden doğrudan İl/İlçe seçip kaydet'e bastıysa o il/ilçedeki müşterileri otomatik dahil et
+    if (customerCodes.length === 0 && ((citySel && citySel.value) || customRouteDraftDistricts.length > 0)) {
+        const autoMatched = getFilteredCustomersForCustomRoutePicker();
+        if (autoMatched.length > 0 && autoMatched.length <= 500) {
+            customerCodes = autoMatched.map(c => c.code);
+        }
+    }
+
+    // Seçilen müşterilerin il/ilçelerini güzergah listesine de ekle
+    const customers = appState.customers || [];
+    const selectedCustObjs = customers.filter(c => customerCodes.includes(c.code));
+    const derivedDistricts = Array.from(new Set([
+        ...customRouteDraftDistricts,
+        ...selectedCustObjs.map(c => `${c.city || ''} / ${c.district || ''}`).filter(s => s !== ' / ')
+    ]));
+
+    if (!routeText && derivedDistricts.length > 0) {
+        routeText = derivedDistricts.slice(0, 6).join(' -> ');
+    }
+    if (!routeText) {
+        routeText = name;
+    }
+
+    if (!Array.isArray(appState.customRoutes)) {
+        appState.customRoutes = [];
+    }
+
+    const record = {
+        id: editId || ('RUTPLAN-' + Date.now()),
+        name,
+        routeText,
+        plannedDate,
+        assignee,
+        notes,
+        districts: derivedDistricts,
+        customerCodes,
+        updatedAt: formatNowTR(),
+        createdBy: currentUser ? currentUser.name : 'ÖMER EREN'
+    };
+
+    const existingIdx = appState.customRoutes.findIndex(r => r.id === editId || normalizeTR(r.name) === normalizeTR(name));
+    if (existingIdx !== -1) {
+        appState.customRoutes[existingIdx] = record;
+    } else {
+        appState.customRoutes.unshift(record);
+    }
+
+    syncCustomRoutesToCustomers();
+    populateFilterOptions();
+    populateStrategyFilters(true);
+    renderSavedCustomRoutesList();
+    renderLegacyCustomers();
+    renderDistrictStrategies();
+
+    addAuditLog('RUT PLANLAMA', `"${name}" rut planı (${routeText} • ${customerCodes.length} Müşteri) kaydedildi.`);
+    await syncToServer();
+
+    resetCustomRouteForm();
+    showToast(`"${name}" rut planı (${customerCodes.length} cari ile) başarıyla kaydedildi!`, 'success');
+}
+
+function editCustomRoutePlan(routeId) {
+    const rt = (appState.customRoutes || []).find(r => r.id === routeId);
+    if (!rt) return;
+
+    switchTab('legacy-tab');
+
+    const editIdEl = document.getElementById('custom-rut-edit-id');
+    const nameEl = document.getElementById('custom-rut-name');
+    const routeEl = document.getElementById('custom-rut-route-text');
+    const dateEl = document.getElementById('custom-rut-date');
+    const assigneeEl = document.getElementById('custom-rut-assignee');
+    const notesEl = document.getElementById('custom-rut-notes');
+    const titleEl = document.getElementById('custom-rut-form-title');
+    const saveBtn = document.getElementById('custom-rut-save-btn');
+
+    if (editIdEl) editIdEl.value = rt.id;
+    if (nameEl) nameEl.value = rt.name || '';
+    if (routeEl) routeEl.value = rt.routeText || '';
+    if (dateEl) dateEl.value = rt.plannedDate || '';
+    if (assigneeEl && rt.assignee) assigneeEl.value = rt.assignee;
+    if (notesEl) notesEl.value = rt.notes || '';
+    if (titleEl) titleEl.textContent = `Rut Planını Düzenle: ${rt.name}`;
+    if (saveBtn) saveBtn.innerHTML = '<i class="fa-solid fa-floppy-disk"></i> Rut Planını Güncelle';
+
+    customRouteDraftSelectedCodes = new Set(Array.isArray(rt.customerCodes) ? rt.customerCodes : []);
+    customRouteDraftDistricts = Array.isArray(rt.districts) ? [...rt.districts] : [];
+
+    renderCustomRouteDistrictBadges();
+    renderCustomRouteCustomerPicker();
+    renderCustomRouteSelectedChips();
+    renderLegacyCustomers();
+
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+    showToast(`"${rt.name}" düzenleme modunda açıldı. Güzergah ve müşterileri güncelleyip kaydedebilirsiniz.`, 'info');
+}
+
+async function deleteCustomRoutePlan(routeId) {
+    const rt = (appState.customRoutes || []).find(r => r.id === routeId);
+    if (!rt) return;
+    if (!confirm(`"${rt.name}" rut planını silmek istediğinize emin misiniz?`)) return;
+
+    appState.customRoutes = (appState.customRoutes || []).filter(r => r.id !== routeId);
+
+    const rutSel = document.getElementById('legacy-filter-rut');
+    if (rutSel && rutSel.value === rt.name) rutSel.value = '';
+    const stratRutSel = document.getElementById('strategy-filter-rut');
+    if (stratRutSel && stratRutSel.value === rt.name) stratRutSel.value = '';
+
+    syncCustomRoutesToCustomers();
+    populateFilterOptions();
+    populateStrategyFilters(true);
+    renderSavedCustomRoutesList();
+    renderLegacyCustomers();
+    renderDistrictStrategies();
+
+    addAuditLog('RUT SİLME', `"${rt.name}" rut planı silindi.`);
+    await syncToServer();
+    showToast(`"${rt.name}" rut planı silindi.`, 'info');
+}
+
+function filterLegacyByCustomRoute(routeName) {
+    switchTab('legacy-tab');
+    const sInput = document.getElementById('legacy-search');
+    if (sInput) sInput.value = '';
+    const citySel = document.getElementById('legacy-filter-city');
+    if (citySel) citySel.value = '';
+    const distSel = document.getElementById('legacy-filter-district');
+    if (distSel) distSel.value = '';
+    const prioSel = document.getElementById('legacy-filter-priority');
+    if (prioSel) prioSel.value = '';
+    const balSel = document.getElementById('legacy-filter-balance');
+    if (balSel) balSel.value = '';
+
+    populateFilterOptions();
+    const rutSel = document.getElementById('legacy-filter-rut');
+    if (rutSel) {
+        rutSel.value = routeName || '';
+    }
+    legacyPage = 1;
+    renderLegacyCustomers();
+    renderSavedCustomRoutesList();
+}
+
+function printCustomRouteSheet(routeId) {
+    const rt = (appState.customRoutes || []).find(r => r.id === routeId);
+    if (!rt) return;
+    const customers = (appState.customers || []).filter(c =>
+        (Array.isArray(rt.customerCodes) && rt.customerCodes.includes(c.code)) || c.rut === rt.name
+    );
+    const area = document.getElementById('print-report-area');
+    if (!area) return;
+
+    area.innerHTML = `
+        <div style="font-family:Arial, sans-serif; color:#000; padding:20px;">
+            <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:2px solid #0284c7; padding-bottom:12px; margin-bottom:16px;">
+                <div>
+                    <h2 style="margin:0; color:#0284c7;">DİZSAN OTOMOTİV &amp; SERVİS — SAHA RUT PLANI</h2>
+                    <h3 style="margin:4px 0 0; color:#0f172a;">${rt.name}</h3>
+                    <div style="font-size:12px; color:#334155; margin-top:4px;"><strong>Güzergah:</strong> ${rt.routeText || '-'}</div>
+                    ${rt.notes ? `<div style="font-size:11px; color:#475569; margin-top:2px;"><strong>Plan Notu:</strong> ${rt.notes}</div>` : ''}
+                </div>
+                <div style="text-align:right; font-size:11px;">
+                    <div><strong>Plan Tarihi:</strong> ${rt.plannedDate || '-'}</div>
+                    <div><strong>Sorumlu:</strong> ${rt.assignee || '-'}</div>
+                    <div><strong>Toplam Müşteri:</strong> ${customers.length} Cari</div>
+                </div>
+            </div>
+            <table style="width:100%; border-collapse:collapse; font-size:11px;">
+                <thead>
+                    <tr style="background:#e2e8f0;">
+                        <th style="border:1px solid #94a3b8; padding:6px;">#</th>
+                        <th style="border:1px solid #94a3b8; padding:6px;">Cari Kodu</th>
+                        <th style="border:1px solid #94a3b8; padding:6px;">Müşteri / Ünvan</th>
+                        <th style="border:1px solid #94a3b8; padding:6px;">İl / İlçe</th>
+                        <th style="border:1px solid #94a3b8; padding:6px;">Yetkili &amp; Telefon</th>
+                        <th style="border:1px solid #94a3b8; padding:6px;">Plaka</th>
+                        <th style="border:1px solid #94a3b8; padding:6px; text-align:right;">Bakiye</th>
+                        <th style="border:1px solid #94a3b8; padding:6px;">Saha Ziyaret Notu</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    ${customers.map((c, i) => `
+                        <tr>
+                            <td style="border:1px solid #94a3b8; padding:6px;">${i + 1}</td>
+                            <td style="border:1px solid #94a3b8; padding:6px; font-family:monospace;">${c.code}</td>
+                            <td style="border:1px solid #94a3b8; padding:6px; font-weight:bold;">${c.title}</td>
+                            <td style="border:1px solid #94a3b8; padding:6px;">${c.city} / ${c.district}</td>
+                            <td style="border:1px solid #94a3b8; padding:6px;">${c.authorized || '-'} (${c.phone || '-'})</td>
+                            <td style="border:1px solid #94a3b8; padding:6px;">${c.plates || '-'}</td>
+                            <td style="border:1px solid #94a3b8; padding:6px; text-align:right;">${formatMoney(c.balance)}</td>
+                            <td style="border:1px solid #94a3b8; padding:6px; min-width:140px;"></td>
+                        </tr>
+                    `).join('')}
+                </tbody>
+            </table>
+        </div>
+    `;
+    window.print();
+}
+
+function renderSavedCustomRoutesList() {
+    const listEl = document.getElementById('saved-custom-routes-list');
+    const countEl = document.getElementById('saved-custom-routes-count');
+    const routes = Array.isArray(appState.customRoutes) ? appState.customRoutes : [];
+    const activeRutFilter = document.getElementById('legacy-filter-rut')?.value || '';
+
+    if (countEl) countEl.textContent = String(routes.length);
+    if (!listEl) return;
+
+    if (routes.length === 0) {
+        listEl.innerHTML = `
+            <div style="grid-column:1 / -1; padding:0.9rem 1rem; border:1px dashed rgba(148,163,184,0.25); border-radius:10px; color:var(--text-sec); font-size:0.78rem; display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:0.5rem;">
+                <span><i class="fa-solid fa-route" style="color:#38bdf8; margin-right:6px;"></i> Henüz kayıtlı bir rut planı yok. Yukarıdan <strong>Rut Adı</strong>, <strong>Güzergah</strong> ve <strong>Müşterileri</strong> girip <strong>"Rut Kaydet"</strong> tuşuna basarak ilk rutunuzu oluşturabilirsiniz.</span>
+            </div>
+        `;
+        return;
+    }
+
+    const customers = appState.customers || [];
+    listEl.innerHTML = routes.map(rt => {
+        const custCount = customers.filter(c =>
+            (Array.isArray(rt.customerCodes) && rt.customerCodes.includes(c.code)) || c.rut === rt.name
+        ).length;
+        const isActive = activeRutFilter === rt.name;
+        const safeName = String(rt.name || '').replace(/'/g, "\\'");
+
+        return `
+            <div style="background:${isActive ? 'rgba(16,185,129,0.12)' : 'rgba(15,23,42,0.75)'}; border:1px solid ${isActive ? '#10b981' : 'rgba(56,189,248,0.28)'}; border-radius:10px; padding:0.75rem 0.9rem; display:flex; flex-direction:column; justify-content:space-between; gap:0.55rem;">
+                <div>
+                    <div style="display:flex; justify-content:space-between; align-items:flex-start; gap:0.4rem;">
+                        <strong style="color:#fff; font-size:0.85rem; cursor:pointer;" onclick="filterLegacyByCustomRoute('${safeName}')">
+                            <i class="fa-solid fa-route" style="color:#38bdf8;"></i> ${rt.name}
+                        </strong>
+                        <span class="badge badge-success" style="font-size:0.68rem; white-space:nowrap;">${custCount} Müşteri</span>
+                    </div>
+                    <div style="font-size:0.74rem; color:#34d399; font-weight:600; margin-top:4px;">
+                        <i class="fa-solid fa-road"></i> Güzergah: ${rt.routeText || '-'}
+                    </div>
+                    <div style="font-size:0.69rem; color:var(--text-sec); margin-top:3px;">
+                        <i class="fa-regular fa-calendar"></i> ${rt.plannedDate || '-'} &bull; <i class="fa-solid fa-user"></i> ${rt.assignee || '-'}
+                    </div>
+                    ${rt.notes ? `<div style="font-size:0.7rem; color:#cbd5e1; margin-top:3px; background:rgba(255,255,255,0.03); padding:3px 6px; border-radius:5px;">${rt.notes}</div>` : ''}
+                </div>
+                <div style="display:flex; gap:0.35rem; flex-wrap:wrap; padding-top:0.4rem; border-top:1px solid rgba(148,163,184,0.12);">
+                    <button type="button" class="btn ${isActive ? 'btn-success' : 'btn-primary'} btn-sm" style="padding:0.24rem 0.55rem; font-size:0.7rem;" onclick="filterLegacyByCustomRoute('${isActive ? '' : safeName}')">
+                        <i class="fa-solid fa-filter"></i> ${isActive ? 'Filtreyi Kaldır' : 'Müşterileri Gör'}
+                    </button>
+                    <button type="button" class="btn btn-secondary btn-sm" style="padding:0.24rem 0.55rem; font-size:0.7rem;" onclick="editCustomRoutePlan('${rt.id}')">
+                        <i class="fa-solid fa-pen-to-square" style="color:#38bdf8;"></i> Düzenle
+                    </button>
+                    <button type="button" class="btn btn-secondary btn-sm" style="padding:0.24rem 0.55rem; font-size:0.7rem;" onclick="printCustomRouteSheet('${rt.id}')">
+                        <i class="fa-solid fa-print" style="color:#fbbf24;"></i> Yazdır
+                    </button>
+                    <button type="button" class="btn btn-danger btn-sm" style="padding:0.24rem 0.5rem; font-size:0.7rem; margin-left:auto;" onclick="deleteCustomRoutePlan('${rt.id}')" title="Rutu Sil">
+                        <i class="fa-solid fa-trash"></i>
+                    </button>
+                </div>
+            </div>
+        `;
+    }).join('');
+}
+
+function ensureDistrictStrategiesPopulated() {
+    const existing = appState.districtStrategies || {};
+    if (Object.keys(existing).length > 0) return existing;
+    const customers = appState.customers || [];
+    if (customers.length === 0) return existing;
+    const built = {};
+    customers.forEach(c => {
+        const city = (c.city || 'Diğer').trim();
+        const district = (c.district || 'Merkez').trim();
+        const key = `${city}|${district}`;
+        if (!built[key]) {
+            built[key] = {
+                rut: (c.rut && !isLegacyAutoRutCode(c.rut)) ? c.rut : '',
+                city,
+                district,
+                totalCustomers: 0,
+                churnCustomers: 0,
+                totalOperations: 0,
+                totalRevenue: 0,
+                strategy: `${district} bölgesindeki ağır vasıta ve filo müşterilerine yerinde saha ziyareti ve özel bakım kampanyası sunumu.`
+            };
+        }
+        built[key].totalCustomers += 1;
+        if ((c.priority || '').includes('P1') || (c.priority || '').includes('P2') || (c.churnDuration && !c.churnDuration.includes('Aktif'))) {
+            built[key].churnCustomers += 1;
+        }
+        built[key].totalOperations += Number(c.totalOperations || (c.serviceHistory ? c.serviceHistory.length : 1));
+        built[key].totalRevenue += Number(c.totalRevenue || 0);
+    });
+    appState.districtStrategies = built;
+    return built;
+}
+
+function populateStrategyFilters(forceRebuildDistricts = false) {
+    ensureDistrictStrategiesPopulated();
+    syncCustomRoutesToCustomers();
+    const strategies = Object.values(appState.districtStrategies || {});
+    if (strategies.length === 0) return;
+
+    const citySel = document.getElementById('strategy-filter-city');
+    const distSel = document.getElementById('strategy-filter-district');
+    const rutSel = document.getElementById('strategy-filter-rut');
+
+    if (citySel && citySel.dataset.populatedCount !== String(strategies.length)) {
+        const cityMap = {};
+        strategies.forEach(s => {
+            if (!s.city) return;
+            if (!cityMap[s.city]) cityMap[s.city] = { districts: 0, customers: 0 };
+            cityMap[s.city].districts += 1;
+            cityMap[s.city].customers += Number(s.totalCustomers || 0);
+        });
+        const sortedCities = Object.keys(cityMap).sort((a, b) => a.localeCompare(b, 'tr'));
+        const curCity = citySel.value;
+        citySel.innerHTML = `<option value="">📍 Tüm İller (${sortedCities.length} İl)</option>` +
+            sortedCities.map(ct => `<option value="${ct}">${ct} (${cityMap[ct].districts} İlçe • ${cityMap[ct].customers} Cari)</option>`).join('');
+        if (curCity) citySel.value = curCity;
+        citySel.dataset.populatedCount = String(strategies.length);
+    }
+
+    if (rutSel) {
+        const rutMap = {};
+        (appState.customRoutes || []).forEach(r => {
+            if (r && r.name) rutMap[r.name] = 0;
+        });
+        strategies.forEach(s => {
+            if (!s.rut || isLegacyAutoRutCode(s.rut)) return;
+            rutMap[s.rut] = (rutMap[s.rut] || 0) + 1;
+        });
+        const sortedRuts = Object.keys(rutMap).sort((a, b) => a.localeCompare(b, 'tr', { numeric: true }));
+        const curRut = rutSel.value;
+        rutSel.innerHTML = `<option value="">🚗 Tüm Rutlar (${sortedRuts.length} Kayıtlı Rut)</option>` +
+            sortedRuts.map(rt => `<option value="${rt}">${rt} (${rutMap[rt]} Bölge)</option>`).join('');
+        if (curRut && rutMap[curRut] !== undefined) rutSel.value = curRut;
+    }
+
+    if (distSel && (forceRebuildDistricts || distSel.dataset.populatedCount !== String(strategies.length))) {
+        const selectedCity = citySel ? citySel.value : '';
+        const distMap = {};
+        strategies.forEach(s => {
+            if (!s.district) return;
+            if (selectedCity && normalizeTR(s.city) !== normalizeTR(selectedCity)) return;
+            const key = selectedCity ? s.district : `${s.district} (${s.city})`;
+            const val = s.district;
+            if (!distMap[val]) distMap[val] = { label: key, customers: 0 };
+            distMap[val].customers += Number(s.totalCustomers || 0);
+        });
+        const sortedDists = Object.keys(distMap).sort((a, b) => a.localeCompare(b, 'tr'));
+        const prevDist = distSel.value;
+        distSel.innerHTML = `<option value="">🏘️ Tüm İlçeler (${sortedDists.length} İlçe)</option>` +
+            sortedDists.map(d => `<option value="${d}">${distMap[d].label} • ${distMap[d].customers} Cari</option>`).join('');
+        if (prevDist && distMap[prevDist]) {
+            distSel.value = prevDist;
+        } else {
+            distSel.value = '';
+        }
+        distSel.dataset.populatedCount = `${strategies.length}:${selectedCity}`;
+    }
+}
+
+function handleStrategyCityChange() {
+    const distSel = document.getElementById('strategy-filter-district');
+    if (distSel) distSel.value = '';
+    populateStrategyFilters(true);
+    renderDistrictStrategies();
+}
+
+function resetStrategyFilters() {
+    const searchEl = document.getElementById('strategy-search');
+    const citySel = document.getElementById('strategy-filter-city');
+    const distSel = document.getElementById('strategy-filter-district');
+    const rutSel = document.getElementById('strategy-filter-rut');
+    if (searchEl) searchEl.value = '';
+    if (citySel) citySel.value = '';
+    if (distSel) distSel.value = '';
+    if (rutSel) rutSel.value = '';
+    populateStrategyFilters(true);
+    renderDistrictStrategies();
+}
+
+function openStrategyDistrictInRutPlan(city, district, rut = '') {
+    switchTab('legacy-tab');
+    populateFilterOptions();
+
+    // Yeni Rut Planla formunda ilgili İl ve İlçeyi otomatik seç ve güzergaha hazırla
+    const plannerCitySel = document.getElementById('custom-rut-city-select');
+    if (plannerCitySel && city) {
+        plannerCitySel.value = city;
+        handleCustomRouteCityChange();
+        const plannerDistSel = document.getElementById('custom-rut-district-select');
+        if (plannerDistSel && district) {
+            plannerDistSel.value = district;
+        }
+        addDistrictToCustomRouteDraft();
+    }
+
+    const searchInput = document.getElementById('legacy-search');
+    if (searchInput) searchInput.value = '';
+    const prioSel = document.getElementById('legacy-filter-priority');
+    if (prioSel) prioSel.value = '';
+    const balSel = document.getElementById('legacy-filter-balance');
+    if (balSel) balSel.value = '';
+    const rutSel = document.getElementById('legacy-filter-rut');
+    if (rutSel) rutSel.value = '';
+
+    const cityInput = document.getElementById('legacy-filter-city');
+    if (cityInput) {
+        cityInput.value = city || '';
+    }
+    handleCityFilterChange();
+
+    const distSelect = document.getElementById('legacy-filter-district');
+    if (distSelect && district) {
+        const matchOpt = Array.from(distSelect.options).find(o => normalizeTR(o.value) === normalizeTR(district));
+        if (matchOpt) {
+            distSelect.value = matchOpt.value;
+        } else {
+            const opt = document.createElement('option');
+            opt.value = district;
+            opt.textContent = district;
+            distSelect.appendChild(opt);
+            distSelect.value = district;
+        }
+    }
+
+    legacyPage = 1;
+    renderLegacyCustomers();
+    if (window.DizsanBackNav && typeof window.DizsanBackNav.showToast === 'function') {
+        window.DizsanBackNav.showToast(`📍 ${city} / ${district} bölgesi Rut Planlama ekranına aktarıldı. Müşterileri seçip "Rut Kaydet" diyebilirsiniz.`);
+    }
+}
+
+function openStrategyDistrictInCariRehber(city, district) {
+    switchTab('cari-ekstre-tab');
+    populateFilterOptions();
+
+    const searchEl = document.getElementById('ekstre-search') || document.getElementById('ekstre-search-input');
+    if (searchEl) searchEl.value = '';
+    const baEl = document.getElementById('ekstre-filter-ba') || document.getElementById('ekstre-balance-filter');
+    if (baEl) baEl.value = '';
+
+    const citySel = document.getElementById('ekstre-filter-city') || document.getElementById('ekstre-city-filter');
+    if (citySel && city) {
+        const matchCity = Array.from(citySel.options).find(o => normalizeTR(o.value) === normalizeTR(city));
+        if (matchCity) {
+            citySel.value = matchCity.value;
+        } else {
+            const opt = document.createElement('option');
+            opt.value = city;
+            opt.textContent = city;
+            citySel.appendChild(opt);
+            citySel.value = city;
+        }
+    }
+
+    handleEkstreCityFilterChange(district);
+    if (window.DizsanBackNav && typeof window.DizsanBackNav.showToast === 'function') {
+        window.DizsanBackNav.showToast(`📒 ${city} / ${district} bölgesi Müşteri Rehberi (Cari & Ekstre) ekranında açıldı.`);
+    }
+}
+
 function renderDistrictStrategies() {
     const tbody = document.getElementById('strategy-table-body');
     if (!tbody) return;
+
+    populateStrategyFilters(false);
+
     const search = normalizeTR(document.getElementById('strategy-search')?.value);
+    const selectedCity = document.getElementById('strategy-filter-city')?.value || '';
+    const selectedDistrict = document.getElementById('strategy-filter-district')?.value || '';
+    const selectedRut = document.getElementById('strategy-filter-rut')?.value || '';
     const strategies = Object.values(appState.districtStrategies || {});
 
+    const resetBtn = document.getElementById('strategy-filter-reset-btn');
+    if (resetBtn) {
+        resetBtn.style.display = (search || selectedCity || selectedDistrict || selectedRut) ? 'inline-flex' : 'none';
+    }
+
     const filtered = strategies.filter(s => {
-        if (!search) return true;
-        const hay = normalizeTR(`${s.rut} ${s.city} ${s.district} ${s.strategy}`);
-        return hay.includes(search);
+        if (selectedCity && normalizeTR(s.city) !== normalizeTR(selectedCity)) return false;
+        if (selectedDistrict && normalizeTR(s.district) !== normalizeTR(selectedDistrict)) return false;
+        if (selectedRut && s.rut !== selectedRut) return false;
+        if (search) {
+            const hay = normalizeTR(`${s.rut} ${s.city} ${s.district} ${s.strategy}`);
+            if (!hay.includes(search)) return false;
+        }
+        return true;
     });
 
-    tbody.innerHTML = filtered.map(s => `
+    const countLabel = document.getElementById('strategy-table-count-label');
+    if (countLabel) {
+        const isFiltered = Boolean(search || selectedCity || selectedDistrict || selectedRut);
+        countLabel.textContent = isFiltered
+            ? `İl ve İlçe Bazlı 120 Kodlu Müşteri Saha Planı & Müzakere Rehberi (${filtered.length} / ${strategies.length} Bölge)`
+            : `İl ve İlçe Bazlı 120 Kodlu Müşteri Saha Planı & Müzakere Rehberi (${strategies.length} Bölge)`;
+    }
+
+    if (filtered.length === 0) {
+        tbody.innerHTML = `
+            <tr>
+                <td colspan="9" style="text-align:center; padding:1.5rem; color:var(--text-sec);">
+                    Seçilen il/ilçe kriterlerine uygun bölge kaydı bulunamadı.
+                </td>
+            </tr>
+        `;
+        return;
+    }
+
+    tbody.innerHTML = filtered.map(s => {
+        const safeCity = String(s.city || '').replace(/'/g, "\\'");
+        const safeDist = String(s.district || '').replace(/'/g, "\\'");
+        const safeRut = String(s.rut || '').replace(/'/g, "\\'");
+        const hasCustomRut = s.rut && !isLegacyAutoRutCode(s.rut);
+        return `
         <tr>
-            <td style="font-weight:700; color:var(--dizsan-light);">${s.rut}</td>
+            <td style="font-weight:700; white-space:nowrap;">
+                ${hasCustomRut
+                    ? `<span class="badge badge-success" style="font-size:0.72rem;"><i class="fa-solid fa-route"></i> ${s.rut}</span>`
+                    : `<span style="font-size:0.72rem; color:var(--text-muted);">Planlanmadı</span>`
+                }
+            </td>
             <td><strong>${s.city}</strong></td>
-            <td>${s.district}</td>
+            <td>
+                <span class="badge badge-secondary" style="cursor:pointer; border-color:rgba(56,189,248,0.4); color:#38bdf8;" onclick="openStrategyDistrictInRutPlan('${safeCity}', '${safeDist}', '${safeRut}')" title="${s.city} / ${s.district} müşterilerini Rut Planlama sekmesinde aç">
+                    <i class="fa-solid fa-location-dot"></i> ${s.district}
+                </span>
+            </td>
             <td style="font-weight:700;">${s.totalCustomers}</td>
             <td style="color:#f87171; font-weight:700;">${s.churnCustomers}</td>
             <td>${s.totalOperations}</td>
-            <td style="color:#34d399; font-weight:700;">${formatMoney(s.totalRevenue)}</td>
+            <td style="color:#34d399; font-weight:700; white-space:nowrap;">${formatMoney(s.totalRevenue)}</td>
             <td style="font-size:0.78rem; color:#cbd5e1;">${s.strategy}</td>
+            <td style="text-align:right; white-space:nowrap;">
+                <div style="display:inline-flex; gap:0.35rem; justify-content:flex-end;">
+                    <button type="button" class="btn btn-primary btn-sm" style="padding:0.28rem 0.55rem; font-size:0.72rem;" onclick="openStrategyDistrictInRutPlan('${safeCity}', '${safeDist}', '${safeRut}')" title="${s.city} / ${s.district} için Rut Planlama ekranına geç">
+                        <i class="fa-solid fa-route"></i> Rut Planla
+                    </button>
+                    <button type="button" class="btn btn-secondary btn-sm" style="padding:0.28rem 0.55rem; font-size:0.72rem;" onclick="openStrategyDistrictInCariRehber('${safeCity}', '${safeDist}')" title="${s.city} / ${s.district} için Müşteri Rehberi &amp; Cari Ekstre ekranına geç">
+                        <i class="fa-solid fa-address-book" style="color:#38bdf8;"></i> Müşteri Rehberi
+                    </button>
+                </div>
+            </td>
         </tr>
-    `).join('');
+    `}).join('');
 }
+
+window.initCustomRoutePlannerUI = initCustomRoutePlannerUI;
+window.handleCustomRouteCityChange = handleCustomRouteCityChange;
+window.addDistrictToCustomRouteDraft = addDistrictToCustomRouteDraft;
+window.removeDistrictFromCustomRouteDraft = removeDistrictFromCustomRouteDraft;
+window.renderCustomRouteCustomerPicker = renderCustomRouteCustomerPicker;
+window.toggleCustomerInCustomRouteDraft = toggleCustomerInCustomRouteDraft;
+window.selectAllFilteredForCustomRoute = selectAllFilteredForCustomRoute;
+window.clearCustomRouteSelectedCustomers = clearCustomRouteSelectedCustomers;
+window.resetCustomRouteForm = resetCustomRouteForm;
+window.saveCustomRoutePlan = saveCustomRoutePlan;
+window.editCustomRoutePlan = editCustomRoutePlan;
+window.deleteCustomRoutePlan = deleteCustomRoutePlan;
+window.filterLegacyByCustomRoute = filterLegacyByCustomRoute;
+window.printCustomRouteSheet = printCustomRouteSheet;
 
 function renderLogs() {
     const tbody = document.getElementById('logs-table-body');
@@ -4617,6 +6277,7 @@ function renderAll() {
     renderDashboard();
     populateFilterOptions();
     renderLegacyCustomers();
+    renderCariEkstreTable(false);
     renderActiveVisits();
     renderTasks();
     renderOmerApprovalCenter();
@@ -4627,6 +6288,11 @@ function renderAll() {
 }
 
 document.addEventListener('DOMContentLoaded', async () => {
+    const isDproEmbedded = (window.self !== window.top) || window.location.search.includes('embed=dpro');
+    if (isDproEmbedded) {
+        document.body.classList.add('dpro-embedded');
+    }
+
     // Eski Service Worker ve önbellekleri zorla temizle (v1.2.0)
     if ('serviceWorker' in navigator) {
         navigator.serviceWorker.getRegistrations().then(regs => {
@@ -4680,6 +6346,13 @@ document.addEventListener('DOMContentLoaded', async () => {
             const matched = appState.users.find(u => normalizeTR(u.name) === normalizeTR(p.name) || normalizeTR(u.username) === normalizeTR(p.username));
             if (matched) currentUser = matched;
         } catch (e) {}
+    }
+
+    // D-Pro birleşik platform içinde gömülü çalışırken D-Pro'da Ömer Eren oturumu açıksa tek oturum (SSO) ile başlat
+    const dproActiveUser = (localStorage.getItem('dizsan_dpro_active_session_v1') || sessionStorage.getItem('dizsan_dpro_active_session_v1') || '').toLowerCase();
+    if (!currentUser && isDproEmbedded && (dproActiveUser === 'ömer' || dproActiveUser === 'omer') && Array.isArray(appState.users) && appState.users.length > 0) {
+        currentUser = appState.users.find(u => normalizeTR(u.username).includes('omer')) || appState.users[0];
+        localStorage.setItem(STORAGE_KEY_SESSION, JSON.stringify(currentUser));
     }
 
     applyAuthenticatedUser();
@@ -4752,6 +6425,18 @@ document.addEventListener('DOMContentLoaded', async () => {
     if (installGuideModalEl) {
         installGuideModalEl.addEventListener('click', (e) => {
             if (e.target === installGuideModalEl) closeInstallGuideModal();
+        });
+    }
+    const invModalEl = document.getElementById('invoice-detail-modal');
+    if (invModalEl) {
+        invModalEl.addEventListener('click', (e) => {
+            if (e.target === invModalEl) closeInvoiceDetailModal();
+        });
+    }
+    const custDetailModalEl = document.getElementById('customer-detail-modal');
+    if (custDetailModalEl) {
+        custDetailModalEl.addEventListener('click', (e) => {
+            if (e.target === custDetailModalEl) closeCustomerDetailModal();
         });
     }
 

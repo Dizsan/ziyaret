@@ -1,0 +1,11 @@
+{
+  "appId": "dikas-finans",
+  "appName": "DiKas – Dizsan Finans, Nakit Akışı ve Ödeme Takip Sistemi",
+  "version": "1.0.5",
+  "build": 105,
+  "releasedAt": "2026-10-19 01:46:00",
+  "updatedAt": "19.10.2026 01:46",
+  "author": "ÖMER EREN",
+  "releaseNotes": "DiKas v1.0.5 Canlı Yayın: Çoklu şirket nakit akışı, Tarihi Belirsiz Kenar Notları çekmecesi, Personel Maaş Kırılımı ve Kişi Bazlı Kısmi Ödeme / Avans takibi + D-Pro sol menü entegrasyonu.",
+  "notes": "DiKas v1.0.5 Canlı Yayın: Çoklu şirket nakit akışı, Tarihi Belirsiz Kenar Notları çekmecesi, Personel Maaş Kırılımı ve Kişi Bazlı Kısmi Ödeme / Avans takibi + D-Pro sol menü entegrasyonu."
+}

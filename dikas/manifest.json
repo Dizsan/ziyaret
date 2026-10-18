@@ -1,0 +1,25 @@
+{
+  "name": "DiKas – Dizsan Finans, Nakit Akışı ve Ödeme Takip Sistemi",
+  "short_name": "DiKas",
+  "description": "Dizsan şirketleri (Dizsan Otomotiv, Dizsan Lojistik, KM Solar) için kasa, banka, ödeme, tahsilat, kredi kartı, kredi/leasing, çek/senet, finans takvimi ve nakit akışı tahminleme sistemi.",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#060913",
+  "theme_color": "#0284c7",
+  "icons": [
+    {
+      "src": "icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}

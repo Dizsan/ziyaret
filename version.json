@@ -1,7 +1,5 @@
 {
   "version": "1.5.7",
-  "build": 157,
-  "releasedAt": "2026-10-18 12:25:31",
-  "releaseNotes": "D-Pro v1.3.0 Cari & Logo Ekstre, Fatura Kalemleri ve Sadece Omer Eren Ozel Canli Erisim Kalkani",
-  "author": "Ömer Eren & DİZSAN"
+  "releasedAt": "19.10.2026 01:42",
+  "releaseNotes": "Hazir rut planlari (RUT-01..08 / DIGER) kaldirildi. Kullanici tarafindan Rut Adi, Guzergah (Il/Ilce) ve Musteriler secilerek kaydedilen Yeni Rut Planlama ve Kayit motoru eklendi."
 }
