@@ -1,5 +1,5 @@
 {
-  "version": "v1.3.0",
+  "version": "1.5.8",
   "users": [
     {
       "order": 0,
@@ -175780,7 +175780,7 @@
       "platform": "Android / Mobil"
     }
   ],
-  "updatedAt": "2026-10-18T21:32:21.835693Z",
+  "updatedAt": "2026-10-18T22:58:30Z",
   "stateRevision": 44,
   "cities": [
     "Adana",

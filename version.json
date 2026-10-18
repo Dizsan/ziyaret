@@ -1,5 +1,6 @@
 {
-  "version": "1.5.7",
-  "releasedAt": "19.10.2026 01:42",
-  "releaseNotes": "Hazir rut planlari (RUT-01..08 / DIGER) kaldirildi. Kullanici tarafindan Rut Adi, Guzergah (Il/Ilce) ve Musteriler secilerek kaydedilen Yeni Rut Planlama ve Kayit motoru eklendi."
+  "version": "1.5.8",
+  "updatedAt": "2026-10-18T22:58:30Z",
+  "notes": "v1.5.8 — Özel Rut Planlama & Kaydetme Sistemi, Kredi Son Ödeme Tarihleri, Dizsan Otomotiv Cari Filtresi",
+  "mandatory": true
 }

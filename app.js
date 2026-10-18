@@ -6453,6 +6453,6 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     // Service Worker Kaydı (Sonsuz yenileme döngüsü yaratmadan sessiz çalışır)
     if ('serviceWorker' in navigator) {
-        navigator.serviceWorker.register('sw.js?v=1.5.7').catch(() => {});
+        navigator.serviceWorker.register('sw.js?v=1.5.8').catch(() => {});
     }
 });
