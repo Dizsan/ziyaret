@@ -1,7 +1,7 @@
 {
-  "version": "1.6.6",
-  "build": 166,
-  "releasedAt": "2026-10-24 22:45:27",
-  "releaseNotes": "Arama listesi ve ust bar sadelestirildi, tek satir kompakt liste yapildi",
+  "version": "1.6.7",
+  "build": 167,
+  "releasedAt": "2026-10-24 22:55:22",
+  "releaseNotes": "Olumlu Gorusme Sonucu Alt Menusu (Takip Edilecek / Tekrar Aranacak) ve Cift Harf Toleransi",
   "author": "Ömer Eren & DİZSAN"
 }

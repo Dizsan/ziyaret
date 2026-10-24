@@ -3019,7 +3019,7 @@ body[data-theme="light"] .matched-field-callout {
 
                 <div class="navbar-right" style="display:none !important;">
                     <button type="button" class="btn btn-secondary btn-sm app-version-chip" id="app-version-badge" onclick="openVersionModal()" title="Sürüm ve Cihaz Güncelleme Merkezi">
-                        <i class="fa-solid fa-code-branch" style="color:#38bdf8;"></i> <span id="app-current-version-text">v1.6.6</span>
+                        <i class="fa-solid fa-code-branch" style="color:#38bdf8;"></i> <span id="app-current-version-text">v1.6.7</span>
                     </button>
 
                     <button type="button" class="btn btn-secondary btn-sm" onclick="forceRefreshFromGitHub()" id="btn-navbar-refresh" title="Logo ERP Canlı Verilerini Yenile (Son Fatura: 20.08.2026)">
@@ -4378,10 +4378,46 @@ body[data-theme="light"] .matched-field-callout {
                                 <option value="Olumlu">🤝 Olumlu / Servise Davet Edildi</option>
                                 <option value="Teklif Verildi">📑 Fiyat Teklifi Verildi</option>
                                 <option value="Randevu Alındı">📅 Randevu Alındı</option>
-                                <option value="Takip Edilecek">⏳ Takip Edilecek (Tekrar Aranacak)</option>
                                 <option value="Ulaşılamadı">📵 Ulaşılamadı / Cevap Vermedi</option>
                                 <option value="Olumsuz">🚫 Olumsuz / Başka Servisle Çalışıyor</option>
                             </select>
+                        </div>
+                    </div>
+
+                    <!-- OLUMLU SEÇİLİNCE AÇILAN ALT MENÜ: TAKİP EDİLECEK (TEKRAR ARANACAK) -->
+                    <div id="visit-positive-submenu" style="display:block; background:linear-gradient(135deg, rgba(16,185,129,0.14), rgba(245,158,11,0.12)); border:1.5px solid rgba(16,185,129,0.5); border-radius:12px; padding:0.85rem 1rem; margin-bottom:0.85rem; box-shadow:0 6px 18px rgba(16,185,129,0.12);">
+                        <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:0.5rem; margin-bottom:0.65rem;">
+                            <div style="display:flex; align-items:center; gap:0.5rem;">
+                                <span style="background:#10b981; color:#052e16; font-weight:900; font-size:0.72rem; padding:2px 8px; border-radius:6px; letter-spacing:0.3px;">ALT MENÜ</span>
+                                <strong style="color:#6ee7b7; font-size:0.88rem;">
+                                    <i class="fa-solid fa-turn-up fa-rotate-90" style="margin-right:4px;"></i> Olumlu Görüşme Takip Durumu
+                                </strong>
+                            </div>
+                            <span style="font-size:0.74rem; color:#fde68a; font-weight:700;">
+                                <i class="fa-solid fa-phone-volume"></i> Otomatik Hatırlatıcı Bağlantılı
+                            </span>
+                        </div>
+
+                        <div class="grid-2-col" style="display:grid; grid-template-columns:1.25fr 1fr; gap:0.75rem; align-items:end;">
+                            <div class="form-group" style="margin-bottom:0;">
+                                <label style="color:#a7f3d0; font-weight:700; font-size:0.78rem;">Takip / Tekrar Arama Durumu *</label>
+                                <select id="visit-positive-substatus" class="form-control" onchange="handlePositiveSubstatusChange()" style="border-color:rgba(16,185,129,0.55); font-weight:700;">
+                                    <option value="Takip Edilecek (Tekrar Aranacak)" selected>⏳ Takip Edilecek (Tekrar Aranacak)</option>
+                                    <option value="Takip Edilecek (Tekrar Ziyaret)">🚗 Takip Edilecek (Tekrar Ziyaret Edilecek)</option>
+                                    <option value="Randevu Kesinleşti (Servise Gelecek)">📅 Randevu Kesinleşti (Servise Gelecek)</option>
+                                    <option value="Doğrudan Servise Davet (Ek Arama Yok)">✅ Doğrudan Servise Davet (Tekrar Arama Yok)</option>
+                                </select>
+                            </div>
+                            <div id="visit-submenu-datetime-wrap" style="display:grid; grid-template-columns:1fr 0.85fr; gap:0.5rem;">
+                                <div class="form-group" style="margin-bottom:0;">
+                                    <label style="color:#fde68a; font-weight:700; font-size:0.76rem;">Tekrar Arama Tarihi *</label>
+                                    <input type="date" id="visit-submenu-date" class="form-control" onchange="syncSubmenuDateTimeToTask()">
+                                </div>
+                                <div class="form-group" style="margin-bottom:0;">
+                                    <label style="color:#fde68a; font-weight:700; font-size:0.76rem;">Saati *</label>
+                                    <input type="time" id="visit-submenu-time" class="form-control" value="10:00" onchange="syncSubmenuDateTimeToTask()">
+                                </div>
+                            </div>
                         </div>
                     </div>
 
@@ -9772,6 +9808,12 @@ function openVisitModal(prefill = null, editId = null) {
     if (taskInstrIn) taskInstrIn.value = '';
     if (dateIn) dateIn.value = tomorrow;
     if (timeIn) timeIn.value = '10:00';
+    const subDateIn = document.getElementById('visit-submenu-date');
+    const subTimeIn = document.getElementById('visit-submenu-time');
+    const subStatusSel = document.getElementById('visit-positive-substatus');
+    if (subDateIn) subDateIn.value = tomorrow;
+    if (subTimeIn) subTimeIn.value = '10:00';
+    if (subStatusSel) subStatusSel.value = 'Takip Edilecek (Tekrar Aranacak)';
     if (cb) cb.checked = false;
     if (fields) fields.style.display = 'none';
 
@@ -9787,7 +9829,15 @@ function openVisitModal(prefill = null, editId = null) {
             if (locIn) locIn.value = v.location || '';
             if (plateIn) plateIn.value = v.plate || '';
             if (persSelect && v.personnel) persSelect.value = v.personnel;
-            if (resSelect && v.result) resSelect.value = v.result;
+            if (resSelect && v.result) {
+                if (v.result === 'Takip Edilecek') {
+                    resSelect.value = 'Olumlu';
+                    if (subStatusSel) subStatusSel.value = 'Takip Edilecek (Tekrar Aranacak)';
+                } else {
+                    resSelect.value = v.result;
+                    if (subStatusSel && v.subResult) subStatusSel.value = v.subResult;
+                }
+            }
             const typeSelect = document.getElementById('visit-type-select');
             if (typeSelect && v.type) typeSelect.value = v.type;
             const notesIn = document.getElementById('visit-notes');
@@ -9798,6 +9848,8 @@ function openVisitModal(prefill = null, editId = null) {
             if (assignedByIn) assignedByIn.value = v.assignedBy || (currentUser ? currentUser.name : 'ÖMER EREN');
             if (dueDateIn && v.dueDate) dueDateIn.value = v.dueDate;
             if (dueTimeIn && v.dueTime) dueTimeIn.value = v.dueTime;
+            if (subDateIn && v.dueDate) subDateIn.value = v.dueDate;
+            if (subTimeIn && v.dueTime) subTimeIn.value = v.dueTime;
             if (prioritySelect && v.priority) prioritySelect.value = v.priority;
             if (taskInstrIn) taskInstrIn.value = v.taskInstructions || v.taskNote || '';
 
@@ -9901,13 +9953,28 @@ function handleVisitResultChange() {
     const fields = document.getElementById('visit-task-fields');
     const container = document.getElementById('visit-task-container');
     const cbLabel = document.getElementById('visit-task-cb-label');
+    const posSubmenu = document.getElementById('visit-positive-submenu');
+    const subStatusSel = document.getElementById('visit-positive-substatus');
     if (!resSelect) return;
 
     const val = String(resSelect.value || '').trim();
     const selText = (resSelect.options && resSelect.selectedIndex >= 0) ? String(resSelect.options[resSelect.selectedIndex].text || '') : '';
-    
-    // Hem value hem görünen metin üzerinden esnek eşleşme kontrolü
-    const isFollowUp = val.includes('Takip') || val.includes('Randevu') || selText.includes('Takip') || selText.includes('Randevu');
+
+    // "Olumlu" seçilince alt menü ("Takip Edilecek / Tekrar Aranacak") açılır
+    const isPositive = val === 'Olumlu' || selText.includes('Olumlu');
+    if (posSubmenu) {
+        posSubmenu.style.display = isPositive ? 'block' : 'none';
+    }
+
+    const subVal = (isPositive && subStatusSel) ? String(subStatusSel.value || '') : '';
+    const isSubFollowUp = isPositive && !subVal.includes('Ek Arama Yok');
+
+    // Hem value hem görünen metin hem de Olumlu alt menüsü üzerinden esnek eşleşme kontrolü
+    const isFollowUp = isSubFollowUp || val.includes('Takip') || val.includes('Randevu') || selText.includes('Takip') || selText.includes('Randevu');
+
+    if (isPositive) {
+        handlePositiveSubstatusChange(true);
+    }
 
     if (isFollowUp) {
         if (cb) cb.checked = true;
@@ -9922,7 +9989,7 @@ function handleVisitResultChange() {
             container.style.boxShadow = '0 0 20px rgba(245, 158, 11, 0.35)';
         }
         if (cbLabel) {
-            cbLabel.innerHTML = `<i class="fa-solid fa-bell fa-shake" style="color:#fbbf24;"></i> <span style="color:#fde68a; font-weight:700;">⏳ TAKİP / RANDEVU PLANI AKTİF</span>`;
+            cbLabel.innerHTML = `<i class="fa-solid fa-bell fa-shake" style="color:#fbbf24;"></i> <span style="color:#fde68a; font-weight:700;">⏳ TAKİP / TEKRAR ARAMA PLANI AKTİF</span>`;
         }
         const dateIn = document.getElementById('visit-task-date');
         if (dateIn && !dateIn.value) {
@@ -9932,7 +9999,7 @@ function handleVisitResultChange() {
 
         const currentFollowup = document.getElementById('visit-followup-type')?.value;
         const parentVisitType = document.getElementById('visit-type-select')?.value || 'TELEFON';
-        const targetType = currentFollowup || (parentVisitType === 'ZİYARET' ? 'ZİYARET' : 'TELEFON');
+        const targetType = subVal.includes('Ziyaret') ? 'ZİYARET' : (subVal.includes('Tekrar Aranacak') ? 'TELEFON' : (currentFollowup || (parentVisitType === 'ZİYARET' ? 'ZİYARET' : 'TELEFON')));
         setFollowupActionType(targetType);
     } else {
         if (cbLabel) {
@@ -9943,9 +10010,52 @@ function handleVisitResultChange() {
             container.style.background = 'rgba(245, 158, 11, 0.08)';
             container.style.boxShadow = 'none';
         }
-        if (cb && !cb.checked && fields) {
+        if (cb) cb.checked = false;
+        if (fields) {
             fields.style.display = 'none';
         }
+    }
+}
+
+function handlePositiveSubstatusChange(skipParentTrigger = false) {
+    const subStatusSel = document.getElementById('visit-positive-substatus');
+    const dtWrap = document.getElementById('visit-submenu-datetime-wrap');
+    if (!subStatusSel) return;
+    const subVal = String(subStatusSel.value || '');
+    const needsFollowup = !subVal.includes('Ek Arama Yok');
+    if (dtWrap) {
+        dtWrap.style.display = needsFollowup ? 'grid' : 'none';
+    }
+    if (needsFollowup) {
+        if (subVal.includes('Ziyaret')) {
+            setFollowupActionType('ZİYARET');
+        } else if (subVal.includes('Tekrar Aranacak')) {
+            setFollowupActionType('TELEFON');
+        }
+        syncSubmenuDateTimeToTask();
+    }
+    if (!skipParentTrigger) {
+        handleVisitResultChange();
+    }
+}
+
+function syncSubmenuDateTimeToTask() {
+    const subDate = document.getElementById('visit-submenu-date')?.value;
+    const subTime = document.getElementById('visit-submenu-time')?.value;
+    const dueDateIn = document.getElementById('visit-due-date');
+    const dueTimeIn = document.getElementById('visit-due-time');
+    const taskDateIn = document.getElementById('visit-task-date');
+    const taskTimeIn = document.getElementById('visit-task-time');
+    if (subDate) {
+        if (dueDateIn) dueDateIn.value = subDate;
+        if (taskDateIn) taskDateIn.value = subDate;
+    }
+    if (subTime) {
+        if (dueTimeIn) dueTimeIn.value = subTime;
+        if (taskTimeIn) taskTimeIn.value = subTime;
+    }
+    if (typeof handleVisitDateOrTimeChange === 'function') {
+        handleVisitDateOrTimeChange();
     }
 }
 
@@ -10050,6 +10160,7 @@ function saveVisitRecord(event) {
     event.preventDefault();
     const type = document.getElementById('visit-type-select').value;
     const result = document.getElementById('visit-result-select').value;
+    const subResult = (result === 'Olumlu') ? (document.getElementById('visit-positive-substatus')?.value || 'Takip Edilecek (Tekrar Aranacak)') : '';
     const customerTitle = document.getElementById('visit-customer-title').value.trim();
     const contactPerson = document.getElementById('visit-contact-person').value.trim();
     const phone = document.getElementById('visit-phone').value.trim();
@@ -10085,6 +10196,7 @@ function saveVisitRecord(event) {
                 ...appState.visits[idx],
                 type,
                 result,
+                subResult,
                 customerTitle,
                 contactPerson,
                 phone,
@@ -10140,6 +10252,7 @@ function saveVisitRecord(event) {
             proposedData: {
                 type,
                 result,
+                subResult,
                 customerTitle,
                 contactPerson,
                 phone,
@@ -10182,6 +10295,7 @@ function saveVisitRecord(event) {
         id: visitId,
         type,
         result,
+        subResult,
         customerTitle,
         contactPerson,
         phone,
@@ -10234,7 +10348,7 @@ function saveVisitRecord(event) {
         dueDate,
         dueTime,
         status: 'Bekliyor',
-        note: `Talimat: ${taskInstructions || notes}. Görüşme Sonucu: ${result}.`,
+        note: `Talimat: ${taskInstructions || notes}. Görüşme Sonucu: ${result}${subResult ? ' (' + subResult + ')' : ''}.`,
         distanceKm: type === 'ZİYARET' ? calc.km : null,
         driveMinutes: type === 'ZİYARET' ? calc.driveMins : null,
         marginMinutes: type === 'ZİYARET' ? calc.marginMins : null,
@@ -10333,6 +10447,11 @@ function renderActiveVisits() {
                                 ${isVisit ? '🚗 SAHA ZİYARETİ' : '📞 TELEFON GÖRÜŞMESİ'}
                             </span>
                             <span class="badge ${isSuccess ? 'badge-success' : 'badge-secondary'}">${v.result}</span>
+                            ${v.subResult ? `
+                                <span class="badge" style="background:rgba(245,158,11,0.2); border:1px solid rgba(245,158,11,0.5); color:#fde68a; font-weight:700;">
+                                    ↳ ${v.subResult}
+                                </span>
+                            ` : ''}
                             ${hasAssignment ? `
                                 <span class="badge" style="background:#2563eb; color:#fff; font-weight:700;">
                                     <i class="fa-solid fa-user-check"></i> Görevli: ${v.assignedTo}
@@ -13317,8 +13436,13 @@ function setCustomerSearchScope(scope) {
 function computeCustomerMatchByMode(c, rawQuery, mode = 'EXACT', scopeOverride = '') {
     const scope = scopeOverride || currentSearchScope || 'CARI';
     const nq = normSearchTR(rawQuery);
-    const nqComp = normCompactTR(rawQuery);
-    if (!nq && !nqComp) return { score: 100, reason: 'Tüm Liste', isExact: true, matchedWord: '', matchedContextHtml: '' };
+    const nqCompRaw = normCompactTR(rawQuery);
+    if (!nq && !nqCompRaw) return { score: 100, reason: 'Tüm Liste', isExact: true, matchedWord: '', matchedContextHtml: '' };
+    // Yanlışlıkla çift basılan harfleri (örn: "merziifon" -> "merzifon") otomatik normalize et
+    const nqCompDedup = nqCompRaw.replace(/([A-Z])\1+/g, '$1');
+    const hasDoubleLetterTypo = nqCompDedup.length >= 4 && nqCompDedup !== nqCompRaw;
+    const nqComp = nqCompRaw;
+    const matchSub = (hay, needle) => Boolean(hay && needle && (hay.includes(needle) || (hasDoubleLetterTypo && hay.replace(/([A-Z])\1+/g, '$1').includes(nqCompDedup))));
     const qTokens = nq.split(' ').filter(Boolean);
     const qCompTokens = qTokens.map(t => normCompactTR(t)).filter(Boolean);
 
@@ -13362,43 +13486,43 @@ function computeCustomerMatchByMode(c, rawQuery, mode = 'EXACT', scopeOverride =
         let locReason = '';
 
         // 1) İlçe (c.district) veya İl (c.city)
-        if ((ndistComp && nqComp && ndistComp.includes(nqComp)) || (ncityComp && nqComp && ncityComp.includes(nqComp)) ||
-            (qCompTokens.length > 1 && qCompTokens.every(qt => (ndistComp + ncityComp).includes(qt)))) {
-            locScore = Math.max(locScore, (ndistComp === nqComp || ncityComp === nqComp) ? 100 : 99);
+        if (matchSub(ndistComp, nqComp) || matchSub(ncityComp, nqComp) ||
+            (qCompTokens.length > 1 && qCompTokens.every(qt => matchSub(ndistComp + ncityComp, qt)))) {
+            locScore = Math.max(locScore, (ndistComp === nqComp || ncityComp === nqComp || ndistComp === nqCompDedup || ncityComp === nqCompDedup) ? 100 : 99);
             locReason = `📍 İl / İlçe Kaydı Eşleşmesi (${cityRaw || '-'} / ${distRaw || '-'})`;
             matchedParts.push(`<span>İl / İlçe:</span> <strong>${highlightSearchText(`${cityRaw || '-'} / ${distRaw || '-'}`, rawQuery)}</strong>`);
         }
 
         // 2) Vergi Dairesi (c.taxOffice / c.vergiDairesi)
-        if (ntaxComp && ((nqComp && ntaxComp.includes(nqComp)) || (qCompTokens.length > 1 && qCompTokens.every(qt => ntaxComp.includes(qt))))) {
+        if (ntaxComp && (matchSub(ntaxComp, nqComp) || (qCompTokens.length > 1 && qCompTokens.every(qt => matchSub(ntaxComp, qt))))) {
             locScore = Math.max(locScore, 98);
             if (!locReason) locReason = `🏛️ Vergi Dairesi Eşleşmesi (${taxOfficeRaw})`;
             matchedParts.push(`<span>Vergi Dairesi:</span> <strong>${highlightSearchText(taxOfficeRaw, rawQuery)}</strong>`);
         }
 
         // 3) Açık Adres (c.address) - Vergi dairesi veya ili başka şehir olsa bile adres içinde geçiyorsa mutlaka gelir!
-        if (naddrComp && ((nqComp && naddrComp.includes(nqComp)) || (qCompTokens.length > 1 && qCompTokens.every(qt => naddrComp.includes(qt))))) {
+        if (naddrComp && (matchSub(naddrComp, nqComp) || (qCompTokens.length > 1 && qCompTokens.every(qt => matchSub(naddrComp, qt))))) {
             locScore = Math.max(locScore, 98);
             if (!locReason) locReason = `📍 Açık Adres İçinde Geçiyor`;
             matchedParts.push(`<span>Açık Adres:</span> <strong>${highlightSearchText(addrRaw, rawQuery)}</strong>`);
         }
 
         // 4) Rut / Bölge (c.rut)
-        if (nrutComp && nqComp && nrutComp.includes(nqComp)) {
+        if (nrutComp && matchSub(nrutComp, nqComp)) {
             locScore = Math.max(locScore, 97);
             if (!locReason) locReason = `🛣️ Rut / Bölge Eşleşmesi (${rutRaw})`;
             matchedParts.push(`<span>Rut:</span> <strong>${highlightSearchText(rutRaw, rawQuery)}</strong>`);
         }
 
         // 5) Cari Ünvan (c.title) içinde bölge/ilçe adı geçiyorsa (Örn: "MERZİFON GÜLBAHAR UN...")
-        if (ntComp && ((nqComp && ntComp.includes(nqComp)) || (qCompTokens.length > 1 && qCompTokens.every(qt => ntComp.includes(qt))))) {
+        if (ntComp && (matchSub(ntComp, nqComp) || (qCompTokens.length > 1 && qCompTokens.every(qt => matchSub(ntComp, qt))))) {
             locScore = Math.max(locScore, 97);
             if (!locReason) locReason = `🏢 Cari Ünvan İçinde Geçiyor`;
             matchedParts.push(`<span>Cari Ünvan:</span> <strong>${highlightSearchText(titleRaw, rawQuery)}</strong>`);
         }
 
         // 6) Cari içindeki diğer herhangi bir alan (Notlar, Yetkili, Fatura Açıklamaları vb.)
-        if (nnotesComp && nqComp && nnotesComp.includes(nqComp)) {
+        if (nnotesComp && matchSub(nnotesComp, nqComp)) {
             locScore = Math.max(locScore, 96);
             if (!locReason) locReason = `📝 Cari Not / Detay Alanında Geçiyor`;
             matchedParts.push(`<span>Not / Detay:</span> <strong>${highlightSearchText(notesRaw, rawQuery)}</strong>`);
@@ -13408,7 +13532,7 @@ function computeCustomerMatchByMode(c, rawQuery, mode = 'EXACT', scopeOverride =
                 const h = historyList[hIdx];
                 if (!h) continue;
                 const hCombined = `${h.islem || ''} ${h.sofor || ''} ${h.plaka || ''} ${h.fatura_no || ''}`.trim();
-                if (hCombined && normCompactTR(hCombined).includes(nqComp)) {
+                if (hCombined && matchSub(normCompactTR(hCombined), nqComp)) {
                     locScore = 95;
                     locReason = `🧾 Cari Alt Fatura Detayında Geçiyor (${h.fatura_no || '-'})`;
                     matchedParts.push(`<span>Fatura Detayı (${escapeHtml(h.fatura_no || '-')}):</span> <strong>${highlightSearchText(hCombined, rawQuery)}</strong>`);
