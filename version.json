@@ -1,7 +1,7 @@
 {
-  "version": "1.6.8",
-  "build": 168,
-  "releasedAt": "2026-10-24 22:59:39",
-  "releaseNotes": "Arama sonuc kayit sayisini sag ust koseye rozet olarak tasi",
+  "version": "1.6.9",
+  "build": 169,
+  "releasedAt": "2026-10-24 23:05:31",
+  "releaseNotes": "GitHub Tam Yedekleme ve Sadece Omer Eren Erisim Kalkani",
   "author": "Ömer Eren & DİZSAN"
 }
