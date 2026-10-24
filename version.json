@@ -1,7 +1,7 @@
 {
-  "version": "1.6.1",
-  "build": 161,
-  "releasedAt": "2026-10-24 21:57:02",
-  "releaseNotes": "Sol Barda Özel Müşteri & Detay Ara Sayfası + Önce Tam Eşleşme ve Detaylandır (Benzerlerini Ara) Modu",
+  "version": "1.6.2",
+  "build": 162,
+  "releasedAt": "2026-10-24 22:06:46",
+  "releaseNotes": "Müşteri Arama Motoru Sadece Cari Ünvan Üzerinde Tam Eşleşme ve Benzer Ünvan Arama (v1.6.2)",
   "author": "Ömer Eren & DİZSAN"
 }

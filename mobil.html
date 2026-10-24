@@ -2986,7 +2986,7 @@ body[data-theme="light"] .global-search-result-item:hover {
 
                 <div class="navbar-right" style="display:none !important;">
                     <button type="button" class="btn btn-secondary btn-sm app-version-chip" id="app-version-badge" onclick="openVersionModal()" title="Sürüm ve Cihaz Güncelleme Merkezi">
-                        <i class="fa-solid fa-code-branch" style="color:#38bdf8;"></i> <span id="app-current-version-text">v1.6.0</span>
+                        <i class="fa-solid fa-code-branch" style="color:#38bdf8;"></i> <span id="app-current-version-text">v1.6.1</span>
                     </button>
 
                     <button type="button" class="btn btn-secondary btn-sm" onclick="forceRefreshFromGitHub()" id="btn-navbar-refresh" title="Logo ERP Canlı Verilerini Yenile (Son Fatura: 20.08.2026)">
@@ -13107,146 +13107,76 @@ function levenshteinDist(a, b) {
 
 function computeCustomerMatchByMode(c, rawQuery, mode = 'EXACT') {
     const nq = normSearchTR(rawQuery);
-    if (!nq) return { score: 100, reason: 'Tüm Liste', matchedDetail: '' };
+    if (!nq) return { score: 100, reason: 'Tüm Liste', isExact: true };
     const qTokens = nq.split(' ').filter(Boolean);
 
-    // Müşterinin fatura geçmişindeki şoför, plaka ve fatura numaralarını da dahil et
-    const history = Array.isArray(c.serviceHistory) ? c.serviceHistory : [];
-    const drivers = [];
-    const hPlates = [];
-    const invNos = [];
-    for (let i = 0; i < history.length; i++) {
-        const h = history[i];
-        if (h.sofor) drivers.push({ text: h.sofor, plaka: h.plaka || '', fatura: h.fatura_no || '', tarih: h.tarih || '' });
-        if (h.plaka) hPlates.push(h.plaka);
-        if (h.fatura_no) invNos.push(h.fatura_no);
+    // SADECE Müşteri Cari Ünvanı (c.title) ve 120 Cari Kodu (c.code) üzerinde çalışır.
+    // Alakasız ilçe adlarını (Canik vb.) veya fatura altındaki şoför isimlerini (Meysaş vb.) ASLA karıştırmaz!
+    const titleRaw = String(c.title || '').trim();
+    const codeRaw = String(c.code || '').trim();
+    const nt = normSearchTR(titleRaw);
+    const nc = normSearchTR(codeRaw);
+    const titleWordsOrig = titleRaw.split(/\s+/).filter(Boolean);
+    const titleWordsNorm = nt.split(' ').filter(Boolean);
+
+    // 1. TAM EŞLEŞME TARAMASI (Büyük/Küçük Harf ve Türkçe Karakter Duyarsız Birebir Cari Ünvan / Kod)
+    if (nt === nq || nc === nq || codeRaw.toLowerCase() === String(rawQuery || '').trim().toLowerCase()) {
+        return { score: 100, reason: `🎯 Tam Eşleşme (Cari Ünvan: "${titleRaw}")`, isExact: true };
+    }
+    if (titleWordsNorm.includes(nq)) {
+        const matchedOrig = titleWordsOrig.find(w => normSearchTR(w) === nq) || rawQuery.toUpperCase();
+        return { score: 100, reason: `🎯 Tam Kelime Eşleşmesi (Ünvanda: "${matchedOrig}")`, isExact: true };
+    }
+    if (nt.includes(nq) || (codeRaw && codeRaw.includes(String(rawQuery || '').trim()))) {
+        return { score: 98, reason: `🎯 Tam Eşleşme (Ünvan İçinde Geçiyor)`, isExact: true };
+    }
+    if (qTokens.length > 1 && qTokens.every(qt => nt.includes(qt))) {
+        return { score: 97, reason: `🎯 Tam Çoklu Kelime Eşleşmesi (Cari Ünvan)`, isExact: true };
     }
 
-    const primaryFields = [
-        { label: 'Cari Ünvan', val: c.title || '' },
-        { label: 'Logo Kodu', val: c.code || '' },
-        { label: 'Yetkili', val: c.authorized || '' },
-        { label: 'Plaka', val: (c.plates || '') + ' ' + hPlates.join(' ') },
-        { label: 'Telefon', val: c.phone || '' },
-        { label: 'Fatura No', val: invNos.join(' ') }
-    ];
-
-    // 1. TAM EŞLEŞME TARAMASI (Büyük/Küçük Harf ve Türkçe Karakter Duyarsız Birebir Arama)
-    for (let fIdx = 0; fIdx < primaryFields.length; fIdx++) {
-        const f = primaryFields[fIdx];
-        const nf = normSearchTR(f.val);
-        if (!nf) continue;
-
-        if (nf === nq) {
-            return { score: 100, reason: `🎯 Tam Eşleşme (${f.label}: "${f.val}")`, isExact: true };
-        }
-        const words = nf.split(' ').filter(Boolean);
-        if (words.includes(nq)) {
-            return { score: 100, reason: `🎯 Tam Kelime Eşleşmesi (${f.label}: "${f.val}")`, isExact: true };
-        }
-        if (nf.includes(nq)) {
-            return { score: 98, reason: `🎯 Tam Eşleşme (${f.label} İçinde: "${f.val}")`, isExact: true };
-        }
-        if (qTokens.length > 1 && qTokens.every(qt => nf.includes(qt))) {
-            return { score: 97, reason: `🎯 Tam Çoklu Kelime Eşleşmesi (${f.label})`, isExact: true };
-        }
-    }
-
-    // Fatura geçmişindeki Şoför (sofor) alanında Tam Eşleşme kontrolü (Örn: "Ganik" -> "FURKAN GANİK")
-    for (let dIdx = 0; dIdx < drivers.length; dIdx++) {
-        const drv = drivers[dIdx];
-        const nd = normSearchTR(drv.text);
-        if (!nd) continue;
-        const dWords = nd.split(' ').filter(Boolean);
-        if (nd === nq || dWords.includes(nq) || nd.includes(nq) || (qTokens.length > 1 && qTokens.every(qt => nd.includes(qt)))) {
-            return {
-                score: 100,
-                reason: `🎯 Tam Eşleşme • Fatura Şoför/Yetkili: "${drv.text}" (Plaka: ${drv.plaka || '-'}, Fatura: ${drv.fatura || '-'})`,
-                isExact: true
-            };
-        }
-    }
-
-    // İl / İlçe / Adres alanında SADECE birebir tam kelime/alt-dizi eşleşmesi varsa
-    const locFields = [
-        { label: 'İl', val: c.city || '' },
-        { label: 'İlçe', val: c.district || '' },
-        { label: 'Adres', val: c.address || '' }
-    ];
-    for (let lIdx = 0; lIdx < locFields.length; lIdx++) {
-        const lf = locFields[lIdx];
-        const nlf = normSearchTR(lf.val);
-        if (!nlf) continue;
-        if (nlf === nq || nlf.split(' ').includes(nq) || (nq.length >= 4 && nlf.includes(nq))) {
-            return { score: 95, reason: `🎯 Tam Eşleşme (${lf.label}: "${lf.val}")`, isExact: true };
-        }
-    }
-
-    // Eğer mod SADECE 'EXACT' (Tam Eşleşme) ise burada dur, benzer/yakın kayıtları karıştırma!
+    // Eğer mod SADECE 'EXACT' (Tam Eşleşme) ise burada dur, benzer kayıtları getirme!
     if (mode === 'EXACT') {
         return { score: 0, reason: '', isExact: false };
     }
 
     // 2. DETAYLANDIR / BENZERLERİNİ ARA MODU (mode === 'SIMILAR')
-    // Sadece Cari Ünvan, Yetkili ve Fatura Şoförü üzerinde yapay zeka benzerlik taraması yapar (alakasız ilçeleri getirmez)
+    // Yalnızca Müşteri Cari Ünvanındaki (c.title) kelimeler üzerinde yakın/benzer kelime taraması yapar
     const pq = phoneticKeyTR(rawQuery);
-    const bq = getBigrams(nq);
-    const similarSearchTargets = [
-        { label: 'Cari Ünvan', val: c.title || '' },
-        { label: 'Yetkili', val: c.authorized || '' },
-        ...drivers.map(d => ({ label: `Şoför (${d.text})`, val: d.text }))
-    ];
-
     let bestScore = 0;
     let bestReason = '';
 
-    for (let tIdx = 0; tIdx < similarSearchTargets.length; tIdx++) {
-        const t = similarSearchTargets[tIdx];
-        const nt = normSearchTR(t.val);
-        if (!nt) continue;
+    for (let wIdx = 0; wIdx < titleWordsOrig.length; wIdx++) {
+        const origW = titleWordsOrig[wIdx];
+        const w = normSearchTR(origW);
+        if (w.length < 3) continue;
 
-        const words = nt.split(' ').filter(w => w.length >= 3);
-        for (let wIdx = 0; wIdx < words.length; wIdx++) {
-            const w = words[wIdx];
-
-            // 1 veya 2 harf farkı (Levenshtein - Örn: Ganik <-> Ginik, Yanık, Kınık)
-            if (nq.length >= 3 && Math.abs(w.length - nq.length) <= 2) {
-                const dist = levenshteinDist(nq, w);
-                if (dist === 1) {
-                    if (92 > bestScore) { bestScore = 92; bestReason = `🤖 AI 1 Harf Benzer (${t.label}: "${w.toUpperCase()}")`; }
-                } else if (dist === 2 && nq.length >= 4) {
-                    if (82 > bestScore) { bestScore = 82; bestReason = `🤖 AI 2 Harf Yakın (${t.label}: "${w.toUpperCase()}")`; }
-                }
+        // 1 Harf Farkı (Örn: "ganik" <-> "GINIK" -> ERHAN GINIK)
+        if (nq.length >= 3 && Math.abs(w.length - nq.length) <= 1) {
+            const dist = levenshteinDist(nq, w);
+            if (dist === 1 && 95 > bestScore) {
+                bestScore = 95;
+                bestReason = `🤖 1 Harf Benzer Ünvan Kelimesi: "${origW}"`;
             }
+        }
 
-            // Ortak Kök / Ek Benzerliği (Örn: "anik" -> Uyanık, Yanıkoğlu, Bağrıyanık)
-            if (nq.length >= 4 && w.length >= 4) {
-                const subRight = nq.slice(1);
-                const subLeft = nq.slice(0, -1);
-                if (w.includes(subRight) || w.includes(subLeft)) {
-                    if (88 > bestScore) { bestScore = 88; bestReason = `🤖 AI Kök Benzerliği (${t.label}: "${w.toUpperCase()}")`; }
-                }
+        if (nq.length >= 4 && w.length >= 4) {
+            // Aynı ilk 3 harfle başlayan benzer uzunlukta ünvan kelimesi
+            if (w.startsWith(nq.slice(0, 3)) && Math.abs(w.length - nq.length) <= 3 && 91 > bestScore) {
+                bestScore = 91;
+                bestReason = `🤖 Başlangıç Benzeri Ünvan Kelimesi: "${origW}"`;
             }
-
-            // Fonetik Eşleşme (Sadece Ünvan / Yetkili / Şoför kelimesiyle tam fonetik boyutta eşleşirse)
-            const pw = phoneticKeyTR(w);
-            if (pq && pw && pq.length >= 4 && pw === pq) {
-                if (86 > bestScore) { bestScore = 86; bestReason = `🤖 AI Ses/Harf Benzeri (${t.label}: "${w.toUpperCase()}")`; }
+            // Ortak 4+ harfli kök (Örn: "anik" -> UYANIK, YANIKOĞLU, BAĞRIYANIK)
+            else if ((w.includes(nq.slice(1)) || w.includes(nq.slice(0, -1))) && 89 > bestScore) {
+                bestScore = 89;
+                bestReason = `🤖 Benzer Kök Ünvan Kelimesi: "${origW}"`;
             }
-
-            // Bigram Benzerliği (En az %72 örtüşme)
-            if (nq.length >= 4 && w.length >= 4) {
-                const bw = getBigrams(w);
-                let inter = 0;
-                bq.forEach(bg => { if (bw.has(bg)) inter++; });
-                if (inter >= 3) {
-                    const dice = (2 * inter) / (bq.size + bw.size);
-                    const sc = Math.round(dice * 85);
-                    if (sc >= 68 && sc > bestScore) {
-                        bestScore = sc;
-                        bestReason = `🤖 AI Yakın Benzerlik %${sc} (${t.label}: "${w.toUpperCase()}")`;
-                    }
-                }
+            // Fonetik / Harf Grubu Benzeri (Örn: "ganik" <-> "KINIK", "KINIKLAR")
+            else if (pq && phoneticKeyTR(w) === pq && 87 > bestScore) {
+                bestScore = 87;
+                bestReason = `🤖 Ses/Harf Benzeri Ünvan Kelimesi: "${origW}"`;
+            } else if (pq && phoneticKeyTR(w).startsWith(pq.slice(0, 3)) && Math.abs(w.length - nq.length) <= 2 && levenshteinDist(nq, w) <= 2 && 85 > bestScore) {
+                bestScore = 85;
+                bestReason = `🤖 Yakın Ünvan Kelimesi: "${origW}"`;
             }
         }
     }
