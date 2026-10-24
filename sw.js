@@ -1,5 +1,5 @@
 // DİZSAN Müşteri Ziyaret & Saha Takip Service Worker (v1.4.1)
-const CACHE_NAME = "dizsan-ziyaret-v1.6.2";
+const CACHE_NAME = "dizsan-ziyaret-vAranan kelimenin gectigi alani ve kelimeyi sari isaretleme (highlight) sistemi eklendi";
 const ASSETS = [
   './',
   './index.html',
