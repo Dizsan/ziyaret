@@ -1,7 +1,7 @@
 {
-  "version": "1.6.3",
-  "build": 163,
-  "releasedAt": "2026-10-24 22:19:02",
-  "releaseNotes": "Aranan kelimenin gectigi alani ve kelimeyi sari isaretleme (highlight) sistemi eklendi",
+  "version": "1.6.4",
+  "build": 164,
+  "releasedAt": "2026-10-24 22:26:50",
+  "releaseNotes": "Buyuk kucuk harf ve noktalama isaretleri duyarsiz anlik liste ve sari isaretleme (highlight)",
   "author": "Ömer Eren & DİZSAN"
 }
