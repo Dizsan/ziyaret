@@ -2847,6 +2847,14 @@ body[data-theme="light"] .global-search-result-item:hover {
                     </div>
                 </div>
 
+                <div class="nav-item" data-tab="customer-search-tab" onclick="switchTab('customer-search-tab')" style="border:1px solid rgba(16,185,129,0.4); background:rgba(16,185,129,0.12);">
+                    <div class="nav-item-left">
+                        <i class="fa-solid fa-magnifying-glass" style="color:#34d399;"></i>
+                        <span style="font-weight:800; color:#d1fae5;">Müşteri &amp; Detay Ara</span>
+                    </div>
+                    <span class="nav-badge" style="background:#10b981; color:#fff; font-weight:800;">ARA</span>
+                </div>
+
                 <div class="nav-item" data-tab="cari-ekstre-tab" onclick="switchTab('cari-ekstre-tab')" style="border:1px solid rgba(56,189,248,0.28); background:rgba(2,132,199,0.08);">
                     <div class="nav-item-left">
                         <i class="fa-solid fa-file-invoice-dollar" style="color:#38bdf8;"></i>
@@ -2978,7 +2986,7 @@ body[data-theme="light"] .global-search-result-item:hover {
 
                 <div class="navbar-right" style="display:none !important;">
                     <button type="button" class="btn btn-secondary btn-sm app-version-chip" id="app-version-badge" onclick="openVersionModal()" title="Sürüm ve Cihaz Güncelleme Merkezi">
-                        <i class="fa-solid fa-code-branch" style="color:#38bdf8;"></i> <span id="app-current-version-text">v1.6.0</span>
+                        <i class="fa-solid fa-code-branch" style="color:#38bdf8;"></i> <span id="app-current-version-text">v1.6.1</span>
                     </button>
 
                     <button type="button" class="btn btn-secondary btn-sm" onclick="forceRefreshFromGitHub()" id="btn-navbar-refresh" title="Logo ERP Canlı Verilerini Yenile (Son Fatura: 20.08.2026)">
@@ -3017,23 +3025,44 @@ body[data-theme="light"] .global-search-result-item:hover {
                 <div id="omer-approval-center-container"></div>
 
                 <!-- ==============================================================
-                     HER SEKMEDE GÖRÜNÜR GLOBAL MÜŞTERİ ARAMA & TEMA ÇUBUĞU
+                     SEKME 0: MÜŞTERİ & DETAY ARA SAYFASI (CUSTOMER-SEARCH-TAB)
                      ============================================================== -->
-                <div id="global-customer-search-bar" class="global-customer-search-bar">
-                    <div class="global-search-top-row">
-                        <div class="global-search-input-wrap">
-                            <i class="fa-solid fa-magnifying-glass search-lead-icon"></i>
-                            <input type="text" id="global-customer-search-input" class="global-search-input" placeholder="Müşteri adı, ünvan, 120 kod, plaka, il/ilçe veya telefon yazıp ARA'ya basın... (Örn: Ganik, Canik, Yıldırım)" oninput="handleGlobalCustomerSearchInput(this.value, false)" onkeydown="if(event.key==='Enter'){event.preventDefault(); triggerGlobalAiCustomerSearch();}" autocomplete="off">
-                            <button type="button" id="global-customer-search-clear" class="global-search-clear-btn" onclick="clearGlobalCustomerSearch()" title="Aramayı Temizle">
-                                <i class="fa-solid fa-xmark"></i>
+                <section id="customer-search-tab" class="tab-section">
+                    <div id="global-customer-search-bar" class="global-customer-search-bar" style="position:relative; margin-bottom:1.2rem;">
+                        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.75rem; flex-wrap:wrap; gap:0.5rem;">
+                            <div>
+                                <h2 style="font-size:1.12rem; font-weight:800; color:#38bdf8; margin:0; display:flex; align-items:center; gap:0.5rem;">
+                                    <i class="fa-solid fa-magnifying-glass"></i> Müşteri, Şoför, Plaka &amp; Fatura Detay Arama Merkezi
+                                </h2>
+                                <p style="font-size:0.78rem; color:#94a3b8; margin:0.2rem 0 0 0;">
+                                    Önce <strong>"Ara (Tam Eşleşme)"</strong> ile birebir eşleşen kayıtları bulun. Benzer veya yakın isimleri de görmek isterseniz <strong>"Detaylandır (Benzerlerini Ara)"</strong> tuşuna basın.
+                                </p>
+                            </div>
+                            <button type="button" id="global-theme-toggle-btn" class="theme-toggle-pill" onclick="toggleZiyaretTheme()" title="Sol Bar Dahil Komple Koyu / Açık Tema Değiştir">
+                                <i class="fa-solid fa-sun" id="global-theme-icon"></i>
+                                <span id="global-theme-text">Açık Tema</span>
                             </button>
                         </div>
 
-                        <button type="button" id="global-customer-search-submit-btn" class="btn btn-primary" style="padding:0.6rem 1.15rem; border-radius:10px; font-size:0.85rem; font-weight:800; display:inline-flex; align-items:center; gap:0.45rem; background:linear-gradient(135deg, #0284c7, #2563eb); border:1px solid #38bdf8; box-shadow:0 4px 14px rgba(2,132,199,0.35); white-space:nowrap; cursor:pointer;" onclick="triggerGlobalAiCustomerSearch()">
-                            <i class="fa-solid fa-wand-magic-sparkles"></i> <span>Ara (AI Eşleştir)</span>
-                        </button>
+                        <div class="global-search-top-row">
+                            <div class="global-search-input-wrap">
+                                <i class="fa-solid fa-magnifying-glass search-lead-icon"></i>
+                                <input type="text" id="global-customer-search-input" class="global-search-input" placeholder="Müşteri ünvanı, şoför/yetkili adı (Örn: Ganik), 120 kod, plaka veya telefon yazın..." onkeydown="if(event.key==='Enter'){event.preventDefault(); executeCustomerSearch('EXACT');}" oninput="onCustomerSearchInputChange(this.value)" autocomplete="off">
+                                <button type="button" id="global-customer-search-clear" class="global-search-clear-btn" onclick="clearGlobalCustomerSearch()" title="Aramayı Temizle">
+                                    <i class="fa-solid fa-xmark"></i>
+                                </button>
+                            </div>
 
-                        <div class="global-search-chips">
+                            <button type="button" id="global-customer-search-submit-btn" class="btn btn-primary" style="padding:0.62rem 1.15rem; border-radius:10px; font-size:0.85rem; font-weight:800; display:inline-flex; align-items:center; gap:0.45rem; background:linear-gradient(135deg, #10b981, #059669); border:1px solid #34d399; box-shadow:0 4px 14px rgba(16,185,129,0.35); white-space:nowrap; cursor:pointer;" onclick="executeCustomerSearch('EXACT')" title="Büyük/küçük harf duyarsız birebir Tam Eşleşme araması yapar">
+                                <i class="fa-solid fa-magnifying-glass"></i> <span>Ara (Tam Eşleşme)</span>
+                            </button>
+
+                            <button type="button" id="global-customer-search-detailed-btn" class="btn btn-primary" style="padding:0.62rem 1.15rem; border-radius:10px; font-size:0.85rem; font-weight:800; display:inline-flex; align-items:center; gap:0.45rem; background:linear-gradient(135deg, #0284c7, #6366f1); border:1px solid #38bdf8; box-shadow:0 4px 14px rgba(2,132,199,0.35); white-space:nowrap; cursor:pointer;" onclick="executeCustomerSearch('SIMILAR')" title="Yapay zeka desteği ile benzeyen, yakın harfli ve fonetik eşleşen tüm kayıtları listeler">
+                                <i class="fa-solid fa-wand-magic-sparkles"></i> <span>Detaylandır (Benzerlerini Ara)</span>
+                            </button>
+                        </div>
+
+                        <div class="global-search-chips" style="margin-top:0.65rem;">
                             <button type="button" class="global-chip active" data-qfilter="ALL" onclick="setGlobalCustomerQuickFilter('ALL')">
                                 <i class="fa-solid fa-users"></i> Tümü (<span id="global-search-total-count">1.990</span>)
                             </button>
@@ -3041,7 +3070,7 @@ body[data-theme="light"] .global-search-result-item:hover {
                                 <i class="fa-solid fa-crown" style="color:#fbbf24;"></i> VIP / Yüksek Ciro
                             </button>
                             <button type="button" class="global-chip" data-qfilter="BORCLU" onclick="setGlobalCustomerQuickFilter('BORCLU')">
-                                <i class="fa-solid fa-Scale-unbalanced" style="color:#f87171;"></i> Borçlu (B)
+                                <i class="fa-solid fa-scale-unbalanced" style="color:#f87171;"></i> Borçlu (B)
                             </button>
                             <button type="button" class="global-chip" data-qfilter="ALACAKLI" onclick="setGlobalCustomerQuickFilter('ALACAKLI')">
                                 <i class="fa-solid fa-circle-check" style="color:#34d399;"></i> Alacaklı (A)
@@ -3051,15 +3080,16 @@ body[data-theme="light"] .global-search-result-item:hover {
                             </button>
                         </div>
 
-                        <button type="button" id="global-theme-toggle-btn" class="theme-toggle-pill" onclick="toggleZiyaretTheme()" title="Sol Bar Dahil Komple Koyu / Açık Tema Değiştir">
-                            <i class="fa-solid fa-sun" id="global-theme-icon"></i>
-                            <span id="global-theme-text">Açık Tema</span>
-                        </button>
+                        <!-- Müşteri Arama Sonuçları Listesi -->
+                        <div id="global-customer-search-results" class="global-search-results-panel" style="display:block; max-height:68vh;">
+                            <div style="padding:1.4rem; text-align:center; color:#94a3b8; font-size:0.86rem;">
+                                <i class="fa-solid fa-magnifying-glass" style="font-size:1.5rem; color:#38bdf8; margin-bottom:0.5rem; display:block;"></i>
+                                Yukarıdaki kutuya aramak istediğiniz <strong>Müşteri Ünvanı, Yetkili/Şoför Adı (Örn: Ganik), 120 Cari Kodu, Araç Plakası veya Telefonu</strong> yazıp <strong>"Ara (Tam Eşleşme)"</strong> butonuna basın.<br>
+                                <span style="font-size:0.78rem; color:#64748b;">Yazım farkı olan benzer isimleri de görmek için <strong>"Detaylandır (Benzerlerini Ara)"</strong> tuşunu kullanabilirsiniz.</span>
+                            </div>
+                        </div>
                     </div>
-
-                    <!-- Anlık Canlı Müşteri Arama Sonuçları (Her Sekmede Açılır) -->
-                    <div id="global-customer-search-results" class="global-search-results-panel"></div>
-                </div>
+                </section>
 
                 <!-- ==============================================================
                      SEKME 1: GENEL BAKIŞ & KOKPİT (DASHBOARD-TAB)
@@ -8836,6 +8866,10 @@ function openCustomerDetailModal(code) {
 
     const customerVisits = (appState.visits || []).filter(v => v.customerCode === customer.code || normalizeTR(v.customerTitle || '') === normalizeTR(customer.title || ''));
     const customerTasks = (appState.tasks || []).filter(t => t.customerCode === customer.code || normalizeTR(t.customerTitle || '') === normalizeTR(customer.title || ''));
+    const uniqueDrivers = Array.from(new Set((customer.serviceHistory || []).map(h => (h.sofor || '').trim()).filter(Boolean)));
+    const uniqueHistoryPlates = Array.from(new Set((customer.serviceHistory || []).map(h => (h.plaka || '').trim()).filter(Boolean)));
+    const allPlatesText = customer.plates || (uniqueHistoryPlates.length > 0 ? uniqueHistoryPlates.join(', ') : 'Plaka Kaydı Yok');
+    const allDriversText = uniqueDrivers.length > 0 ? uniqueDrivers.join(', ') : (customer.authorized || 'Belirtilmedi');
 
     cdBody.innerHTML = `
         <div style="background:linear-gradient(135deg, rgba(2,132,199,0.14), rgba(15,23,42,0.85)); border:1px solid rgba(56,189,248,0.35); border-radius:12px; padding:0.9rem 1rem; margin-bottom:1rem;">
@@ -8894,12 +8928,13 @@ function openCustomerDetailModal(code) {
 
         <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(280px, 1fr)); gap:1rem; margin-bottom:1.15rem;">
             <div style="background:rgba(255,255,255,0.02); border:1px solid var(--border-color); border-radius:var(--radius-md); padding:0.85rem;">
-                <div class="detail-section-title"><i class="fa-solid fa-address-book"></i> Yetkili, Araç ve İletişim Detayları</div>
+                <div class="detail-section-title"><i class="fa-solid fa-address-book"></i> Yetkili, Şoför, Araç ve İletişim Detayları</div>
                 <div style="display:flex; flex-direction:column; gap:0.42rem; font-size:0.81rem;">
                     <div><span style="color:var(--text-muted);">Cari Kodu:</span> <strong style="color:#38bdf8; font-family:monospace;">${customer.code}</strong></div>
-                    <div><span style="color:var(--text-muted);">Yetkili / Şoför:</span> <strong style="color:#fff;">${customer.authorized || 'Bilinmiyor'}</strong></div>
+                    <div><span style="color:var(--text-muted);">Yetkili Kişi:</span> <strong style="color:#fff;">${customer.authorized || 'Bilinmiyor'}</strong></div>
+                    <div><span style="color:var(--text-muted);">Kayıtlı Şoförler (Faturalardan):</span> <strong style="color:#34d399;">${allDriversText}</strong></div>
                     <div><span style="color:var(--text-muted);">Telefon:</span> <strong style="color:#38bdf8;">${customer.phone || 'YOK'}</strong></div>
-                    <div><span style="color:var(--text-muted);">Kayıtlı Araç Plakaları:</span> <strong style="color:#fde68a; font-family:monospace;">${customer.plates || 'Plaka Kaydı Yok'}</strong></div>
+                    <div><span style="color:var(--text-muted);">Kayıtlı Araç Plakaları:</span> <strong style="color:#fde68a; font-family:monospace;">${allPlatesText}</strong></div>
                     <div><span style="color:var(--text-muted);">Kayıp / Churn Süresi:</span> <strong style="color:#cbd5e1;">${customer.churnDuration || '-'}</strong></div>
                     ${customer.loyaltyLevel ? `<div><span style="color:var(--text-muted);">Sadakat Seviyesi:</span> <span class="badge badge-success">${customer.loyaltyLevel}</span></div>` : ''}
                 </div>
@@ -13070,120 +13105,185 @@ function levenshteinDist(a, b) {
     return prev[b.length];
 }
 
-function computeAiCustomerMatch(c, rawQuery) {
+function computeCustomerMatchByMode(c, rawQuery, mode = 'EXACT') {
     const nq = normSearchTR(rawQuery);
-    if (!nq) return { score: 100, reason: 'Tüm Liste' };
-    const pq = phoneticKeyTR(rawQuery);
-    const bq = getBigrams(nq);
+    if (!nq) return { score: 100, reason: 'Tüm Liste', matchedDetail: '' };
     const qTokens = nq.split(' ').filter(Boolean);
 
-    const fields = [
+    // Müşterinin fatura geçmişindeki şoför, plaka ve fatura numaralarını da dahil et
+    const history = Array.isArray(c.serviceHistory) ? c.serviceHistory : [];
+    const drivers = [];
+    const hPlates = [];
+    const invNos = [];
+    for (let i = 0; i < history.length; i++) {
+        const h = history[i];
+        if (h.sofor) drivers.push({ text: h.sofor, plaka: h.plaka || '', fatura: h.fatura_no || '', tarih: h.tarih || '' });
+        if (h.plaka) hPlates.push(h.plaka);
+        if (h.fatura_no) invNos.push(h.fatura_no);
+    }
+
+    const primaryFields = [
         { label: 'Cari Ünvan', val: c.title || '' },
         { label: 'Logo Kodu', val: c.code || '' },
-        { label: 'İlçe', val: c.district || '' },
-        { label: 'İl', val: c.city || '' },
         { label: 'Yetkili', val: c.authorized || '' },
-        { label: 'Plaka', val: c.plates || '' },
+        { label: 'Plaka', val: (c.plates || '') + ' ' + hPlates.join(' ') },
         { label: 'Telefon', val: c.phone || '' },
+        { label: 'Fatura No', val: invNos.join(' ') }
+    ];
+
+    // 1. TAM EŞLEŞME TARAMASI (Büyük/Küçük Harf ve Türkçe Karakter Duyarsız Birebir Arama)
+    for (let fIdx = 0; fIdx < primaryFields.length; fIdx++) {
+        const f = primaryFields[fIdx];
+        const nf = normSearchTR(f.val);
+        if (!nf) continue;
+
+        if (nf === nq) {
+            return { score: 100, reason: `🎯 Tam Eşleşme (${f.label}: "${f.val}")`, isExact: true };
+        }
+        const words = nf.split(' ').filter(Boolean);
+        if (words.includes(nq)) {
+            return { score: 100, reason: `🎯 Tam Kelime Eşleşmesi (${f.label}: "${f.val}")`, isExact: true };
+        }
+        if (nf.includes(nq)) {
+            return { score: 98, reason: `🎯 Tam Eşleşme (${f.label} İçinde: "${f.val}")`, isExact: true };
+        }
+        if (qTokens.length > 1 && qTokens.every(qt => nf.includes(qt))) {
+            return { score: 97, reason: `🎯 Tam Çoklu Kelime Eşleşmesi (${f.label})`, isExact: true };
+        }
+    }
+
+    // Fatura geçmişindeki Şoför (sofor) alanında Tam Eşleşme kontrolü (Örn: "Ganik" -> "FURKAN GANİK")
+    for (let dIdx = 0; dIdx < drivers.length; dIdx++) {
+        const drv = drivers[dIdx];
+        const nd = normSearchTR(drv.text);
+        if (!nd) continue;
+        const dWords = nd.split(' ').filter(Boolean);
+        if (nd === nq || dWords.includes(nq) || nd.includes(nq) || (qTokens.length > 1 && qTokens.every(qt => nd.includes(qt)))) {
+            return {
+                score: 100,
+                reason: `🎯 Tam Eşleşme • Fatura Şoför/Yetkili: "${drv.text}" (Plaka: ${drv.plaka || '-'}, Fatura: ${drv.fatura || '-'})`,
+                isExact: true
+            };
+        }
+    }
+
+    // İl / İlçe / Adres alanında SADECE birebir tam kelime/alt-dizi eşleşmesi varsa
+    const locFields = [
+        { label: 'İl', val: c.city || '' },
+        { label: 'İlçe', val: c.district || '' },
         { label: 'Adres', val: c.address || '' }
+    ];
+    for (let lIdx = 0; lIdx < locFields.length; lIdx++) {
+        const lf = locFields[lIdx];
+        const nlf = normSearchTR(lf.val);
+        if (!nlf) continue;
+        if (nlf === nq || nlf.split(' ').includes(nq) || (nq.length >= 4 && nlf.includes(nq))) {
+            return { score: 95, reason: `🎯 Tam Eşleşme (${lf.label}: "${lf.val}")`, isExact: true };
+        }
+    }
+
+    // Eğer mod SADECE 'EXACT' (Tam Eşleşme) ise burada dur, benzer/yakın kayıtları karıştırma!
+    if (mode === 'EXACT') {
+        return { score: 0, reason: '', isExact: false };
+    }
+
+    // 2. DETAYLANDIR / BENZERLERİNİ ARA MODU (mode === 'SIMILAR')
+    // Sadece Cari Ünvan, Yetkili ve Fatura Şoförü üzerinde yapay zeka benzerlik taraması yapar (alakasız ilçeleri getirmez)
+    const pq = phoneticKeyTR(rawQuery);
+    const bq = getBigrams(nq);
+    const similarSearchTargets = [
+        { label: 'Cari Ünvan', val: c.title || '' },
+        { label: 'Yetkili', val: c.authorized || '' },
+        ...drivers.map(d => ({ label: `Şoför (${d.text})`, val: d.text }))
     ];
 
     let bestScore = 0;
     let bestReason = '';
 
-    for (let fIdx = 0; fIdx < fields.length; fIdx++) {
-        const f = fields[fIdx];
-        const nf = normSearchTR(f.val);
-        if (!nf) continue;
+    for (let tIdx = 0; tIdx < similarSearchTargets.length; tIdx++) {
+        const t = similarSearchTargets[tIdx];
+        const nt = normSearchTR(t.val);
+        if (!nt) continue;
 
-        // 1. Tam veya Alt Dizi Eşleşmesi (Büyük/Küçük Harf ve Türkçe Karakter Duyarsız)
-        if (nf === nq) {
-            return { score: 100, reason: `${f.label} Tam Eşleşme: "${f.val}"` };
-        }
-        if (nf.startsWith(nq)) {
-            if (99 > bestScore) { bestScore = 99; bestReason = `${f.label} Başlangıç Eşleşmesi: "${f.val}"`; }
-        } else if (nf.includes(nq)) {
-            if (96 > bestScore) { bestScore = 96; bestReason = `${f.label} İçinde Geçiyor: "${f.val}"`; }
-        }
-
-        // Çok kelimeli sorguda tüm kelimeler geçiyor mu?
-        if (qTokens.length > 1 && qTokens.every(qt => nf.includes(qt))) {
-            if (95 > bestScore) { bestScore = 95; bestReason = `${f.label} Çoklu Kelime Eşleşmesi`; }
-        }
-
-        // 2. Kelime Bazlı AI Fonetik, Harf Yakınlığı (Levenshtein) ve Kök Benzerliği
-        const words = nf.split(' ').filter(w => w.length >= 2);
+        const words = nt.split(' ').filter(w => w.length >= 3);
         for (let wIdx = 0; wIdx < words.length; wIdx++) {
             const w = words[wIdx];
-            if (w === nq) {
-                if (98 > bestScore) { bestScore = 98; bestReason = `${f.label} Tam Kelime: "${w.toUpperCase()}"`; }
-                continue;
-            }
-            if (w.startsWith(nq) || (nq.length >= 4 && nq.startsWith(w) && w.length >= 4)) {
-                if (94 > bestScore) { bestScore = 94; bestReason = `${f.label} Kelime Kökü: "${w.toUpperCase()}"`; }
-            }
 
-            const pw = phoneticKeyTR(w);
-            if (pq && pw && pq.length >= 3) {
-                if (pw === pq) {
-                    if (93 > bestScore) { bestScore = 93; bestReason = `🤖 AI Fonetik Eşleşme (${f.label}: "${w.toUpperCase()}")`; }
-                } else if (pw.includes(pq) || (pq.includes(pw) && pw.length >= Math.max(4, pq.length - 1))) {
-                    if (87 > bestScore) { bestScore = 87; bestReason = `🤖 AI Fonetik Benzer (${f.label}: "${w.toUpperCase()}")`; }
-                }
-            }
-
-            // Levenshtein Harf Mesafesi (Örn: Ganik <-> Ginik, Canik, Yanık, Kınık)
+            // 1 veya 2 harf farkı (Levenshtein - Örn: Ganik <-> Ginik, Yanık, Kınık)
             if (nq.length >= 3 && Math.abs(w.length - nq.length) <= 2) {
                 const dist = levenshteinDist(nq, w);
                 if (dist === 1) {
-                    if (92 > bestScore) { bestScore = 92; bestReason = `🤖 AI 1 Harf Yakın (${f.label}: "${w.toUpperCase()}")`; }
+                    if (92 > bestScore) { bestScore = 92; bestReason = `🤖 AI 1 Harf Benzer (${t.label}: "${w.toUpperCase()}")`; }
                 } else if (dist === 2 && nq.length >= 4) {
-                    if (82 > bestScore) { bestScore = 82; bestReason = `🤖 AI Yakın Kelime (${f.label}: "${w.toUpperCase()}")`; }
+                    if (82 > bestScore) { bestScore = 82; bestReason = `🤖 AI 2 Harf Yakın (${t.label}: "${w.toUpperCase()}")`; }
                 }
             }
 
-            // Ortak Kök / Ek Benzerliği (Örn: "anik" -> Uyanık, Yanıkoğlu, Ergani, Ganik)
+            // Ortak Kök / Ek Benzerliği (Örn: "anik" -> Uyanık, Yanıkoğlu, Bağrıyanık)
             if (nq.length >= 4 && w.length >= 4) {
                 const subRight = nq.slice(1);
                 const subLeft = nq.slice(0, -1);
                 if (w.includes(subRight) || w.includes(subLeft)) {
-                    if (89 > bestScore) { bestScore = 89; bestReason = `🤖 AI Kök Benzerliği (${f.label}: "${w.toUpperCase()}")`; }
+                    if (88 > bestScore) { bestScore = 88; bestReason = `🤖 AI Kök Benzerliği (${t.label}: "${w.toUpperCase()}")`; }
                 }
             }
 
-            // Bigram Dice Benzerliği
-            if (nq.length >= 3 && w.length >= 3) {
+            // Fonetik Eşleşme (Sadece Ünvan / Yetkili / Şoför kelimesiyle tam fonetik boyutta eşleşirse)
+            const pw = phoneticKeyTR(w);
+            if (pq && pw && pq.length >= 4 && pw === pq) {
+                if (86 > bestScore) { bestScore = 86; bestReason = `🤖 AI Ses/Harf Benzeri (${t.label}: "${w.toUpperCase()}")`; }
+            }
+
+            // Bigram Benzerliği (En az %72 örtüşme)
+            if (nq.length >= 4 && w.length >= 4) {
                 const bw = getBigrams(w);
                 let inter = 0;
                 bq.forEach(bg => { if (bw.has(bg)) inter++; });
-                if (inter >= 2) {
+                if (inter >= 3) {
                     const dice = (2 * inter) / (bq.size + bw.size);
-                    const sc = Math.round(dice * 86);
-                    if (sc >= 56 && sc > bestScore) {
+                    const sc = Math.round(dice * 85);
+                    if (sc >= 68 && sc > bestScore) {
                         bestScore = sc;
-                        bestReason = `🤖 AI Benzerlik %${sc} (${f.label}: "${w.toUpperCase()}")`;
+                        bestReason = `🤖 AI Yakın Benzerlik %${sc} (${t.label}: "${w.toUpperCase()}")`;
                     }
                 }
             }
         }
     }
 
-    return { score: bestScore, reason: bestReason };
+    return { score: bestScore, reason: bestReason, isExact: false };
 }
 
+let currentSearchPageMode = 'EXACT';
+
 function focusGlobalCustomerSearch() {
-    const inp = document.getElementById('global-customer-search-input');
-    if (inp) {
-        inp.focus();
-        inp.select();
-        handleGlobalCustomerSearchInput(inp.value, true);
+    switchTab('customer-search-tab');
+    setTimeout(() => {
+        const inp = document.getElementById('global-customer-search-input');
+        if (inp) {
+            inp.focus();
+            inp.select();
+        }
+    }, 60);
+}
+
+function onCustomerSearchInputChange(val) {
+    const q = String(val || '').trim();
+    const clearBtn = document.getElementById('global-customer-search-clear');
+    if (clearBtn) {
+        clearBtn.style.display = q.length > 0 ? 'inline-flex' : 'none';
     }
 }
 
-function triggerGlobalAiCustomerSearch() {
+function executeCustomerSearch(mode = 'EXACT') {
+    currentSearchPageMode = mode === 'SIMILAR' ? 'SIMILAR' : 'EXACT';
     const inp = document.getElementById('global-customer-search-input');
     const q = inp ? inp.value : '';
-    handleGlobalCustomerSearchInput(q, true);
+    handleGlobalCustomerSearchInput(q, true, currentSearchPageMode);
+}
+
+function triggerGlobalAiCustomerSearch() {
+    executeCustomerSearch('EXACT');
 }
 
 function setGlobalCustomerQuickFilter(filterKey) {
@@ -13193,13 +13293,14 @@ function setGlobalCustomerQuickFilter(filterKey) {
     });
     const inp = document.getElementById('global-customer-search-input');
     const q = inp ? inp.value : '';
-    handleGlobalCustomerSearchInput(q, true);
+    handleGlobalCustomerSearchInput(q, true, currentSearchPageMode);
 }
 
 function clearGlobalCustomerSearch() {
     const inp = document.getElementById('global-customer-search-input');
     if (inp) inp.value = '';
     selectedAiCustomerCode = '';
+    currentSearchPageMode = 'EXACT';
     globalCustomerQuickFilter = 'ALL';
     document.querySelectorAll('#global-customer-search-bar .global-chip').forEach(btn => {
         btn.classList.toggle('active', btn.getAttribute('data-qfilter') === 'ALL');
@@ -13208,10 +13309,15 @@ function clearGlobalCustomerSearch() {
     if (clearBtn) clearBtn.style.display = 'none';
     const panel = document.getElementById('global-customer-search-results');
     if (panel) {
-        panel.style.display = 'none';
-        panel.innerHTML = '';
+        panel.style.display = 'block';
+        panel.innerHTML = `
+            <div style="padding:1.4rem; text-align:center; color:#94a3b8; font-size:0.86rem;">
+                <i class="fa-solid fa-magnifying-glass" style="font-size:1.5rem; color:#38bdf8; margin-bottom:0.5rem; display:block;"></i>
+                Yukarıdaki kutuya aramak istediğiniz <strong>Müşteri Ünvanı, Yetkili/Şoför Adı (Örn: Ganik), 120 Cari Kodu, Araç Plakası veya Telefonu</strong> yazıp <strong>"Ara (Tam Eşleşme)"</strong> butonuna basın.<br>
+                <span style="font-size:0.78rem; color:#64748b;">Yazım farkı olan benzer isimleri de görmek için <strong>"Detaylandır (Benzerlerini Ara)"</strong> tuşunu kullanabilirsiniz.</span>
+            </div>
+        `;
     }
-    syncGlobalSearchToActiveTab('');
 }
 
 function selectAiCustomerFromList(code, eventObj) {
@@ -13230,31 +13336,14 @@ function selectAiCustomerFromList(code, eventObj) {
 }
 
 function syncGlobalSearchToActiveTab(queryText) {
-    const q = String(queryText || '');
-    const legInp = document.getElementById('legacy-search');
-    if (legInp && legInp.value !== q) {
-        legInp.value = q;
-        if (typeof renderLegacyCustomers === 'function') renderLegacyCustomers(false);
-    }
-    const eksInp = document.getElementById('ekstre-search');
-    if (eksInp && eksInp.value !== q) {
-        eksInp.value = q;
-        if (typeof renderCariEkstreTable === 'function') renderCariEkstreTable(false);
-    }
-    const actInp = document.getElementById('active-search');
-    if (actInp && actInp.value !== q) {
-        actInp.value = q;
-        if (typeof renderActiveVisits === 'function') renderActiveVisits();
-    }
-    const strInp = document.getElementById('strategy-search');
-    if (strInp && strInp.value !== q) {
-        strInp.value = q;
-        if (typeof renderDistrictStrategies === 'function') renderDistrictStrategies();
-    }
+    // Artık arama kendi özel sayfasında (customer-search-tab) çalışır
 }
 
-function handleGlobalCustomerSearchInput(rawVal, forceShowByChip = false) {
+function handleGlobalCustomerSearchInput(rawVal, forceShowByChip = false, searchMode = 'EXACT') {
     const q = String(rawVal || '').trim();
+    const mode = searchMode === 'SIMILAR' ? 'SIMILAR' : 'EXACT';
+    currentSearchPageMode = mode;
+
     const clearBtn = document.getElementById('global-customer-search-clear');
     if (clearBtn) {
         clearBtn.style.display = (q.length > 0 || globalCustomerQuickFilter !== 'ALL') ? 'inline-flex' : 'none';
@@ -13265,14 +13354,11 @@ function handleGlobalCustomerSearchInput(rawVal, forceShowByChip = false) {
         totalEl.textContent = appState.customers.length.toLocaleString('tr-TR');
     }
 
-    syncGlobalSearchToActiveTab(q);
-
     const panel = document.getElementById('global-customer-search-results');
     if (!panel) return;
 
     if (!q && globalCustomerQuickFilter === 'ALL' && !forceShowByChip) {
-        panel.style.display = 'none';
-        panel.innerHTML = '';
+        panel.style.display = 'block';
         return;
     }
 
@@ -13297,12 +13383,14 @@ function handleGlobalCustomerSearchInput(rawVal, forceShowByChip = false) {
         }
 
         if (q) {
-            const matchInfo = computeAiCustomerMatch(c, q);
-            if (matchInfo.score >= 55) {
-                scoredList.push({ customer: c, score: matchInfo.score, reason: matchInfo.reason });
+            const matchInfo = computeCustomerMatchByMode(c, q, mode);
+            if (mode === 'EXACT' && matchInfo.score >= 95) {
+                scoredList.push({ customer: c, score: matchInfo.score, reason: matchInfo.reason, isExact: true });
+            } else if (mode === 'SIMILAR' && matchInfo.score >= 65) {
+                scoredList.push({ customer: c, score: matchInfo.score, reason: matchInfo.reason, isExact: !!matchInfo.isExact });
             }
         } else {
-            scoredList.push({ customer: c, score: 100, reason: 'Hızlı Filtre Eşleşmesi' });
+            scoredList.push({ customer: c, score: 100, reason: 'Hızlı Filtre Eşleşmesi', isExact: true });
         }
     }
 
@@ -13316,25 +13404,47 @@ function handleGlobalCustomerSearchInput(rawVal, forceShowByChip = false) {
     if (topMatches.length === 0) {
         panel.style.display = 'block';
         panel.innerHTML = `
-            <div style="padding:0.95rem; text-align:center; color:#94a3b8; font-size:0.84rem;">
-                <i class="fa-solid fa-wand-magic-sparkles" style="color:#38bdf8;"></i> "<strong>${escapeHtml(q)}</strong>" için yakın veya benzer müşteri bulunamadı.
-                <button type="button" class="btn btn-success btn-sm" style="margin-left:0.6rem;" onclick="openCustomerModal()">
-                    <i class="fa-solid fa-user-plus"></i> Yeni Müşteri Ekle
-                </button>
+            <div style="padding:1.1rem; text-align:center; color:#cbd5e1; font-size:0.86rem; background:rgba(15,23,42,0.5); border:1px dashed rgba(56,189,248,0.35); border-radius:10px;">
+                <i class="fa-solid fa-magnifying-glass" style="color:#f59e0b; font-size:1.2rem; margin-bottom:0.4rem; display:block;"></i>
+                "<strong>${escapeHtml(q)}</strong>" için <strong>${mode === 'EXACT' ? 'Birebir Tam Eşleşme' : 'Benzer Kayıt'}</strong> bulunamadı.
+                <div style="margin-top:0.65rem; display:flex; justify-content:center; gap:0.5rem; flex-wrap:wrap;">
+                    ${mode === 'EXACT' ? `
+                        <button type="button" class="btn btn-primary btn-sm" style="background:linear-gradient(135deg,#0284c7,#6366f1); font-weight:800;" onclick="executeCustomerSearch('SIMILAR')">
+                            <i class="fa-solid fa-wand-magic-sparkles"></i> Detaylandır (Benzerlerini ve Yakın İsimleri Ara)
+                        </button>
+                    ` : ''}
+                    <button type="button" class="btn btn-success btn-sm" onclick="openCustomerModal()">
+                        <i class="fa-solid fa-user-plus"></i> Yeni Müşteri Ekle
+                    </button>
+                </div>
             </div>
         `;
         return;
     }
 
+    const modeBadgeHtml = mode === 'EXACT'
+        ? `<span style="background:rgba(16,185,129,0.2); color:#34d399; border:1px solid rgba(16,185,129,0.45); padding:0.2rem 0.55rem; border-radius:6px; font-weight:800;">🎯 TAM EŞLEŞME MODU (${scoredList.length} Kayıt)</span>`
+        : `<span style="background:rgba(99,102,241,0.22); color:#a5b4fc; border:1px solid rgba(99,102,241,0.45); padding:0.2rem 0.55rem; border-radius:6px; font-weight:800;">✨ DETAYLI &amp; BENZER ARAMA MODU (${scoredList.length} Kayıt)</span>`;
+
     panel.style.display = 'block';
     panel.innerHTML = `
-        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.55rem; font-size:0.77rem; color:#e2e8f0; background:rgba(2,132,199,0.15); border:1px solid rgba(56,189,248,0.3); padding:0.45rem 0.7rem; border-radius:8px; flex-wrap:wrap; gap:0.4rem;">
-            <span>
-                <i class="fa-solid fa-wand-magic-sparkles" style="color:#38bdf8;"></i>
-                <strong>Yapay Zeka Destekli Eşleşen, Benzeyen ve Yakın Sonuçlar:</strong> Toplam <strong>${scoredList.length}</strong> yakın kayıt bulundu (En yakın ${topMatches.length} sonuç aşağıda sıralandı).
-                <span style="color:#fde68a; font-weight:700;">👉 Doğru müşteriyi işaretleyin veya üzerine tıklayın, tüm detaylar açılır pencerede görüntülensin.</span>
-            </span>
-            <button type="button" onclick="document.getElementById('global-customer-search-results').style.display='none'" style="background:rgba(15,23,42,0.6); border:1px solid rgba(56,189,248,0.35); color:#38bdf8; cursor:pointer; font-weight:700; font-size:0.73rem; padding:0.2rem 0.55rem; border-radius:6px;">Listeyi Kapat ▲</button>
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.65rem; font-size:0.78rem; color:#e2e8f0; background:rgba(2,132,199,0.15); border:1px solid rgba(56,189,248,0.3); padding:0.55rem 0.75rem; border-radius:8px; flex-wrap:wrap; gap:0.5rem;">
+            <div style="display:flex; align-items:center; gap:0.55rem; flex-wrap:wrap;">
+                ${modeBadgeHtml}
+                <span style="color:#fde68a; font-weight:700;">👉 Doğru müşteriyi işaretleyin veya satıra tıklayın, tüm detaylar açılır pencerede görüntülensin.</span>
+            </div>
+            <div style="display:flex; align-items:center; gap:0.45rem;">
+                ${mode === 'EXACT' && q ? `
+                    <button type="button" onclick="executeCustomerSearch('SIMILAR')" style="background:linear-gradient(135deg,#0284c7,#6366f1); border:1px solid #38bdf8; color:#fff; cursor:pointer; font-weight:800; font-size:0.74rem; padding:0.3rem 0.65rem; border-radius:6px; display:inline-flex; align-items:center; gap:0.35rem;">
+                        <i class="fa-solid fa-wand-magic-sparkles"></i> Detaylandır (Benzerlerini de Göster)
+                    </button>
+                ` : ''}
+                ${mode === 'SIMILAR' && q ? `
+                    <button type="button" onclick="executeCustomerSearch('EXACT')" style="background:rgba(16,185,129,0.2); border:1px solid #34d399; color:#34d399; cursor:pointer; font-weight:800; font-size:0.74rem; padding:0.3rem 0.65rem; border-radius:6px;">
+                        🎯 Sadece Tam Eşleşmeleri Göster
+                    </button>
+                ` : ''}
+            </div>
         </div>
         ${topMatches.map((item, idx) => {
             const c = item.customer;
@@ -13347,6 +13457,8 @@ function handleGlobalCustomerSearchInput(rawVal, forceShowByChip = false) {
             const badgeBg = item.score >= 95 ? 'rgba(16,185,129,0.2)' : (item.score >= 85 ? 'rgba(56,189,248,0.2)' : 'rgba(245,158,11,0.2)');
             const badgeColor = item.score >= 95 ? '#34d399' : (item.score >= 85 ? '#38bdf8' : '#fbbf24');
             const invCount = (c.serviceHistory || []).length;
+            const uniqueDrivers = Array.from(new Set((c.serviceHistory || []).map(h => (h.sofor || '').trim()).filter(Boolean)));
+            const driverSummary = uniqueDrivers.length > 0 ? uniqueDrivers.slice(0, 3).join(', ') : (c.authorized || 'Belirtilmedi');
 
             return `
                 <div class="global-search-result-item" data-cust-code="${safeCode}" onclick="selectAiCustomerFromList('${safeCode}', event)" style="cursor:pointer; ${isChecked ? 'border-color:#10b981; background:rgba(16,185,129,0.14);' : ''}">
@@ -13357,16 +13469,16 @@ function handleGlobalCustomerSearchInput(rawVal, forceShowByChip = false) {
                         </div>
                         <div style="flex:1;">
                             <div style="display:flex; align-items:center; gap:0.45rem; flex-wrap:wrap;">
-                                <span style="font-weight:800; font-size:0.88rem; color:#38bdf8;">${escapeHtml(c.title || '-')}</span>
-                                <span style="font-size:0.71rem; padding:0.12rem 0.45rem; border-radius:6px; background:rgba(56,189,248,0.14); color:#38bdf8; font-family:monospace; font-weight:700;">${safeCode}</span>
-                                <span style="font-size:0.7rem; padding:0.12rem 0.5rem; border-radius:6px; background:${badgeBg}; color:${badgeColor}; font-weight:700; border:1px solid ${badgeColor}44;">
-                                    %${item.score} • ${escapeHtml(item.reason)}
+                                <span style="font-weight:800; font-size:0.9rem; color:#38bdf8;">${escapeHtml(c.title || '-')}</span>
+                                <span style="font-size:0.72rem; padding:0.12rem 0.45rem; border-radius:6px; background:rgba(56,189,248,0.14); color:#38bdf8; font-family:monospace; font-weight:700;">${safeCode}</span>
+                                <span style="font-size:0.72rem; padding:0.14rem 0.55rem; border-radius:6px; background:${badgeBg}; color:${badgeColor}; font-weight:800; border:1px solid ${badgeColor}44;">
+                                    ${escapeHtml(item.reason)}
                                 </span>
                             </div>
-                            <div style="display:flex; align-items:center; gap:0.85rem; margin-top:0.3rem; font-size:0.75rem; color:#cbd5e1; flex-wrap:wrap;">
+                            <div style="display:flex; align-items:center; gap:0.85rem; margin-top:0.32rem; font-size:0.76rem; color:#cbd5e1; flex-wrap:wrap;">
                                 <span><i class="fa-solid fa-location-dot" style="color:#f59e0b;"></i> <strong>${escapeHtml(c.city || '-')} / ${escapeHtml(c.district || '-')}</strong> (${escapeHtml(c.rut || '-')})</span>
-                                <span><i class="fa-solid fa-user-tie" style="color:#38bdf8;"></i> Yetkili: <strong>${escapeHtml(c.authorized || 'Belirtilmedi')}</strong></span>
-                                <span><i class="fa-solid fa-phone" style="color:#34d399;"></i> Tel: <strong>${escapeHtml(c.phone || '-')}</strong></span>
+                                <span><i class="fa-solid fa-id-badge" style="color:#34d399;"></i> Yetkili / Şoför: <strong style="color:#d1fae5;">${escapeHtml(driverSummary)}</strong></span>
+                                <span><i class="fa-solid fa-phone" style="color:#38bdf8;"></i> Tel: <strong>${escapeHtml(c.phone || '-')}</strong></span>
                                 <span><i class="fa-solid fa-truck-front" style="color:#fde68a;"></i> Plaka: <strong>${escapeHtml(c.plates || '-')}</strong></span>
                             </div>
                             <div style="display:flex; align-items:center; gap:0.9rem; margin-top:0.25rem; font-size:0.74rem; color:#94a3b8; flex-wrap:wrap;">
@@ -13396,6 +13508,8 @@ function handleGlobalCustomerSearchInput(rawVal, forceShowByChip = false) {
 window.toggleZiyaretTheme = toggleZiyaretTheme;
 window.applyZiyaretTheme = applyZiyaretTheme;
 window.focusGlobalCustomerSearch = focusGlobalCustomerSearch;
+window.executeCustomerSearch = executeCustomerSearch;
+window.onCustomerSearchInputChange = onCustomerSearchInputChange;
 window.triggerGlobalAiCustomerSearch = triggerGlobalAiCustomerSearch;
 window.selectAiCustomerFromList = selectAiCustomerFromList;
 window.handleGlobalCustomerSearchInput = handleGlobalCustomerSearchInput;

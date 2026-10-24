@@ -175780,7 +175780,7 @@
       "platform": "Android / Mobil"
     }
   ],
-  "updatedAt": "2026-10-24T18:48:41.097075Z",
+  "updatedAt": "2026-10-24T18:57:02.599149Z",
   "stateRevision": 44,
   "cities": [
     "Adana",
@@ -175949,9 +175949,9 @@
     "realtimeSyncChannel": "GitHub Live API & Raw CDN",
     "status": "Aktif & Güncel (Sadece Dizsan Otomotiv Carileri - Lojistik/DsMot/KmSolar Hariç)"
   },
-  "appVersion": "1.6.0",
-  "versionUpdatedAt": "2026-10-24 21:48:41",
-  "versionReleaseNotes": "AI Destekli Bulanık & Fonetik Müşteri Arama, Ara Butonu ve 360 Derece Tam Detay Penceresi",
+  "appVersion": "1.6.1",
+  "versionUpdatedAt": "2026-10-24 21:57:02",
+  "versionReleaseNotes": "Sol Barda Özel Müşteri & Detay Ara Sayfası + Önce Tam Eşleşme ve Detaylandır (Benzerlerini Ara) Modu",
   "totalCount": 1990,
   "customRoutes": []
 }
