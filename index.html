@@ -3019,7 +3019,7 @@ body[data-theme="light"] .matched-field-callout {
 
                 <div class="navbar-right" style="display:none !important;">
                     <button type="button" class="btn btn-secondary btn-sm app-version-chip" id="app-version-badge" onclick="openVersionModal()" title="Sürüm ve Cihaz Güncelleme Merkezi">
-                        <i class="fa-solid fa-code-branch" style="color:#38bdf8;"></i> <span id="app-current-version-text">v1.6.7</span>
+                        <i class="fa-solid fa-code-branch" style="color:#38bdf8;"></i> <span id="app-current-version-text">v1.6.8</span>
                     </button>
 
                     <button type="button" class="btn btn-secondary btn-sm" onclick="forceRefreshFromGitHub()" id="btn-navbar-refresh" title="Logo ERP Canlı Verilerini Yenile (Son Fatura: 20.08.2026)">
@@ -3071,10 +3071,16 @@ body[data-theme="light"] .matched-field-callout {
                                     <i class="fa-solid fa-map-location-dot" style="color:#f59e0b;"></i> İl - İlçeye Göre Ara
                                 </button>
                             </div>
-                            <button type="button" id="global-theme-toggle-btn" class="theme-toggle-pill" onclick="toggleZiyaretTheme()" title="Koyu / Açık Tema Değiştir">
-                                <i class="fa-solid fa-sun" id="global-theme-icon"></i>
-                                <span id="global-theme-text">Açık Tema</span>
-                            </button>
+                            <div style="display:flex; align-items:center; gap:0.5rem; flex-wrap:wrap;">
+                                <span id="global-search-corner-other" style="display:none;"></span>
+                                <span id="global-search-corner-count" style="display:none; padding:0.38rem 0.75rem; border-radius:8px; font-size:0.8rem; font-weight:800; background:rgba(16,185,129,0.16); border:1px solid rgba(16,185,129,0.45); color:#34d399; white-space:nowrap;">
+                                    0 Kayıt
+                                </span>
+                                <button type="button" id="global-theme-toggle-btn" class="theme-toggle-pill" onclick="toggleZiyaretTheme()" title="Koyu / Açık Tema Değiştir">
+                                    <i class="fa-solid fa-sun" id="global-theme-icon"></i>
+                                    <span id="global-theme-text">Açık Tema</span>
+                                </button>
+                            </div>
                         </div>
 
                         <div class="global-search-top-row">
@@ -13847,6 +13853,13 @@ function clearGlobalCustomerSearch() {
     });
     const clearBtn = document.getElementById('global-customer-search-clear');
     if (clearBtn) clearBtn.style.display = 'none';
+    const cornerCount = document.getElementById('global-search-corner-count');
+    if (cornerCount) cornerCount.style.display = 'none';
+    const cornerOther = document.getElementById('global-search-corner-other');
+    if (cornerOther) {
+        cornerOther.style.display = 'none';
+        cornerOther.innerHTML = '';
+    }
     const panel = document.getElementById('global-customer-search-results');
     if (panel) {
         panel.style.display = 'block';
@@ -13966,11 +13979,29 @@ function handleGlobalCustomerSearchInput(rawVal, forceShowByChip = false, search
     const topMatches = scoredList.slice(0, 500);
 
     const otherScopeBannerBtn = (q && otherScopeCount > 0)
-        ? `<button type="button" onclick="setCustomerSearchScope('${otherScope}')" style="background:linear-gradient(135deg,#f59e0b,#d97706); border:1px solid #fde68a; color:#fff; cursor:pointer; font-weight:800; font-size:0.75rem; padding:0.32rem 0.7rem; border-radius:6px; display:inline-flex; align-items:center; gap:0.35rem; box-shadow:0 2px 8px rgba(245,158,11,0.35);">
+        ? `<button type="button" onclick="setCustomerSearchScope('${otherScope}')" style="background:linear-gradient(135deg,#f59e0b,#d97706); border:1px solid #fde68a; color:#fff; cursor:pointer; font-weight:800; font-size:0.74rem; padding:0.35rem 0.65rem; border-radius:8px; display:inline-flex; align-items:center; gap:0.35rem; box-shadow:0 2px 8px rgba(245,158,11,0.3);">
                <i class="fa-solid ${otherScope === 'LOCATION' ? 'fa-map-location-dot' : 'fa-building-user'}"></i>
-               ${otherScope === 'LOCATION' ? `📍 İl - İlçeye Göre Ara'da ${otherScopeCount} Müşteri Var (Tıkla & Tümünü Getir)` : `🏢 Cariye Göre Ara'da ${otherScopeCount} Müşteri Var (Tıkla & Getir)`}
+               ${otherScope === 'LOCATION' ? `İl-İlçe'de ${otherScopeCount} Kayıt` : `Cari'de ${otherScopeCount} Kayıt`}
            </button>`
         : '';
+
+    const cornerCount = document.getElementById('global-search-corner-count');
+    if (cornerCount) {
+        cornerCount.style.display = 'inline-flex';
+        cornerCount.style.alignItems = 'center';
+        cornerCount.style.gap = '0.35rem';
+        cornerCount.innerHTML = `<i class="fa-solid fa-layer-group"></i> <span>${scoredList.length.toLocaleString('tr-TR')} Kayıt</span>`;
+    }
+    const cornerOther = document.getElementById('global-search-corner-other');
+    if (cornerOther) {
+        if (otherScopeBannerBtn) {
+            cornerOther.style.display = 'inline-flex';
+            cornerOther.innerHTML = otherScopeBannerBtn;
+        } else {
+            cornerOther.style.display = 'none';
+            cornerOther.innerHTML = '';
+        }
+    }
 
     if (topMatches.length === 0) {
         panel.style.display = 'block';
@@ -13994,16 +14025,8 @@ function handleGlobalCustomerSearchInput(rawVal, forceShowByChip = false, search
         return;
     }
 
-    const scopeLabel = currentSearchScope === 'LOCATION' ? '📍 İl - İlçeye Göre' : '🏢 Cariye Göre';
-
     panel.style.display = 'block';
     panel.innerHTML = `
-        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.45rem; font-size:0.76rem; color:#cbd5e1; padding:0.35rem 0.6rem; border-radius:6px; background:rgba(15,23,42,0.4); flex-wrap:wrap; gap:0.4rem;">
-            <span><strong>${scopeLabel}:</strong> ${scoredList.length} kayıt bulundu. Detay için satıra tıklayın.</span>
-            <div style="display:flex; gap:0.4rem; align-items:center;">
-                ${otherScopeBannerBtn}
-            </div>
-        </div>
         ${topMatches.map((item, idx) => {
             const c = item.customer;
             const safeCode = escapeHtml(c.code || '');

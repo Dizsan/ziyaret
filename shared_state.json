@@ -175780,7 +175780,7 @@
       "platform": "Android / Mobil"
     }
   ],
-  "updatedAt": "2026-10-24T19:55:22.962838Z",
+  "updatedAt": "2026-10-24T19:59:39.914202Z",
   "stateRevision": 44,
   "cities": [
     "Adana",
@@ -175949,9 +175949,9 @@
     "realtimeSyncChannel": "GitHub Live API & Raw CDN",
     "status": "Aktif & Güncel (Sadece Dizsan Otomotiv Carileri - Lojistik/DsMot/KmSolar Hariç)"
   },
-  "appVersion": "1.6.7",
-  "versionUpdatedAt": "2026-10-24 22:55:22",
-  "versionReleaseNotes": "Olumlu Gorusme Sonucu Alt Menusu (Takip Edilecek / Tekrar Aranacak) ve Cift Harf Toleransi",
+  "appVersion": "1.6.8",
+  "versionUpdatedAt": "2026-10-24 22:59:39",
+  "versionReleaseNotes": "Arama sonuc kayit sayisini sag ust koseye rozet olarak tasi",
   "totalCount": 1990,
   "customRoutes": []
 }

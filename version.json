@@ -1,7 +1,7 @@
 {
-  "version": "1.6.7",
-  "build": 167,
-  "releasedAt": "2026-10-24 22:55:22",
-  "releaseNotes": "Olumlu Gorusme Sonucu Alt Menusu (Takip Edilecek / Tekrar Aranacak) ve Cift Harf Toleransi",
+  "version": "1.6.8",
+  "build": 168,
+  "releasedAt": "2026-10-24 22:59:39",
+  "releaseNotes": "Arama sonuc kayit sayisini sag ust koseye rozet olarak tasi",
   "author": "Ömer Eren & DİZSAN"
 }
