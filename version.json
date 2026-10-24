@@ -1,7 +1,7 @@
 {
-  "version": "1.5.9",
-  "build": 159,
-  "releasedAt": "2026-10-24 21:33:18",
-  "releaseNotes": "Kredi Ödemeleri Takip Mobil PWA ve Canlı GitHub Senkronizasyonu (v1.5.9)",
+  "version": "1.6.0",
+  "build": 160,
+  "releasedAt": "2026-10-24 21:48:41",
+  "releaseNotes": "AI Destekli Bulanık & Fonetik Müşteri Arama, Ara Butonu ve 360 Derece Tam Detay Penceresi",
   "author": "Ömer Eren & DİZSAN"
 }
