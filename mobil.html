@@ -3019,7 +3019,7 @@ body[data-theme="light"] .matched-field-callout {
 
                 <div class="navbar-right" style="display:none !important;">
                     <button type="button" class="btn btn-secondary btn-sm app-version-chip" id="app-version-badge" onclick="openVersionModal()" title="Sürüm ve Cihaz Güncelleme Merkezi">
-                        <i class="fa-solid fa-code-branch" style="color:#38bdf8;"></i> <span id="app-current-version-text">v1.6.4</span>
+                        <i class="fa-solid fa-code-branch" style="color:#38bdf8;"></i> <span id="app-current-version-text">v1.6.5</span>
                     </button>
 
                     <button type="button" class="btn btn-secondary btn-sm" onclick="forceRefreshFromGitHub()" id="btn-navbar-refresh" title="Logo ERP Canlı Verilerini Yenile (Son Fatura: 20.08.2026)">
@@ -3061,81 +3061,44 @@ body[data-theme="light"] .matched-field-callout {
                      SEKME 0: MÜŞTERİ & DETAY ARA SAYFASI (CUSTOMER-SEARCH-TAB)
                      ============================================================== -->
                 <section id="customer-search-tab" class="tab-section">
-                    <div id="global-customer-search-bar" class="global-customer-search-bar" style="position:relative; margin-bottom:1.2rem;">
-                        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.75rem; flex-wrap:wrap; gap:0.5rem;">
-                            <div>
-                                <h2 style="font-size:1.12rem; font-weight:800; color:#38bdf8; margin:0; display:flex; align-items:center; gap:0.5rem;">
-                                    <i class="fa-solid fa-magnifying-glass"></i> Müşteri, Şoför, Plaka &amp; İl / İlçe Detay Arama Merkezi
-                                </h2>
-                                <p style="font-size:0.78rem; color:#94a3b8; margin:0.2rem 0 0 0;">
-                                    Müşteri/Şoför adı ile aramak için <strong>"🏢 Cariye Göre Ara"</strong>, gittiğiniz bölgedeki tüm müşterileri (adres, ilçe, vergi dairesi veya cari içinde nerede geçerse geçsin) listelemek için <strong>"📍 İl - İlçeye Göre Ara"</strong> seçeneğini kullanın.
-                                </p>
+                    <div id="global-customer-search-bar" class="global-customer-search-bar" style="position:relative; margin-bottom:1rem;">
+                        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.65rem; flex-wrap:wrap; gap:0.5rem;">
+                            <div style="display:flex; align-items:center; gap:0.5rem; flex-wrap:wrap;">
+                                <button type="button" id="scope-btn-cari" onclick="setCustomerSearchScope('CARI')" style="padding:0.48rem 0.95rem; border-radius:8px; font-size:0.82rem; font-weight:800; cursor:pointer; display:inline-flex; align-items:center; gap:0.4rem; background:linear-gradient(135deg,#10b981,#059669); color:#fff; border:2px solid #34d399;">
+                                    <i class="fa-solid fa-building-user"></i> Cariye Göre Ara
+                                </button>
+                                <button type="button" id="scope-btn-location" onclick="setCustomerSearchScope('LOCATION')" style="padding:0.48rem 0.95rem; border-radius:8px; font-size:0.82rem; font-weight:800; cursor:pointer; display:inline-flex; align-items:center; gap:0.4rem; background:rgba(30,41,59,0.85); color:#cbd5e1; border:2px solid rgba(148,163,184,0.3);">
+                                    <i class="fa-solid fa-map-location-dot" style="color:#f59e0b;"></i> İl - İlçeye Göre Ara
+                                </button>
                             </div>
-                            <button type="button" id="global-theme-toggle-btn" class="theme-toggle-pill" onclick="toggleZiyaretTheme()" title="Sol Bar Dahil Komple Koyu / Açık Tema Değiştir">
+                            <button type="button" id="global-theme-toggle-btn" class="theme-toggle-pill" onclick="toggleZiyaretTheme()" title="Koyu / Açık Tema Değiştir">
                                 <i class="fa-solid fa-sun" id="global-theme-icon"></i>
                                 <span id="global-theme-text">Açık Tema</span>
                             </button>
                         </div>
 
-                        <!-- SEÇMELİ ARAMA TÜRÜ: CARİYE GÖRE ARA / İL - İLÇEYE GÖRE ARA -->
-                        <div style="display:flex; align-items:center; gap:0.55rem; margin-bottom:0.65rem; flex-wrap:wrap; background:rgba(15,23,42,0.45); padding:0.5rem 0.65rem; border-radius:10px; border:1px solid rgba(56,189,248,0.28);">
-                            <span style="font-size:0.76rem; font-weight:800; color:#94a3b8; text-transform:uppercase; letter-spacing:0.04em;">
-                                <i class="fa-solid fa-sliders" style="color:#38bdf8;"></i> Arama Kriteri Seçin:
-                            </span>
-                            <button type="button" id="scope-btn-cari" onclick="setCustomerSearchScope('CARI')" style="padding:0.48rem 0.95rem; border-radius:8px; font-size:0.82rem; font-weight:800; cursor:pointer; display:inline-flex; align-items:center; gap:0.4rem; background:linear-gradient(135deg,#10b981,#059669); color:#fff; border:2px solid #34d399; box-shadow:0 3px 10px rgba(16,185,129,0.3);">
-                                <i class="fa-solid fa-building-user"></i> Cariye Göre Ara (Müşteri Adı, Şoför, Kod, Plaka)
-                            </button>
-                            <button type="button" id="scope-btn-location" onclick="setCustomerSearchScope('LOCATION')" style="padding:0.48rem 0.95rem; border-radius:8px; font-size:0.82rem; font-weight:800; cursor:pointer; display:inline-flex; align-items:center; gap:0.4rem; background:rgba(30,41,59,0.85); color:#cbd5e1; border:2px solid rgba(148,163,184,0.3);">
-                                <i class="fa-solid fa-map-location-dot" style="color:#f59e0b;"></i> İl - İlçeye Göre Ara (İl, İlçe, Adres, Vergi Dairesi, Cari İçi Tümü)
-                            </button>
-                            <select id="global-customer-search-scope" onchange="setCustomerSearchScope(this.value)" style="margin-left:auto; padding:0.42rem 0.7rem; border-radius:8px; font-size:0.79rem; font-weight:800; background:var(--bg-card); color:var(--text-main); border:1px solid rgba(56,189,248,0.4); cursor:pointer;">
-                                <option value="CARI">🏢 Cariye Göre Ara (Müşteri / Şoför / Plaka / Kod)</option>
-                                <option value="LOCATION">📍 İl - İlçeye Göre Ara (İl / İlçe / Adres / Vergi Dairesi / Tümü)</option>
-                            </select>
-                        </div>
-
                         <div class="global-search-top-row">
                             <div class="global-search-input-wrap">
                                 <i class="fa-solid fa-magnifying-glass search-lead-icon"></i>
-                                <input type="text" id="global-customer-search-input" class="global-search-input" placeholder="Müşteri ünvanı, şoför/yetkili adı (Örn: Ganik), 120 kod, plaka veya telefon yazın..." onkeydown="if(event.key==='Enter'){event.preventDefault(); executeCustomerSearch('EXACT');}" oninput="onCustomerSearchInputChange(this.value)" autocomplete="off">
+                                <input type="text" id="global-customer-search-input" class="global-search-input" placeholder="Müşteri adı, şoför/yetkili, 120 kod veya plaka yazın..." onkeydown="if(event.key==='Enter'){event.preventDefault(); executeCustomerSearch('EXACT');}" oninput="onCustomerSearchInputChange(this.value)" autocomplete="off">
                                 <button type="button" id="global-customer-search-clear" class="global-search-clear-btn" onclick="clearGlobalCustomerSearch()" title="Aramayı Temizle">
                                     <i class="fa-solid fa-xmark"></i>
                                 </button>
                             </div>
 
-                            <button type="button" id="global-customer-search-submit-btn" class="btn btn-primary" style="padding:0.62rem 1.15rem; border-radius:10px; font-size:0.85rem; font-weight:800; display:inline-flex; align-items:center; gap:0.45rem; background:linear-gradient(135deg, #10b981, #059669); border:1px solid #34d399; box-shadow:0 4px 14px rgba(16,185,129,0.35); white-space:nowrap; cursor:pointer;" onclick="executeCustomerSearch('EXACT')" title="Büyük/küçük harf duyarsız birebir Tam Eşleşme araması yapar">
-                                <i class="fa-solid fa-magnifying-glass"></i> <span>Ara (Tam Eşleşme)</span>
+                            <button type="button" id="global-customer-search-submit-btn" class="btn btn-primary" style="padding:0.6rem 1.05rem; border-radius:10px; font-size:0.84rem; font-weight:800; display:inline-flex; align-items:center; gap:0.4rem; background:linear-gradient(135deg, #10b981, #059669); border:1px solid #34d399; white-space:nowrap; cursor:pointer;" onclick="executeCustomerSearch('EXACT')">
+                                <i class="fa-solid fa-magnifying-glass"></i> <span>Ara</span>
                             </button>
 
-                            <button type="button" id="global-customer-search-detailed-btn" class="btn btn-primary" style="padding:0.62rem 1.15rem; border-radius:10px; font-size:0.85rem; font-weight:800; display:inline-flex; align-items:center; gap:0.45rem; background:linear-gradient(135deg, #0284c7, #6366f1); border:1px solid #38bdf8; box-shadow:0 4px 14px rgba(2,132,199,0.35); white-space:nowrap; cursor:pointer;" onclick="executeCustomerSearch('SIMILAR')" title="Yapay zeka desteği ile benzeyen, yakın harfli ve fonetik eşleşen tüm kayıtları listeler">
-                                <i class="fa-solid fa-wand-magic-sparkles"></i> <span>Detaylandır (Benzerlerini Ara)</span>
-                            </button>
-                        </div>
-
-                        <div class="global-search-chips" style="margin-top:0.65rem;">
-                            <button type="button" class="global-chip active" data-qfilter="ALL" onclick="setGlobalCustomerQuickFilter('ALL')">
-                                <i class="fa-solid fa-users"></i> Tümü (<span id="global-search-total-count">1.990</span>)
-                            </button>
-                            <button type="button" class="global-chip" data-qfilter="VIP" onclick="setGlobalCustomerQuickFilter('VIP')">
-                                <i class="fa-solid fa-crown" style="color:#fbbf24;"></i> VIP / Yüksek Ciro
-                            </button>
-                            <button type="button" class="global-chip" data-qfilter="BORCLU" onclick="setGlobalCustomerQuickFilter('BORCLU')">
-                                <i class="fa-solid fa-scale-unbalanced" style="color:#f87171;"></i> Borçlu (B)
-                            </button>
-                            <button type="button" class="global-chip" data-qfilter="ALACAKLI" onclick="setGlobalCustomerQuickFilter('ALACAKLI')">
-                                <i class="fa-solid fa-circle-check" style="color:#34d399;"></i> Alacaklı (A)
-                            </button>
-                            <button type="button" class="global-chip" data-qfilter="CORUM" onclick="setGlobalCustomerQuickFilter('CORUM')">
-                                <i class="fa-solid fa-location-dot" style="color:#38bdf8;"></i> Çorum
+                            <button type="button" id="global-customer-search-detailed-btn" class="btn btn-primary" style="padding:0.6rem 1.05rem; border-radius:10px; font-size:0.84rem; font-weight:800; display:inline-flex; align-items:center; gap:0.4rem; background:linear-gradient(135deg, #0284c7, #6366f1); border:1px solid #38bdf8; white-space:nowrap; cursor:pointer;" onclick="executeCustomerSearch('SIMILAR')">
+                                <i class="fa-solid fa-wand-magic-sparkles"></i> <span>Detaylandır</span>
                             </button>
                         </div>
 
                         <!-- Müşteri Arama Sonuçları Listesi -->
-                        <div id="global-customer-search-results" class="global-search-results-panel" style="display:block; max-height:68vh;">
-                            <div style="padding:1.4rem; text-align:center; color:#94a3b8; font-size:0.86rem;">
-                                <i class="fa-solid fa-magnifying-glass" style="font-size:1.5rem; color:#38bdf8; margin-bottom:0.5rem; display:block;"></i>
-                                Yukarıdaki kutuya aramak istediğiniz <strong>Müşteri Ünvanı, Yetkili/Şoför Adı (Örn: Ganik), 120 Cari Kodu, Araç Plakası veya Telefonu</strong> yazıp <strong>"Ara (Tam Eşleşme)"</strong> butonuna basın.<br>
-                                <span style="font-size:0.78rem; color:#64748b;">Yazım farkı olan benzer isimleri de görmek için <strong>"Detaylandır (Benzerlerini Ara)"</strong> tuşunu kullanabilirsiniz.</span>
+                        <div id="global-customer-search-results" class="global-search-results-panel" style="display:block; max-height:74vh;">
+                            <div style="padding:1rem; text-align:center; color:#94a3b8; font-size:0.84rem;">
+                                Arama yapmak için yukarıdan <strong>Cariye Göre</strong> veya <strong>İl - İlçeye Göre</strong> seçip kelimeyi yazın.
                             </div>
                         </div>
                     </div>
@@ -13907,106 +13870,52 @@ function handleGlobalCustomerSearchInput(rawVal, forceShowByChip = false, search
         return;
     }
 
-    const scopeTagHtml = currentSearchScope === 'LOCATION'
-        ? `<span style="background:rgba(245,158,11,0.22); color:#fde68a; border:1px solid rgba(245,158,11,0.5); padding:0.2rem 0.55rem; border-radius:6px; font-weight:800;">📍 İL - İLÇEYE GÖRE ARAMA (${scoredList.length} Müşteri)</span>`
-        : `<span style="background:rgba(16,185,129,0.2); color:#34d399; border:1px solid rgba(16,185,129,0.45); padding:0.2rem 0.55rem; border-radius:6px; font-weight:800;">🏢 CARİYE GÖRE ARAMA (${scoredList.length} Müşteri)</span>`;
-
-    const modeBadgeHtml = mode === 'EXACT'
-        ? `<span style="background:rgba(56,189,248,0.16); color:#38bdf8; border:1px solid rgba(56,189,248,0.4); padding:0.2rem 0.5rem; border-radius:6px; font-weight:800;">🎯 Tam Eşleşme</span>`
-        : `<span style="background:rgba(99,102,241,0.22); color:#a5b4fc; border:1px solid rgba(99,102,241,0.45); padding:0.2rem 0.5rem; border-radius:6px; font-weight:800;">✨ Benzer Arama</span>`;
+    const scopeLabel = currentSearchScope === 'LOCATION' ? '📍 İl - İlçeye Göre' : '🏢 Cariye Göre';
 
     panel.style.display = 'block';
     panel.innerHTML = `
-        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.65rem; font-size:0.78rem; color:#e2e8f0; background:rgba(2,132,199,0.15); border:1px solid rgba(56,189,248,0.3); padding:0.55rem 0.75rem; border-radius:8px; flex-wrap:wrap; gap:0.5rem;">
-            <div style="display:flex; align-items:center; gap:0.55rem; flex-wrap:wrap;">
-                ${scopeTagHtml}
-                ${modeBadgeHtml}
-                <span style="color:#fde68a; font-weight:700;">👉 Eşleşen kısım <mark class="search-match-highlight" style="font-size:0.72rem;">🔍 sarı işaretle</mark> gösterilmiştir.</span>
-            </div>
-            <div style="display:flex; align-items:center; gap:0.45rem; flex-wrap:wrap;">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.45rem; font-size:0.76rem; color:#cbd5e1; padding:0.35rem 0.6rem; border-radius:6px; background:rgba(15,23,42,0.4); flex-wrap:wrap; gap:0.4rem;">
+            <span><strong>${scopeLabel}:</strong> ${scoredList.length} kayıt bulundu. Detay için satıra tıklayın.</span>
+            <div style="display:flex; gap:0.4rem; align-items:center;">
                 ${otherScopeBannerBtn}
-                ${mode === 'EXACT' && q ? `
-                    <button type="button" onclick="executeCustomerSearch('SIMILAR')" style="background:linear-gradient(135deg,#0284c7,#6366f1); border:1px solid #38bdf8; color:#fff; cursor:pointer; font-weight:800; font-size:0.74rem; padding:0.3rem 0.65rem; border-radius:6px; display:inline-flex; align-items:center; gap:0.35rem;">
-                        <i class="fa-solid fa-wand-magic-sparkles"></i> Detaylandır (Benzerlerini de Göster)
-                    </button>
-                ` : ''}
-                ${mode === 'SIMILAR' && q ? `
-                    <button type="button" onclick="executeCustomerSearch('EXACT')" style="background:rgba(16,185,129,0.2); border:1px solid #34d399; color:#34d399; cursor:pointer; font-weight:800; font-size:0.74rem; padding:0.3rem 0.65rem; border-radius:6px;">
-                        🎯 Sadece Tam Eşleşmeleri Göster
-                    </button>
-                ` : ''}
             </div>
         </div>
         ${topMatches.map((item, idx) => {
             const c = item.customer;
-            const acc = getCustomerAccountingSummary(c);
-            const isBorclu = acc.baCode === 'B' || acc.baCode === '(B)';
-            const isAlacakli = acc.baCode === 'A' || acc.baCode === '(A)';
-            const baColor = isBorclu ? '#f87171' : (isAlacakli ? '#34d399' : '#94a3b8');
             const safeCode = escapeHtml(c.code || '');
             const isChecked = selectedAiCustomerCode === c.code;
-            const badgeBg = item.score >= 95 ? 'rgba(16,185,129,0.2)' : (item.score >= 85 ? 'rgba(56,189,248,0.2)' : 'rgba(245,158,11,0.2)');
-            const badgeColor = item.score >= 95 ? '#34d399' : (item.score >= 85 ? '#38bdf8' : '#fbbf24');
-            const invCount = (c.serviceHistory || []).length;
             const nqComp = normCompactTR(q);
-            const uniqueDrivers = Array.from(new Set((c.serviceHistory || []).map(h => (h.sofor || '').trim()).filter(Boolean)));
-            uniqueDrivers.sort((d1, d2) => {
-                const m1 = nqComp && normCompactTR(d1).includes(nqComp) ? 1 : 0;
-                const m2 = nqComp && normCompactTR(d2).includes(nqComp) ? 1 : 0;
-                return m2 - m1;
-            });
-            const driverSummaryRaw = uniqueDrivers.length > 0 ? uniqueDrivers.slice(0, 4).join(', ') : (c.authorized || 'Belirtilmedi');
 
             const titleHighlighted = highlightSearchText(c.title || '-', q, item.matchedWord);
             const codeHighlighted = highlightSearchText(c.code || '', q, item.matchedWord);
             const cityHighlighted = highlightSearchText(c.city || '-', q, item.matchedWord);
             const distHighlighted = highlightSearchText(c.district || '-', q, item.matchedWord);
-            const addrHighlighted = highlightSearchText(c.address || '-', q, item.matchedWord);
-            const driverHighlighted = highlightSearchText(driverSummaryRaw, q, item.matchedWord);
-            const phoneHighlighted = highlightSearchText(c.phone || '-', q, item.matchedWord);
-            const platesHighlighted = highlightSearchText(c.plates || '-', q, item.matchedWord);
+
+            // Eğer eşleşme Ünvan, Kod veya İl/İlçe dışında bir alt alanda (Şoför, Plaka, Adres, Vergi Dairesi vb.) ise sadece o kısa eşleşmeyi yanına ekle
+            const inMainFields = nqComp && (
+                normCompactTR(c.title || '').includes(nqComp) ||
+                normCompactTR(c.code || '').includes(nqComp) ||
+                normCompactTR(c.city || '').includes(nqComp) ||
+                normCompactTR(c.district || '').includes(nqComp)
+            );
+            let subMatchTag = '';
+            if (!inMainFields && item.matchedWord) {
+                subMatchTag = `<span style="font-size:0.74rem; color:#fde68a;">• ${highlightSearchText(item.matchedWord, q, item.matchedWord)}</span>`;
+            } else if (!inMainFields && c.address && nqComp && normCompactTR(c.address).includes(nqComp)) {
+                subMatchTag = `<span style="font-size:0.74rem; color:#cbd5e1;">• ${highlightSearchText(c.address, q)}</span>`;
+            }
 
             return `
-                <div class="global-search-result-item" data-cust-code="${safeCode}" onclick="selectAiCustomerFromList('${safeCode}', event)" style="cursor:pointer; ${isChecked ? 'border-color:#10b981; background:rgba(16,185,129,0.14);' : ''}">
-                    <div style="display:flex; align-items:flex-start; gap:0.7rem; flex:1; min-width:250px;">
-                        <div style="padding-top:0.15rem; display:flex; flex-direction:column; align-items:center; gap:0.2rem;">
-                            <input type="checkbox" class="ai-cust-select-cb" ${isChecked ? 'checked' : ''} onclick="selectAiCustomerFromList('${safeCode}', event)" style="width:18px; height:18px; accent-color:#10b981; cursor:pointer;" title="Bu müşteriyi seç ve tüm detaylarını açılır pencerede gör">
-                            <span style="font-size:0.65rem; color:#94a3b8; font-weight:700;">#${idx + 1}</span>
-                        </div>
-                        <div style="flex:1;">
-                            <div style="display:flex; align-items:center; gap:0.45rem; flex-wrap:wrap;">
-                                <span style="font-weight:800; font-size:0.9rem; color:#38bdf8;">${titleHighlighted}</span>
-                                <span style="font-size:0.72rem; padding:0.12rem 0.45rem; border-radius:6px; background:rgba(56,189,248,0.14); color:#38bdf8; font-family:monospace; font-weight:700;">${codeHighlighted}</span>
-                                <span style="font-size:0.72rem; padding:0.14rem 0.55rem; border-radius:6px; background:${badgeBg}; color:${badgeColor}; font-weight:800; border:1px solid ${badgeColor}44;">
-                                    ${escapeHtml(item.reason)}
-                                </span>
-                            </div>
-                            ${item.matchedContextHtml || ''}
-                            <div style="display:flex; align-items:center; gap:0.85rem; margin-top:0.32rem; font-size:0.76rem; color:#cbd5e1; flex-wrap:wrap;">
-                                <span><i class="fa-solid fa-location-dot" style="color:#f59e0b;"></i> <strong>${cityHighlighted} / ${distHighlighted}</strong> (${escapeHtml(c.rut || '-')})</span>
-                                <span><i class="fa-solid fa-map-pin" style="color:#a78bfa;"></i> Adres: <strong>${addrHighlighted}</strong></span>
-                                <span><i class="fa-solid fa-id-badge" style="color:#34d399;"></i> Yetkili / Şoför: <strong style="color:#d1fae5;">${driverHighlighted}</strong></span>
-                                <span><i class="fa-solid fa-phone" style="color:#38bdf8;"></i> Tel: <strong>${phoneHighlighted}</strong></span>
-                                <span><i class="fa-solid fa-truck-front" style="color:#fde68a;"></i> Plaka: <strong>${platesHighlighted}</strong></span>
-                            </div>
-                            <div style="display:flex; align-items:center; gap:0.9rem; margin-top:0.25rem; font-size:0.74rem; color:#94a3b8; flex-wrap:wrap;">
-                                <span><i class="fa-solid fa-coins" style="color:#fbbf24;"></i> Tarihsel Ciro: <strong style="color:#fff;">${formatMoney(c.totalRevenue || 0)}</strong></span>
-                                <span style="color:${baColor}; font-weight:700;"><i class="fa-solid fa-scale-balanced"></i> Net Bakiye: ${formatMoney(acc.absBalance)} ${acc.baCode}</span>
-                                <span><i class="fa-solid fa-file-invoice" style="color:#38bdf8;"></i> Fatura: <strong>${invCount} Adet</strong> (Son: ${escapeHtml(c.lastDate || '-')})</span>
-                            </div>
-                        </div>
+                <div class="global-search-result-item" data-cust-code="${safeCode}" onclick="selectAiCustomerFromList('${safeCode}', event)" style="cursor:pointer; padding:0.5rem 0.7rem; margin-bottom:0.3rem; display:flex; align-items:center; justify-content:space-between; gap:0.6rem; ${isChecked ? 'border-color:#10b981; background:rgba(16,185,129,0.14);' : ''}">
+                    <div style="display:flex; align-items:center; gap:0.55rem; flex:1; min-width:0; flex-wrap:wrap;">
+                        <input type="checkbox" class="ai-cust-select-cb" ${isChecked ? 'checked' : ''} onclick="selectAiCustomerFromList('${safeCode}', event)" style="width:16px; height:16px; accent-color:#10b981; cursor:pointer; margin:0;">
+                        <span style="font-size:0.72rem; color:#64748b; font-weight:700; min-width:22px;">#${idx + 1}</span>
+                        <span style="font-weight:800; font-size:0.86rem; color:#38bdf8;">${titleHighlighted}</span>
+                        <span style="font-size:0.72rem; padding:0.1rem 0.4rem; border-radius:5px; background:rgba(56,189,248,0.12); color:#93c5fd; font-family:monospace; font-weight:700;">${codeHighlighted}</span>
+                        <span style="font-size:0.76rem; color:#cbd5e1;"><i class="fa-solid fa-location-dot" style="color:#f59e0b;"></i> ${cityHighlighted} / ${distHighlighted}</span>
+                        ${subMatchTag}
                     </div>
-                    <div style="display:flex; align-items:center; gap:0.4rem; flex-wrap:wrap;">
-                        <button type="button" class="btn btn-primary btn-sm" style="padding:0.38rem 0.7rem; font-size:0.75rem; font-weight:800;" onclick="selectAiCustomerFromList('${safeCode}', event)" title="Seç ve Tüm Müşteri Detaylarını Açılır Pencerede Gör">
-                            <i class="fa-solid fa-expand"></i> Seç &amp; Tüm Detayları Aç
-                        </button>
-                        <button type="button" class="btn btn-success btn-sm" style="padding:0.38rem 0.6rem; font-size:0.74rem;" onclick="event.stopPropagation(); quickStartVisitForCustomer('${safeCode}')" title="Bu Müşteriye Ziyaret / Telefon Kaydı Gir">
-                            <i class="fa-solid fa-plus"></i> Ziyaret Ekle
-                        </button>
-                        <button type="button" class="btn btn-secondary btn-sm" style="padding:0.38rem 0.52rem; font-size:0.74rem;" onclick="event.stopPropagation(); openCustomerWhatsApp('${safeCode}')" title="WhatsApp Gönder">
-                            <i class="fa-brands fa-whatsapp" style="color:#25d366;"></i>
-                        </button>
-                    </div>
+                    <i class="fa-solid fa-chevron-right" style="color:#64748b; font-size:0.78rem;"></i>
                 </div>
             `;
         }).join('')}

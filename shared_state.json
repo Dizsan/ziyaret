@@ -175780,7 +175780,7 @@
       "platform": "Android / Mobil"
     }
   ],
-  "updatedAt": "2026-10-24T19:40:29.634194Z",
+  "updatedAt": "2026-10-24T19:45:27.169675Z",
   "stateRevision": 44,
   "cities": [
     "Adana",
@@ -175949,9 +175949,9 @@
     "realtimeSyncChannel": "GitHub Live API & Raw CDN",
     "status": "Aktif & Güncel (Sadece Dizsan Otomotiv Carileri - Lojistik/DsMot/KmSolar Hariç)"
   },
-  "appVersion": "1.6.5",
-  "versionUpdatedAt": "2026-10-24 22:40:29",
-  "versionReleaseNotes": "Secmeli Arama Alani: Cariye Gore Ara ve Il-Ilceye Gore Ara (Usta Un / Merzifon dahil tam kapsam)",
+  "appVersion": "1.6.6",
+  "versionUpdatedAt": "2026-10-24 22:45:27",
+  "versionReleaseNotes": "Arama listesi ve ust bar sadelestirildi, tek satir kompakt liste yapildi",
   "totalCount": 1990,
   "customRoutes": []
 }
