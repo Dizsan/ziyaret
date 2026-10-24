@@ -3026,7 +3026,7 @@ body[data-theme="light"] .matched-field-callout {
 
                 <div class="navbar-right" style="display:none !important;">
                     <button type="button" class="btn btn-secondary btn-sm app-version-chip" id="app-version-badge" onclick="openVersionModal()" title="Sürüm ve Cihaz Güncelleme Merkezi">
-                        <i class="fa-solid fa-code-branch" style="color:#38bdf8;"></i> <span id="app-current-version-text">v1.7.0</span>
+                        <i class="fa-solid fa-code-branch" style="color:#38bdf8;"></i> <span id="app-current-version-text">v1.7.1</span>
                     </button>
 
                     <button type="button" class="btn btn-secondary btn-sm" onclick="forceRefreshFromGitHub()" id="btn-navbar-refresh" title="Logo ERP Canlı Verilerini Yenile (Son Fatura: 20.08.2026)">
@@ -6395,7 +6395,7 @@ body[data-theme="light"] .matched-field-callout {
  */
 
 const INITIAL_APP_VERSION = "v1.3.0";
-const CURRENT_APP_VERSION = "1.5.9";
+const CURRENT_APP_VERSION = "1.7.1";
 let hasShownUpdateNotice = false;
 const VAPID_PUBLIC_KEY = "BJIJfCBiDwya3clZOWS08EDxfuN18xtfJGTX0n_apWBTEW7-kO_FGKNy5VDRvUsMgc46IP5oxLlIHqgrDo-JTkE";
 const STORAGE_KEY_STATE = "dizsan_ziyaret_shared_state_v1";
@@ -6582,10 +6582,12 @@ let activePasswordResetRequest = null;
 let legacyPage = 1;
 const LEGACY_PAGE_SIZE = 100;
 
-// GitHub Bulut API Anahtarı
+// GitHub Bulut API Anahtarı (Telefon <-> PC Anlık Otomatik Senkronizasyon)
 const CLOUD_KEY_CODES = [106, 107, 115, 98, 91, 123, 91, 82, 116, 68, 73, 89, 125, 119, 57, 84, 112, 75, 86, 86, 109, 86, 112, 72, 103, 80, 116, 87, 117, 111, 113, 57, 125, 80, 53, 105, 76, 60, 120, 79];
-const CLOUD_API_URL = 'https://api.github.com/repos/Dizsan/ziyaret/contents/shared_state.json';
+const CLOUD_API_URL = 'https://api.github.com/repos/Dizsan/ziyaret/contents/live_sync_state.json';
+const CLOUD_DPRO_API_URL = 'https://api.github.com/repos/Dizsan/dpro/contents/apps/ziyaret/live_sync_state.json';
 let lastKnownCloudSha = null;
+let lastKnownDproSha = null;
 let isCloudPutInFlight = false;
 let hasPendingCloudPut = false;
 let lastLocalSaveTime = 0;
@@ -7331,6 +7333,13 @@ async function fetchLiveGitHubData(isInitial = false) {
         }
     }
 
+    try {
+        const cloudSync = await fetchLiveCloudSyncState();
+        if (cloudSync) {
+            applyLiveCloudSyncToAppState(cloudSync, isInitial);
+        }
+    } catch (e) {}
+
     syncCustomRoutesToCustomers();
     saveStateLocally();
     updateLogoLiveIndicator();
@@ -7412,6 +7421,117 @@ async function syncToServer() {
     }
 }
 
+function buildLiveSyncPayload(stateObj) {
+    const clean = sanitizeStateForCloud(stateObj);
+    const customCustomers = (clean.customers || [])
+        .filter(c => c && (c.isCustom || c._modifiedAt || String(c.code || '').startsWith('120.YENI')))
+        .map(c => {
+            const { serviceHistory, ...rest } = c;
+            return rest;
+        });
+    return {
+        version: clean.version || CURRENT_APP_VERSION,
+        latestVersion: clean.latestVersion || null,
+        stateRevision: Number(clean.stateRevision || 1),
+        updatedAt: clean.updatedAt || new Date().toISOString(),
+        visits: Array.isArray(clean.visits) ? clean.visits : [],
+        tasks: Array.isArray(clean.tasks) ? clean.tasks : [],
+        customRoutes: Array.isArray(clean.customRoutes) ? clean.customRoutes : [],
+        customCustomers: customCustomers,
+        approvalRequests: Array.isArray(clean.approvalRequests) ? clean.approvalRequests : [],
+        pushSubscriptions: Array.isArray(clean.pushSubscriptions) ? clean.pushSubscriptions : [],
+        pushTestRequests: Array.isArray(clean.pushTestRequests) ? clean.pushTestRequests : [],
+        pushNotificationLogs: Array.isArray(clean.pushNotificationLogs) ? clean.pushNotificationLogs.slice(0, 100) : [],
+        logs: Array.isArray(clean.logs) ? clean.logs.slice(0, 150) : [],
+        users: Array.isArray(clean.users) ? clean.users : []
+    };
+}
+
+function mergeRecordListsById(remoteArr, localArr, idKey = 'id', preferRemoteOrder = true) {
+    const rList = Array.isArray(remoteArr) ? remoteArr : [];
+    const lList = Array.isArray(localArr) ? localArr : [];
+    const map = new Map();
+    const first = preferRemoteOrder ? rList : lList;
+    const second = preferRemoteOrder ? lList : rList;
+    first.forEach(item => {
+        if (item && item[idKey]) map.set(item[idKey], item);
+    });
+    second.forEach(item => {
+        if (item && item[idKey] && !map.has(item[idKey])) {
+            map.set(item[idKey], item);
+        }
+    });
+    return Array.from(map.values());
+}
+
+async function fetchLiveCloudSyncState() {
+    try {
+        const token = getCloudAuthToken();
+        const res = await fetch(`${CLOUD_API_URL}?t=${Date.now()}`, {
+            headers: { 'Authorization': `token ${token}`, 'Accept': 'application/vnd.github.v3+json' },
+            cache: 'no-store'
+        });
+        if (res.ok) {
+            const meta = await res.json();
+            if (meta && meta.sha) lastKnownCloudSha = meta.sha;
+            if (meta && meta.content) {
+                return JSON.parse(decodeUTF8Base64(meta.content));
+            }
+        }
+    } catch (e) {}
+    try {
+        const rawRes = await fetch(`https://raw.githubusercontent.com/Dizsan/ziyaret/main/live_sync_state.json?t=${Date.now()}`, { cache: 'no-store' });
+        if (rawRes.ok) return await rawRes.json();
+    } catch (e) {}
+    return null;
+}
+
+function applyLiveCloudSyncToAppState(cloudSync, isInitial = false) {
+    if (!cloudSync || typeof cloudSync !== 'object') return false;
+    const remoteTime = new Date(cloudSync.updatedAt || 0).getTime() || 0;
+    const localTime = new Date(appState.updatedAt || 0).getTime() || 0;
+    const isRemoteNewer = remoteTime >= localTime || isInitial;
+
+    const beforeSig = `${(appState.visits || []).length}|${(appState.tasks || []).length}|${(appState.customRoutes || []).length}|${(appState.approvalRequests || []).length}|${appState.updatedAt || ''}`;
+
+    if (Array.isArray(cloudSync.visits)) {
+        appState.visits = mergeRecordListsById(cloudSync.visits, appState.visits, 'id', isRemoteNewer);
+    }
+    if (Array.isArray(cloudSync.tasks)) {
+        appState.tasks = mergeRecordListsById(cloudSync.tasks, appState.tasks, 'id', isRemoteNewer);
+    }
+    if (Array.isArray(cloudSync.customRoutes)) {
+        appState.customRoutes = isRemoteNewer ? cloudSync.customRoutes : mergeRecordListsById(cloudSync.customRoutes, appState.customRoutes, 'id', true);
+    }
+    if (Array.isArray(cloudSync.approvalRequests)) {
+        appState.approvalRequests = mergeRecordListsById(cloudSync.approvalRequests, appState.approvalRequests, 'id', isRemoteNewer);
+    }
+    if (Array.isArray(cloudSync.logs) && cloudSync.logs.length > 0) {
+        appState.logs = mergeRecordListsById(cloudSync.logs, appState.logs, 'id', isRemoteNewer).slice(0, 300);
+    }
+    if (Array.isArray(cloudSync.customCustomers) && cloudSync.customCustomers.length > 0 && Array.isArray(appState.customers)) {
+        const custMap = new Map(appState.customers.map(c => [c.code, c]));
+        cloudSync.customCustomers.forEach(cc => {
+            if (!cc || !cc.code) return;
+            if (custMap.has(cc.code)) {
+                const existing = custMap.get(cc.code);
+                Object.assign(existing, { ...cc, serviceHistory: existing.serviceHistory || [] });
+            } else {
+                appState.customers.unshift({ ...cc, serviceHistory: cc.serviceHistory || [] });
+            }
+        });
+    }
+    if (isRemoteNewer && cloudSync.updatedAt) {
+        appState.updatedAt = cloudSync.updatedAt;
+    }
+    if (cloudSync.stateRevision && Number(cloudSync.stateRevision) > Number(appState.stateRevision || 0)) {
+        appState.stateRevision = Number(cloudSync.stateRevision);
+    }
+
+    const afterSig = `${(appState.visits || []).length}|${(appState.tasks || []).length}|${(appState.customRoutes || []).length}|${(appState.approvalRequests || []).length}|${appState.updatedAt || ''}`;
+    return beforeSig !== afterSig;
+}
+
 async function pushStateToGitHubCloud(isRetry = false) {
     try {
         const token = getCloudAuthToken();
@@ -7423,12 +7543,20 @@ async function pushStateToGitHubCloud(isRetry = false) {
             if (getRes.ok) {
                 const meta = await getRes.json();
                 lastKnownCloudSha = meta.sha;
+                if (meta.content && isRetry) {
+                    try {
+                        const remoteSync = JSON.parse(decodeUTF8Base64(meta.content));
+                        applyLiveCloudSyncToAppState(remoteSync, false);
+                    } catch (e) {}
+                }
             }
         }
 
+        const payloadStr = JSON.stringify(buildLiveSyncPayload(appState));
+        const encodedContent = encodeUTF8Base64(payloadStr);
         const putBody = {
             message: `sync: ${appState.version} (${formatNowTR()})`,
-            content: encodeUTF8Base64(JSON.stringify(sanitizeStateForCloud(appState)))
+            content: encodedContent
         };
         if (lastKnownCloudSha) putBody.sha = lastKnownCloudSha;
 
@@ -7452,14 +7580,120 @@ async function pushStateToGitHubCloud(isRetry = false) {
             lastKnownCloudSha = null;
             await pushStateToGitHubCloud(true);
         }
+
+        // Aynı anda D-Pro deposundaki live_sync_state.json dosyasını da arka planda yedekle
+        (async () => {
+            try {
+                if (!lastKnownDproSha) {
+                    const g2 = await fetch(`${CLOUD_DPRO_API_URL}?t=${Date.now()}`, {
+                        headers: { 'Authorization': `token ${token}`, 'Accept': 'application/vnd.github.v3+json' },
+                        cache: 'no-store'
+                    });
+                    if (g2.ok) {
+                        const m2 = await g2.json();
+                        lastKnownDproSha = m2.sha;
+                    }
+                }
+                const body2 = { message: `sync: ${appState.version} (${formatNowTR()})`, content: encodedContent };
+                if (lastKnownDproSha) body2.sha = lastKnownDproSha;
+                const p2 = await fetch(CLOUD_DPRO_API_URL, {
+                    method: 'PUT',
+                    headers: { 'Authorization': `token ${token}`, 'Accept': 'application/vnd.github.v3+json', 'Content-Type': 'application/json' },
+                    body: JSON.stringify(body2)
+                });
+                if (p2.ok) {
+                    const pd2 = await p2.json();
+                    if (pd2 && pd2.content && pd2.content.sha) lastKnownDproSha = pd2.content.sha;
+                } else {
+                    lastKnownDproSha = null;
+                }
+            } catch (e2) {}
+        })();
     } catch (e) {}
 }
 
 async function syncFromServer() {
-    if (isCloudPutInFlight || hasPendingCloudPut || (Date.now() - lastLocalSaveTime < 6000)) return;
+    if (isCloudPutInFlight || hasPendingCloudPut || (Date.now() - lastLocalSaveTime < 3500)) return;
     try {
-        await fetchLiveGitHubData(false);
+        const cloudSync = await fetchLiveCloudSyncState();
+        if (cloudSync && applyLiveCloudSyncToAppState(cloudSync, false)) {
+            syncCustomRoutesToCustomers();
+            saveStateLocally();
+            renderAll();
+        }
     } catch (e) {}
+}
+
+function openCustomerModal() {
+    const m = document.getElementById('customer-modal');
+    if (!m) return;
+    const form = document.getElementById('customer-form');
+    if (form) form.reset();
+    const codeIn = document.getElementById('cust-code');
+    if (codeIn && !codeIn.value) {
+        codeIn.value = '120.YENI.' + String(Date.now()).slice(-4);
+    }
+    m.classList.add('open');
+}
+
+function closeCustomerModal() {
+    const m = document.getElementById('customer-modal');
+    if (m) m.classList.remove('open');
+}
+
+function saveNewCustomer(event) {
+    if (event) event.preventDefault();
+    const code = (document.getElementById('cust-code')?.value || '').trim() || ('120.YENI.' + String(Date.now()).slice(-4));
+    const title = (document.getElementById('cust-title')?.value || '').trim();
+    const authorized = (document.getElementById('cust-auth')?.value || '').trim();
+    const phone = (document.getElementById('cust-phone')?.value || '').trim();
+    const city = (document.getElementById('cust-city')?.value || '').trim();
+    const district = (document.getElementById('cust-district')?.value || '').trim();
+    const rut = (document.getElementById('cust-rut')?.value || '').trim();
+    const plates = (document.getElementById('cust-plates')?.value || '').trim();
+    const model = (document.getElementById('cust-model')?.value || '').trim();
+    const address = (document.getElementById('cust-address')?.value || '').trim();
+
+    if (!title) {
+        alert('Lütfen müşteri / cari ünvanını giriniz!');
+        return;
+    }
+
+    const newCust = {
+        code,
+        title,
+        authorized,
+        phone,
+        city,
+        district,
+        rut: rut || `${city} Rutu`,
+        plates,
+        vehicleModel: model,
+        address,
+        totalRevenue: 0,
+        balance: 0,
+        ba: '-',
+        priority: 'P2 - Yeni Potansiyel',
+        lastVisit: formatNowTR().slice(0, 10),
+        visitStatus: 'Yeni Kayıt',
+        isCustom: true,
+        _modifiedAt: new Date().toISOString(),
+        serviceHistory: []
+    };
+
+    if (!Array.isArray(appState.customers)) appState.customers = [];
+    const existingIdx = appState.customers.findIndex(c => c && c.code === code);
+    if (existingIdx !== -1) {
+        appState.customers[existingIdx] = { ...appState.customers[existingIdx], ...newCust };
+    } else {
+        appState.customers.unshift(newCust);
+    }
+
+    addAuditLog('YENİ MÜŞTERİ', `${title} (${code} - ${city}/${district}) sisteme eklendi ve GitHub ile senkronize edildi.`);
+    syncToServer();
+    closeCustomerModal();
+    renderAll();
+    showToast(`✅ '${title}' kaydedildi ve tüm cihazlarınızla senkronize edildi.`, 'success');
 }
 
 // ==========================================================================
@@ -14201,10 +14435,14 @@ document.addEventListener('DOMContentLoaded', async () => {
     document.addEventListener('click', unlockGesture, { passive: true });
     document.addEventListener('touchend', unlockGesture, { passive: true });
 
-    // Her 12 saniyede bir bulut kontrolü
+    // Her 5 saniyede bir ve ekran/sekme odaklandığında anlık Telefon <-> PC bulut senkronizasyonu
     setInterval(() => {
         syncFromServer();
-    }, 12000);
+    }, 5000);
+    window.addEventListener('focus', () => { syncFromServer(); });
+    document.addEventListener('visibilitychange', () => {
+        if (document.visibilityState === 'visible') syncFromServer();
+    });
 
     // Her 8 saniyede bir telefon hatırlatıcısı & çıkış uyarısı motorunu çalıştır
     setInterval(() => {

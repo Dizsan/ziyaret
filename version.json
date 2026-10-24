@@ -1,7 +1,7 @@
 {
-  "version": "1.7.0",
-  "build": 170,
-  "releasedAt": "2026-10-24 23:11:53",
-  "releaseNotes": "Mobil ekranda Kaydet & Senkronize Et ve Iptal butonlari gorunurluk duzeltmesi",
+  "version": "1.7.1",
+  "build": 171,
+  "releasedAt": "2026-10-24 23:21:53",
+  "releaseNotes": "Telefon ve PC arasinda anlik cift yonlu otomatik GitHub senkronizasyonu (live_sync_state.json)",
   "author": "Ömer Eren & DİZSAN"
 }

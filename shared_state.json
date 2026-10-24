@@ -175780,7 +175780,7 @@
       "platform": "Android / Mobil"
     }
   ],
-  "updatedAt": "2026-10-24T20:11:53.763861Z",
+  "updatedAt": "2026-10-24T20:21:53.045749Z",
   "stateRevision": 44,
   "cities": [
     "Adana",
@@ -175949,9 +175949,9 @@
     "realtimeSyncChannel": "GitHub Live API & Raw CDN",
     "status": "Aktif & Güncel (Sadece Dizsan Otomotiv Carileri - Lojistik/DsMot/KmSolar Hariç)"
   },
-  "appVersion": "1.7.0",
-  "versionUpdatedAt": "2026-10-24 23:11:53",
-  "versionReleaseNotes": "Mobil ekranda Kaydet & Senkronize Et ve Iptal butonlari gorunurluk duzeltmesi",
+  "appVersion": "1.7.1",
+  "versionUpdatedAt": "2026-10-24 23:21:53",
+  "versionReleaseNotes": "Telefon ve PC arasinda anlik cift yonlu otomatik GitHub senkronizasyonu (live_sync_state.json)",
   "totalCount": 1990,
   "customRoutes": []
 }
