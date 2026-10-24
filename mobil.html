@@ -3019,7 +3019,7 @@ body[data-theme="light"] .matched-field-callout {
 
                 <div class="navbar-right" style="display:none !important;">
                     <button type="button" class="btn btn-secondary btn-sm app-version-chip" id="app-version-badge" onclick="openVersionModal()" title="Sürüm ve Cihaz Güncelleme Merkezi">
-                        <i class="fa-solid fa-code-branch" style="color:#38bdf8;"></i> <span id="app-current-version-text">v1.6.3</span>
+                        <i class="fa-solid fa-code-branch" style="color:#38bdf8;"></i> <span id="app-current-version-text">v1.6.4</span>
                     </button>
 
                     <button type="button" class="btn btn-secondary btn-sm" onclick="forceRefreshFromGitHub()" id="btn-navbar-refresh" title="Logo ERP Canlı Verilerini Yenile (Son Fatura: 20.08.2026)">
@@ -3065,16 +3065,33 @@ body[data-theme="light"] .matched-field-callout {
                         <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.75rem; flex-wrap:wrap; gap:0.5rem;">
                             <div>
                                 <h2 style="font-size:1.12rem; font-weight:800; color:#38bdf8; margin:0; display:flex; align-items:center; gap:0.5rem;">
-                                    <i class="fa-solid fa-magnifying-glass"></i> Müşteri, Şoför, Plaka &amp; Fatura Detay Arama Merkezi
+                                    <i class="fa-solid fa-magnifying-glass"></i> Müşteri, Şoför, Plaka &amp; İl / İlçe Detay Arama Merkezi
                                 </h2>
                                 <p style="font-size:0.78rem; color:#94a3b8; margin:0.2rem 0 0 0;">
-                                    Önce <strong>"Ara (Tam Eşleşme)"</strong> ile birebir eşleşen kayıtları bulun. Benzer veya yakın isimleri de görmek isterseniz <strong>"Detaylandır (Benzerlerini Ara)"</strong> tuşuna basın.
+                                    Müşteri/Şoför adı ile aramak için <strong>"🏢 Cariye Göre Ara"</strong>, gittiğiniz bölgedeki tüm müşterileri (adres, ilçe, vergi dairesi veya cari içinde nerede geçerse geçsin) listelemek için <strong>"📍 İl - İlçeye Göre Ara"</strong> seçeneğini kullanın.
                                 </p>
                             </div>
                             <button type="button" id="global-theme-toggle-btn" class="theme-toggle-pill" onclick="toggleZiyaretTheme()" title="Sol Bar Dahil Komple Koyu / Açık Tema Değiştir">
                                 <i class="fa-solid fa-sun" id="global-theme-icon"></i>
                                 <span id="global-theme-text">Açık Tema</span>
                             </button>
+                        </div>
+
+                        <!-- SEÇMELİ ARAMA TÜRÜ: CARİYE GÖRE ARA / İL - İLÇEYE GÖRE ARA -->
+                        <div style="display:flex; align-items:center; gap:0.55rem; margin-bottom:0.65rem; flex-wrap:wrap; background:rgba(15,23,42,0.45); padding:0.5rem 0.65rem; border-radius:10px; border:1px solid rgba(56,189,248,0.28);">
+                            <span style="font-size:0.76rem; font-weight:800; color:#94a3b8; text-transform:uppercase; letter-spacing:0.04em;">
+                                <i class="fa-solid fa-sliders" style="color:#38bdf8;"></i> Arama Kriteri Seçin:
+                            </span>
+                            <button type="button" id="scope-btn-cari" onclick="setCustomerSearchScope('CARI')" style="padding:0.48rem 0.95rem; border-radius:8px; font-size:0.82rem; font-weight:800; cursor:pointer; display:inline-flex; align-items:center; gap:0.4rem; background:linear-gradient(135deg,#10b981,#059669); color:#fff; border:2px solid #34d399; box-shadow:0 3px 10px rgba(16,185,129,0.3);">
+                                <i class="fa-solid fa-building-user"></i> Cariye Göre Ara (Müşteri Adı, Şoför, Kod, Plaka)
+                            </button>
+                            <button type="button" id="scope-btn-location" onclick="setCustomerSearchScope('LOCATION')" style="padding:0.48rem 0.95rem; border-radius:8px; font-size:0.82rem; font-weight:800; cursor:pointer; display:inline-flex; align-items:center; gap:0.4rem; background:rgba(30,41,59,0.85); color:#cbd5e1; border:2px solid rgba(148,163,184,0.3);">
+                                <i class="fa-solid fa-map-location-dot" style="color:#f59e0b;"></i> İl - İlçeye Göre Ara (İl, İlçe, Adres, Vergi Dairesi, Cari İçi Tümü)
+                            </button>
+                            <select id="global-customer-search-scope" onchange="setCustomerSearchScope(this.value)" style="margin-left:auto; padding:0.42rem 0.7rem; border-radius:8px; font-size:0.79rem; font-weight:800; background:var(--bg-card); color:var(--text-main); border:1px solid rgba(56,189,248,0.4); cursor:pointer;">
+                                <option value="CARI">🏢 Cariye Göre Ara (Müşteri / Şoför / Plaka / Kod)</option>
+                                <option value="LOCATION">📍 İl - İlçeye Göre Ara (İl / İlçe / Adres / Vergi Dairesi / Tümü)</option>
+                            </select>
                         </div>
 
                         <div class="global-search-top-row">
@@ -8955,8 +8972,8 @@ function openCustomerDetailModal(code) {
                     <div style="font-size:1.05rem; font-weight:800; color:#fff;">${hl(customer.title || '-')}</div>
                     <div style="font-size:0.8rem; color:#cbd5e1; margin-top:0.25rem;">
                         Cari Kod: <strong style="color:#38bdf8; font-family:monospace;">${hl(customer.code || '-')}</strong> •
-                        Bölge: <strong>${customer.city || '-'} / ${customer.district || '-'}</strong> •
-                        Rut: <strong>${customer.rut || '-'}</strong>
+                        Bölge: <strong>${hl(customer.city || '-')} / ${hl(customer.district || '-')}</strong> •
+                        Rut: <strong>${hl(customer.rut || '-')}</strong>
                     </div>
                     ${activeMatchInfo.matchedContextHtml || ''}
                 </div>
@@ -9025,10 +9042,10 @@ function openCustomerDetailModal(code) {
             <div style="background:rgba(255,255,255,0.02); border:1px solid var(--border-color); border-radius:var(--radius-md); padding:0.85rem;">
                 <div class="detail-section-title"><i class="fa-solid fa-location-dot"></i> Resmi Logo CLCARD Adresi &amp; Saha Geçmişi</div>
                 <div style="font-size:0.81rem; color:#e2e8f0; line-height:1.45; min-height:42px;">
-                    ${customer.address || 'Kayıtlı açık adres bulunmuyor.'}
+                    ${hl(customer.address || 'Kayıtlı açık adres bulunmuyor.')}
                 </div>
                 <div style="font-size:0.75rem; color:var(--text-muted); margin-top:0.4rem;">
-                    İlçe / İl: <strong style="color:#fff;">${customer.district || '-'} / ${customer.city || '-'}</strong> (${customer.rut || '-'})
+                    İlçe / İl: <strong style="color:#fff;">${hl(customer.district || '-')} / ${hl(customer.city || '-')}</strong> (${hl(customer.rut || '-')})
                 </div>
                 <div style="font-size:0.75rem; color:var(--text-muted); margin-top:0.35rem;">
                     Saha Ziyaret / Arama Kaydı: <strong style="color:#38bdf8;">${customerVisits.length} Görüşme</strong> • Bekleyen Aksiyon: <strong style="color:#fbbf24;">${customerTasks.length} Görev</strong>
@@ -13288,7 +13305,54 @@ function highlightSearchText(rawText, queryText, extraMatchedWord = '') {
     return html;
 }
 
-function computeCustomerMatchByMode(c, rawQuery, mode = 'EXACT') {
+let currentSearchScope = 'CARI'; // 'CARI' (Cariye Göre Ara) veya 'LOCATION' (İl - İlçeye Göre Ara)
+
+function setCustomerSearchScope(scope) {
+    currentSearchScope = scope === 'LOCATION' ? 'LOCATION' : 'CARI';
+    const sel = document.getElementById('global-customer-search-scope');
+    if (sel && sel.value !== currentSearchScope) {
+        sel.value = currentSearchScope;
+    }
+    const btnCari = document.getElementById('scope-btn-cari');
+    const btnLoc = document.getElementById('scope-btn-location');
+    if (btnCari && btnLoc) {
+        if (currentSearchScope === 'CARI') {
+            btnCari.style.background = 'linear-gradient(135deg,#10b981,#059669)';
+            btnCari.style.color = '#fff';
+            btnCari.style.borderColor = '#34d399';
+            btnCari.style.boxShadow = '0 3px 10px rgba(16,185,129,0.3)';
+            btnLoc.style.background = 'rgba(30,41,59,0.85)';
+            btnLoc.style.color = '#cbd5e1';
+            btnLoc.style.borderColor = 'rgba(148,163,184,0.3)';
+            btnLoc.style.boxShadow = 'none';
+        } else {
+            btnLoc.style.background = 'linear-gradient(135deg,#f59e0b,#d97706)';
+            btnLoc.style.color = '#fff';
+            btnLoc.style.borderColor = '#fbbf24';
+            btnLoc.style.boxShadow = '0 3px 10px rgba(245,158,11,0.35)';
+            btnCari.style.background = 'rgba(30,41,59,0.85)';
+            btnCari.style.color = '#cbd5e1';
+            btnCari.style.borderColor = 'rgba(148,163,184,0.3)';
+            btnCari.style.boxShadow = 'none';
+        }
+    }
+    const inp = document.getElementById('global-customer-search-input');
+    if (inp) {
+        inp.placeholder = currentSearchScope === 'LOCATION'
+            ? 'İl, ilçe, belde, köy, adres veya vergi dairesi yazın (Örn: Merzifon, Çorum, Suluova)...'
+            : 'Müşteri ünvanı, şoför/yetkili adı (Örn: Ganik), 120 kod, plaka veya telefon yazın...';
+        const q = String(inp.value || '').trim();
+        if (q.length > 0 || globalCustomerQuickFilter !== 'ALL') {
+            handleGlobalCustomerSearchInput(q, true, currentSearchPageMode);
+        } else {
+            clearGlobalCustomerSearch();
+        }
+        inp.focus();
+    }
+}
+
+function computeCustomerMatchByMode(c, rawQuery, mode = 'EXACT', scopeOverride = '') {
+    const scope = scopeOverride || currentSearchScope || 'CARI';
     const nq = normSearchTR(rawQuery);
     const nqComp = normCompactTR(rawQuery);
     if (!nq && !nqComp) return { score: 100, reason: 'Tüm Liste', isExact: true, matchedWord: '', matchedContextHtml: '' };
@@ -13301,23 +13365,146 @@ function computeCustomerMatchByMode(c, rawQuery, mode = 'EXACT') {
     const platesRaw = String(c.plates || '').trim();
     const phoneRaw = String(c.phone || '').trim();
     const addrRaw = String(c.address || '').trim();
+    const cityRaw = String(c.city || '').trim();
+    const distRaw = String(c.district || '').trim();
+    const rutRaw = String(c.rut || '').trim();
+    const taxOfficeRaw = String(c.taxOffice || c.vergiDairesi || c.vd || '').trim();
+    const notesRaw = String(c.visitNotes || c.dataAudit || '').trim();
 
     const nt = normSearchTR(titleRaw);
     const ntComp = normCompactTR(titleRaw);
-    const nc = normSearchTR(codeRaw);
     const ncComp = normCompactTR(codeRaw);
-    const na = normSearchTR(authRaw);
     const naComp = normCompactTR(authRaw);
-    const np = normSearchTR(platesRaw);
     const npComp = normCompactTR(platesRaw);
-    const nph = normSearchTR(phoneRaw);
     const nphComp = normCompactTR(phoneRaw);
     const naddrComp = normCompactTR(addrRaw);
+    const ncityComp = normCompactTR(cityRaw);
+    const ndistComp = normCompactTR(distRaw);
+    const nrutComp = normCompactTR(rutRaw);
+    const ntaxComp = normCompactTR(taxOfficeRaw);
+    const nnotesComp = normCompactTR(notesRaw);
 
     const titleWordsOrig = titleRaw.split(/[\s.,;:\-\/()'"&]+/).filter(Boolean);
     const titleWordsNorm = titleWordsOrig.map(w => normCompactTR(w)).filter(Boolean);
+    const historyList = Array.isArray(c.serviceHistory) ? c.serviceHistory : [];
 
-    // 1. TAM EŞLEŞME TARAMASI (Büyük/Küçük Harf, Türkçe Karakter ve TÜM Noktalama İşaretleri Duyarsız)
+    // =========================================================================
+    // KAPSAM 2: İL - İLÇEYE GÖRE ARA (scope === 'LOCATION')
+    // Cari içinde nerede yazdığına bakılmaksızın (İlçe, İl, Vergi Dairesi, Adres,
+    // Rut, Cari Ünvan veya Alt Fatura alanları) eşleşen TÜM müşterileri getirir!
+    // =========================================================================
+    if (scope === 'LOCATION') {
+        const matchedParts = [];
+        let locScore = 0;
+        let locReason = '';
+
+        // 1) İlçe (c.district) veya İl (c.city)
+        if ((ndistComp && nqComp && ndistComp.includes(nqComp)) || (ncityComp && nqComp && ncityComp.includes(nqComp)) ||
+            (qCompTokens.length > 1 && qCompTokens.every(qt => (ndistComp + ncityComp).includes(qt)))) {
+            locScore = Math.max(locScore, (ndistComp === nqComp || ncityComp === nqComp) ? 100 : 99);
+            locReason = `📍 İl / İlçe Kaydı Eşleşmesi (${cityRaw || '-'} / ${distRaw || '-'})`;
+            matchedParts.push(`<span>İl / İlçe:</span> <strong>${highlightSearchText(`${cityRaw || '-'} / ${distRaw || '-'}`, rawQuery)}</strong>`);
+        }
+
+        // 2) Vergi Dairesi (c.taxOffice / c.vergiDairesi)
+        if (ntaxComp && ((nqComp && ntaxComp.includes(nqComp)) || (qCompTokens.length > 1 && qCompTokens.every(qt => ntaxComp.includes(qt))))) {
+            locScore = Math.max(locScore, 98);
+            if (!locReason) locReason = `🏛️ Vergi Dairesi Eşleşmesi (${taxOfficeRaw})`;
+            matchedParts.push(`<span>Vergi Dairesi:</span> <strong>${highlightSearchText(taxOfficeRaw, rawQuery)}</strong>`);
+        }
+
+        // 3) Açık Adres (c.address) - Vergi dairesi veya ili başka şehir olsa bile adres içinde geçiyorsa mutlaka gelir!
+        if (naddrComp && ((nqComp && naddrComp.includes(nqComp)) || (qCompTokens.length > 1 && qCompTokens.every(qt => naddrComp.includes(qt))))) {
+            locScore = Math.max(locScore, 98);
+            if (!locReason) locReason = `📍 Açık Adres İçinde Geçiyor`;
+            matchedParts.push(`<span>Açık Adres:</span> <strong>${highlightSearchText(addrRaw, rawQuery)}</strong>`);
+        }
+
+        // 4) Rut / Bölge (c.rut)
+        if (nrutComp && nqComp && nrutComp.includes(nqComp)) {
+            locScore = Math.max(locScore, 97);
+            if (!locReason) locReason = `🛣️ Rut / Bölge Eşleşmesi (${rutRaw})`;
+            matchedParts.push(`<span>Rut:</span> <strong>${highlightSearchText(rutRaw, rawQuery)}</strong>`);
+        }
+
+        // 5) Cari Ünvan (c.title) içinde bölge/ilçe adı geçiyorsa (Örn: "MERZİFON GÜLBAHAR UN...")
+        if (ntComp && ((nqComp && ntComp.includes(nqComp)) || (qCompTokens.length > 1 && qCompTokens.every(qt => ntComp.includes(qt))))) {
+            locScore = Math.max(locScore, 97);
+            if (!locReason) locReason = `🏢 Cari Ünvan İçinde Geçiyor`;
+            matchedParts.push(`<span>Cari Ünvan:</span> <strong>${highlightSearchText(titleRaw, rawQuery)}</strong>`);
+        }
+
+        // 6) Cari içindeki diğer herhangi bir alan (Notlar, Yetkili, Fatura Açıklamaları vb.)
+        if (nnotesComp && nqComp && nnotesComp.includes(nqComp)) {
+            locScore = Math.max(locScore, 96);
+            if (!locReason) locReason = `📝 Cari Not / Detay Alanında Geçiyor`;
+            matchedParts.push(`<span>Not / Detay:</span> <strong>${highlightSearchText(notesRaw, rawQuery)}</strong>`);
+        }
+        if (locScore === 0) {
+            for (let hIdx = 0; hIdx < historyList.length; hIdx++) {
+                const h = historyList[hIdx];
+                if (!h) continue;
+                const hCombined = `${h.islem || ''} ${h.sofor || ''} ${h.plaka || ''} ${h.fatura_no || ''}`.trim();
+                if (hCombined && normCompactTR(hCombined).includes(nqComp)) {
+                    locScore = 95;
+                    locReason = `🧾 Cari Alt Fatura Detayında Geçiyor (${h.fatura_no || '-'})`;
+                    matchedParts.push(`<span>Fatura Detayı (${escapeHtml(h.fatura_no || '-')}):</span> <strong>${highlightSearchText(hCombined, rawQuery)}</strong>`);
+                    break;
+                }
+            }
+        }
+
+        if (locScore >= 95) {
+            // Eğer açık adreste geçmiyorsa bile ziyaret kolaylığı için açık adresi de yanına bilgi olarak ekle
+            if (addrRaw && !matchedParts.some(p => p.includes('Açık Adres:'))) {
+                matchedParts.push(`<span>Adres:</span> ${highlightSearchText(addrRaw, rawQuery)}`);
+            }
+            return {
+                score: locScore,
+                reason: locReason,
+                isExact: true,
+                matchedWord: rawQuery,
+                matchedContextHtml: `<div class="matched-field-callout"><i class="fa-solid fa-map-location-dot"></i> ${matchedParts.join(' &bull; ')}</div>`
+            };
+        }
+
+        if (mode === 'EXACT') {
+            return { score: 0, reason: '', isExact: false, matchedWord: '', matchedContextHtml: '' };
+        }
+
+        // LOCATION modunda 'SIMILAR' (Detaylandır / Benzerlerini Ara): İlçe, İl ve Adres kelimelerinde 1-2 harf yazım hatası toleransı
+        const locWords = `${cityRaw} ${distRaw} ${addrRaw} ${taxOfficeRaw}`.split(/[\s.,;:\-\/()'"&]+/).filter(Boolean);
+        let bestLocScore = 0;
+        let bestLocWord = '';
+        for (const lw of locWords) {
+            const wComp = normCompactTR(lw);
+            if (wComp.length < 3 || nqComp.length < 3) continue;
+            const dist = levenshteinDist(nqComp, wComp);
+            if (dist === 1 && 92 > bestLocScore) {
+                bestLocScore = 92;
+                bestLocWord = lw;
+            } else if (nqComp.length >= 4 && wComp.startsWith(nqComp.slice(0, 3)) && dist <= 2 && 88 > bestLocScore) {
+                bestLocScore = 88;
+                bestLocWord = lw;
+            }
+        }
+        if (bestLocScore > 0) {
+            return {
+                score: bestLocScore,
+                reason: `🤖 Yakın İl/İlçe/Adres Kelimesi: "${bestLocWord}"`,
+                isExact: false,
+                matchedWord: bestLocWord,
+                matchedContextHtml: `<div class="matched-field-callout"><i class="fa-solid fa-map-location-dot"></i> <span>Benzer Konum Bilgisinde Bulundu:</span> ${highlightSearchText(`${cityRaw} / ${distRaw} - ${addrRaw}`, rawQuery, bestLocWord)}</div>`
+            };
+        }
+        return { score: 0, reason: '', isExact: false, matchedWord: '', matchedContextHtml: '' };
+    }
+
+    // =========================================================================
+    // KAPSAM 1: CARİYE GÖRE ARA (scope === 'CARI')
+    // Sadece Müşteri Adı/Ünvanı, 120 Cari Kodu, Yetkili, Şoför, Plaka, Telefon
+    // ve Fatura No alanlarına bakar (İl/İlçe/Adres karıştırmaz!).
+    // =========================================================================
     // A) Cari Ünvan & 120 Cari Kodu
     if (ntComp === nqComp || ncComp === nqComp) {
         return {
@@ -13368,20 +13555,17 @@ function computeCustomerMatchByMode(c, rawQuery, mode = 'EXACT') {
         };
     }
 
-    // C) Fatura Altındaki Şoför Adı (h.sofor), Plaka (h.plaka), Fatura No (h.fatura_no) veya İşlem (h.islem)
-    const historyList = Array.isArray(c.serviceHistory) ? c.serviceHistory : [];
+    // C) Fatura Altındaki Şoför Adı (h.sofor), Plaka (h.plaka) veya Fatura No (h.fatura_no)
     for (let hIdx = 0; hIdx < historyList.length; hIdx++) {
         const h = historyList[hIdx];
         if (!h) continue;
         const soforRaw = String(h.sofor || '').trim();
         const plakaRaw = String(h.plaka || '').trim();
         const fatNoRaw = String(h.fatura_no || '').trim();
-        const islemRaw = String(h.islem || '').trim();
 
         const nsComp = normCompactTR(soforRaw);
         const nplComp = normCompactTR(plakaRaw);
         const nfComp = normCompactTR(fatNoRaw);
-        const nislComp = normCompactTR(islemRaw);
 
         if (nsComp && ((nqComp && nsComp.includes(nqComp)) || (qCompTokens.length > 1 && qCompTokens.every(qt => nsComp.includes(qt))))) {
             return {
@@ -13410,18 +13594,9 @@ function computeCustomerMatchByMode(c, rawQuery, mode = 'EXACT') {
                 matchedContextHtml: `<div class="matched-field-callout"><i class="fa-solid fa-file-invoice"></i> <span>Fatura Numarasında Bulundu:</span> ${highlightSearchText(fatNoRaw, rawQuery)} (${escapeHtml(h.tarih || '-')})</div>`
             };
         }
-        if (nislComp && nqComp && nqComp.length >= 3 && nislComp.includes(nqComp)) {
-            return {
-                score: 95,
-                reason: `🔧 Fatura İşlem / Parça Eşleşmesi`,
-                isExact: true,
-                matchedWord: rawQuery,
-                matchedContextHtml: `<div class="matched-field-callout"><i class="fa-solid fa-screwdriver-wrench"></i> <span>Fatura İşlem Satırında Bulundu (${escapeHtml(fatNoRaw || '-')}):</span> ${highlightSearchText(islemRaw, rawQuery)}</div>`
-            };
-        }
     }
 
-    // D) Kayıtlı Plakalar (c.plates), Telefon (c.phone) veya Adres (c.address)
+    // D) Kayıtlı Plakalar (c.plates) veya Telefon (c.phone)
     if (npComp && nqComp && npComp.includes(nqComp)) {
         return {
             score: 95,
@@ -13438,15 +13613,6 @@ function computeCustomerMatchByMode(c, rawQuery, mode = 'EXACT') {
             isExact: true,
             matchedWord: rawQuery,
             matchedContextHtml: `<div class="matched-field-callout"><i class="fa-solid fa-phone"></i> <span>Telefon Numarasında Geçiyor:</span> ${highlightSearchText(phoneRaw, rawQuery)}</div>`
-        };
-    }
-    if (naddrComp && nqComp && nqComp.length >= 3 && naddrComp.includes(nqComp)) {
-        return {
-            score: 95,
-            reason: `📍 Adres Bilgisinde Eşleşme`,
-            isExact: true,
-            matchedWord: rawQuery,
-            matchedContextHtml: `<div class="matched-field-callout"><i class="fa-solid fa-map-pin"></i> <span>Adres Alanında Geçiyor:</span> ${highlightSearchText(addrRaw, rawQuery)}</div>`
         };
     }
 
@@ -13597,10 +13763,13 @@ function clearGlobalCustomerSearch() {
     const panel = document.getElementById('global-customer-search-results');
     if (panel) {
         panel.style.display = 'block';
+        const scopeLabel = currentSearchScope === 'LOCATION'
+            ? '<strong>İl, İlçe, Adres, Vergi Dairesi veya Bölge Adı (Örn: Merzifon, Çorum, Suluova)</strong>'
+            : '<strong>Müşteri Ünvanı, Yetkili/Şoför Adı (Örn: Ganik), 120 Cari Kodu, Araç Plakası veya Telefonu</strong>';
         panel.innerHTML = `
             <div style="padding:1.4rem; text-align:center; color:#94a3b8; font-size:0.86rem;">
-                <i class="fa-solid fa-magnifying-glass" style="font-size:1.5rem; color:#38bdf8; margin-bottom:0.5rem; display:block;"></i>
-                Yukarıdaki kutuya aramak istediğiniz <strong>Müşteri Ünvanı, Yetkili/Şoför Adı (Örn: Ganik), 120 Cari Kodu, Araç Plakası veya Telefonu</strong> yazın; büyük/küçük harf ve noktalama işaretlerine bakılmaksızın eşleşenler aşağıya liste olarak gelir ve eşleşen kelime <mark class="search-match-highlight">🔍 sarı ile işaretlenir</mark>.
+                <i class="fa-solid ${currentSearchScope === 'LOCATION' ? 'fa-map-location-dot' : 'fa-magnifying-glass'}" style="font-size:1.5rem; color:${currentSearchScope === 'LOCATION' ? '#f59e0b' : '#38bdf8'}; margin-bottom:0.5rem; display:block;"></i>
+                Yukarıdaki kutuya aramak istediğiniz ${scopeLabel} yazın; büyük/küçük harf ve noktalama işaretlerine bakılmaksızın eşleşenler aşağıya liste olarak gelir ve eşleşen kelime <mark class="search-match-highlight">🔍 sarı ile işaretlenir</mark>.
             </div>
         `;
     }
@@ -13650,6 +13819,8 @@ function handleGlobalCustomerSearchInput(rawVal, forceShowByChip = false, search
 
     const list = Array.isArray(appState.customers) ? appState.customers : [];
     const scoredList = [];
+    let otherScopeCount = 0;
+    const otherScope = currentSearchScope === 'LOCATION' ? 'CARI' : 'LOCATION';
 
     for (let i = 0; i < list.length; i++) {
         const c = list[i];
@@ -13669,7 +13840,7 @@ function handleGlobalCustomerSearchInput(rawVal, forceShowByChip = false, search
         }
 
         if (q) {
-            const matchInfo = computeCustomerMatchByMode(c, q, mode);
+            const matchInfo = computeCustomerMatchByMode(c, q, mode, currentSearchScope);
             if (mode === 'EXACT' && matchInfo.score >= 95) {
                 scoredList.push({
                     customer: c,
@@ -13689,6 +13860,12 @@ function handleGlobalCustomerSearchInput(rawVal, forceShowByChip = false, search
                     matchedContextHtml: matchInfo.matchedContextHtml || ''
                 });
             }
+
+            // Diğer arama kapsamında (Örn: Cari modundayken İl-İlçe'de kaç kayıt var?) sayısını da hesapla
+            const otherMatch = computeCustomerMatchByMode(c, q, 'EXACT', otherScope);
+            if (otherMatch.score >= 95) {
+                otherScopeCount++;
+            }
         } else {
             scoredList.push({ customer: c, score: 100, reason: 'Hızlı Filtre Eşleşmesi', isExact: true, matchedWord: '', matchedContextHtml: '' });
         }
@@ -13699,15 +13876,23 @@ function handleGlobalCustomerSearchInput(rawVal, forceShowByChip = false, search
         return (Number(b.customer.totalRevenue) || 0) - (Number(a.customer.totalRevenue) || 0);
     });
 
-    const topMatches = scoredList.slice(0, 150);
+    const topMatches = scoredList.slice(0, 500);
+
+    const otherScopeBannerBtn = (q && otherScopeCount > 0)
+        ? `<button type="button" onclick="setCustomerSearchScope('${otherScope}')" style="background:linear-gradient(135deg,#f59e0b,#d97706); border:1px solid #fde68a; color:#fff; cursor:pointer; font-weight:800; font-size:0.75rem; padding:0.32rem 0.7rem; border-radius:6px; display:inline-flex; align-items:center; gap:0.35rem; box-shadow:0 2px 8px rgba(245,158,11,0.35);">
+               <i class="fa-solid ${otherScope === 'LOCATION' ? 'fa-map-location-dot' : 'fa-building-user'}"></i>
+               ${otherScope === 'LOCATION' ? `📍 İl - İlçeye Göre Ara'da ${otherScopeCount} Müşteri Var (Tıkla & Tümünü Getir)` : `🏢 Cariye Göre Ara'da ${otherScopeCount} Müşteri Var (Tıkla & Getir)`}
+           </button>`
+        : '';
 
     if (topMatches.length === 0) {
         panel.style.display = 'block';
         panel.innerHTML = `
             <div style="padding:1.1rem; text-align:center; color:#cbd5e1; font-size:0.86rem; background:rgba(15,23,42,0.5); border:1px dashed rgba(56,189,248,0.35); border-radius:10px;">
                 <i class="fa-solid fa-magnifying-glass" style="color:#f59e0b; font-size:1.2rem; margin-bottom:0.4rem; display:block;"></i>
-                "<strong>${escapeHtml(q)}</strong>" için <strong>${mode === 'EXACT' ? 'Birebir Tam Eşleşme' : 'Benzer Kayıt'}</strong> bulunamadı.
+                "<strong>${escapeHtml(q)}</strong>" için <strong>${currentSearchScope === 'LOCATION' ? 'İl - İlçeye Göre' : 'Cariye Göre'} (${mode === 'EXACT' ? 'Tam Eşleşme' : 'Benzer Kayıt'})</strong> bulunamadı.
                 <div style="margin-top:0.65rem; display:flex; justify-content:center; gap:0.5rem; flex-wrap:wrap;">
+                    ${otherScopeBannerBtn}
                     ${mode === 'EXACT' ? `
                         <button type="button" class="btn btn-primary btn-sm" style="background:linear-gradient(135deg,#0284c7,#6366f1); font-weight:800;" onclick="executeCustomerSearch('SIMILAR')">
                             <i class="fa-solid fa-wand-magic-sparkles"></i> Detaylandır (Benzerlerini ve Yakın İsimleri Ara)
@@ -13722,18 +13907,24 @@ function handleGlobalCustomerSearchInput(rawVal, forceShowByChip = false, search
         return;
     }
 
+    const scopeTagHtml = currentSearchScope === 'LOCATION'
+        ? `<span style="background:rgba(245,158,11,0.22); color:#fde68a; border:1px solid rgba(245,158,11,0.5); padding:0.2rem 0.55rem; border-radius:6px; font-weight:800;">📍 İL - İLÇEYE GÖRE ARAMA (${scoredList.length} Müşteri)</span>`
+        : `<span style="background:rgba(16,185,129,0.2); color:#34d399; border:1px solid rgba(16,185,129,0.45); padding:0.2rem 0.55rem; border-radius:6px; font-weight:800;">🏢 CARİYE GÖRE ARAMA (${scoredList.length} Müşteri)</span>`;
+
     const modeBadgeHtml = mode === 'EXACT'
-        ? `<span style="background:rgba(16,185,129,0.2); color:#34d399; border:1px solid rgba(16,185,129,0.45); padding:0.2rem 0.55rem; border-radius:6px; font-weight:800;">🎯 TAM EŞLEŞME LİSTESİ (${scoredList.length} Kayıt)</span>`
-        : `<span style="background:rgba(99,102,241,0.22); color:#a5b4fc; border:1px solid rgba(99,102,241,0.45); padding:0.2rem 0.55rem; border-radius:6px; font-weight:800;">✨ DETAYLI &amp; BENZER ARAMA LİSTESİ (${scoredList.length} Kayıt)</span>`;
+        ? `<span style="background:rgba(56,189,248,0.16); color:#38bdf8; border:1px solid rgba(56,189,248,0.4); padding:0.2rem 0.5rem; border-radius:6px; font-weight:800;">🎯 Tam Eşleşme</span>`
+        : `<span style="background:rgba(99,102,241,0.22); color:#a5b4fc; border:1px solid rgba(99,102,241,0.45); padding:0.2rem 0.5rem; border-radius:6px; font-weight:800;">✨ Benzer Arama</span>`;
 
     panel.style.display = 'block';
     panel.innerHTML = `
         <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.65rem; font-size:0.78rem; color:#e2e8f0; background:rgba(2,132,199,0.15); border:1px solid rgba(56,189,248,0.3); padding:0.55rem 0.75rem; border-radius:8px; flex-wrap:wrap; gap:0.5rem;">
             <div style="display:flex; align-items:center; gap:0.55rem; flex-wrap:wrap;">
+                ${scopeTagHtml}
                 ${modeBadgeHtml}
-                <span style="color:#fde68a; font-weight:700;">👉 Büyük/küçük harf ve noktalama işaretleri yok sayılarak eşleşen kısım <mark class="search-match-highlight" style="font-size:0.72rem;">🔍 sarı işaretle</mark> gösterilmiştir.</span>
+                <span style="color:#fde68a; font-weight:700;">👉 Eşleşen kısım <mark class="search-match-highlight" style="font-size:0.72rem;">🔍 sarı işaretle</mark> gösterilmiştir.</span>
             </div>
-            <div style="display:flex; align-items:center; gap:0.45rem;">
+            <div style="display:flex; align-items:center; gap:0.45rem; flex-wrap:wrap;">
+                ${otherScopeBannerBtn}
                 ${mode === 'EXACT' && q ? `
                     <button type="button" onclick="executeCustomerSearch('SIMILAR')" style="background:linear-gradient(135deg,#0284c7,#6366f1); border:1px solid #38bdf8; color:#fff; cursor:pointer; font-weight:800; font-size:0.74rem; padding:0.3rem 0.65rem; border-radius:6px; display:inline-flex; align-items:center; gap:0.35rem;">
                         <i class="fa-solid fa-wand-magic-sparkles"></i> Detaylandır (Benzerlerini de Göster)
@@ -13768,6 +13959,9 @@ function handleGlobalCustomerSearchInput(rawVal, forceShowByChip = false, search
 
             const titleHighlighted = highlightSearchText(c.title || '-', q, item.matchedWord);
             const codeHighlighted = highlightSearchText(c.code || '', q, item.matchedWord);
+            const cityHighlighted = highlightSearchText(c.city || '-', q, item.matchedWord);
+            const distHighlighted = highlightSearchText(c.district || '-', q, item.matchedWord);
+            const addrHighlighted = highlightSearchText(c.address || '-', q, item.matchedWord);
             const driverHighlighted = highlightSearchText(driverSummaryRaw, q, item.matchedWord);
             const phoneHighlighted = highlightSearchText(c.phone || '-', q, item.matchedWord);
             const platesHighlighted = highlightSearchText(c.plates || '-', q, item.matchedWord);
@@ -13789,7 +13983,8 @@ function handleGlobalCustomerSearchInput(rawVal, forceShowByChip = false, search
                             </div>
                             ${item.matchedContextHtml || ''}
                             <div style="display:flex; align-items:center; gap:0.85rem; margin-top:0.32rem; font-size:0.76rem; color:#cbd5e1; flex-wrap:wrap;">
-                                <span><i class="fa-solid fa-location-dot" style="color:#f59e0b;"></i> <strong>${escapeHtml(c.city || '-')} / ${escapeHtml(c.district || '-')}</strong> (${escapeHtml(c.rut || '-')})</span>
+                                <span><i class="fa-solid fa-location-dot" style="color:#f59e0b;"></i> <strong>${cityHighlighted} / ${distHighlighted}</strong> (${escapeHtml(c.rut || '-')})</span>
+                                <span><i class="fa-solid fa-map-pin" style="color:#a78bfa;"></i> Adres: <strong>${addrHighlighted}</strong></span>
                                 <span><i class="fa-solid fa-id-badge" style="color:#34d399;"></i> Yetkili / Şoför: <strong style="color:#d1fae5;">${driverHighlighted}</strong></span>
                                 <span><i class="fa-solid fa-phone" style="color:#38bdf8;"></i> Tel: <strong>${phoneHighlighted}</strong></span>
                                 <span><i class="fa-solid fa-truck-front" style="color:#fde68a;"></i> Plaka: <strong>${platesHighlighted}</strong></span>
@@ -13822,6 +14017,7 @@ window.toggleZiyaretTheme = toggleZiyaretTheme;
 window.applyZiyaretTheme = applyZiyaretTheme;
 window.focusGlobalCustomerSearch = focusGlobalCustomerSearch;
 window.executeCustomerSearch = executeCustomerSearch;
+window.setCustomerSearchScope = setCustomerSearchScope;
 window.onCustomerSearchInputChange = onCustomerSearchInputChange;
 window.triggerGlobalAiCustomerSearch = triggerGlobalAiCustomerSearch;
 window.selectAiCustomerFromList = selectAiCustomerFromList;

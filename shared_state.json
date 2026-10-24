@@ -175780,7 +175780,7 @@
       "platform": "Android / Mobil"
     }
   ],
-  "updatedAt": "2026-10-24T19:26:50.997633Z",
+  "updatedAt": "2026-10-24T19:40:29.634194Z",
   "stateRevision": 44,
   "cities": [
     "Adana",
@@ -175949,9 +175949,9 @@
     "realtimeSyncChannel": "GitHub Live API & Raw CDN",
     "status": "Aktif & Güncel (Sadece Dizsan Otomotiv Carileri - Lojistik/DsMot/KmSolar Hariç)"
   },
-  "appVersion": "1.6.4",
-  "versionUpdatedAt": "2026-10-24 22:26:50",
-  "versionReleaseNotes": "Buyuk kucuk harf ve noktalama isaretleri duyarsiz anlik liste ve sari isaretleme (highlight)",
+  "appVersion": "1.6.5",
+  "versionUpdatedAt": "2026-10-24 22:40:29",
+  "versionReleaseNotes": "Secmeli Arama Alani: Cariye Gore Ara ve Il-Ilceye Gore Ara (Usta Un / Merzifon dahil tam kapsam)",
   "totalCount": 1990,
   "customRoutes": []
 }
