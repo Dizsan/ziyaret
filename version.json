@@ -1,7 +1,7 @@
 {
-  "version": "1.6.9",
-  "build": 169,
-  "releasedAt": "2026-10-24 23:05:31",
-  "releaseNotes": "GitHub Tam Yedekleme ve Sadece Omer Eren Erisim Kalkani",
+  "version": "1.7.0",
+  "build": 170,
+  "releasedAt": "2026-10-24 23:11:53",
+  "releaseNotes": "Mobil ekranda Kaydet & Senkronize Et ve Iptal butonlari gorunurluk duzeltmesi",
   "author": "Ömer Eren & DİZSAN"
 }
