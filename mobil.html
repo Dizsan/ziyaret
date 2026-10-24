@@ -2305,6 +2305,468 @@ body.dpro-embedded .content-body {
     z-index: 12005 !important;
 }
 
+/* ==========================================================================
+   KOYU / AÇIK TEMA SİSTEMİ (SOL BAR DAHİL KOMPLE AÇIK & KOYU TEMA)
+   ========================================================================== */
+html[data-theme="light"],
+body[data-theme="light"] {
+    --bg-dark: #f1f5f9;
+    --bg-card: #ffffff;
+    --bg-card-hover: #f8fafc;
+    --bg-input: #ffffff;
+    --border-color: #cbd5e1;
+    --border-light: #94a3b8;
+    --text-main: #0f172a;
+    --text-muted: #334155;
+    --text-dim: #64748b;
+    --shadow-lg: 0 10px 25px -5px rgba(15, 23, 42, 0.08);
+    background-color: #f1f5f9 !important;
+    color: #0f172a !important;
+}
+
+/* Sol Bar (Sidebar) Komple Açık Tema */
+body[data-theme="light"] .sidebar {
+    background: linear-gradient(180deg, #ffffff 0%, #f8fafc 100%) !important;
+    border-right: 1px solid #cbd5e1 !important;
+    box-shadow: 4px 0 20px rgba(15, 23, 42, 0.05) !important;
+}
+
+body[data-theme="light"] .sidebar-header {
+    background: #f8fafc !important;
+    border-bottom: 1px solid #e2e8f0 !important;
+}
+
+body[data-theme="light"] .sidebar-brand h2 {
+    color: #0f172a !important;
+}
+
+body[data-theme="light"] .sidebar-brand span {
+    color: #475569 !important;
+}
+
+body[data-theme="light"] .sidebar-brand strong#sidebar-app-version {
+    color: #0284c7 !important;
+}
+
+body[data-theme="light"] .sidebar-nav {
+    background: transparent !important;
+}
+
+body[data-theme="light"] .nav-item {
+    color: #334155 !important;
+    background: transparent !important;
+    border: 1px solid transparent !important;
+}
+
+body[data-theme="light"] .nav-item:hover {
+    background: #e2e8f0 !important;
+    color: #0f172a !important;
+}
+
+body[data-theme="light"] .nav-item.active {
+    background: linear-gradient(135deg, #0284c7, #0369a1) !important;
+    color: #ffffff !important;
+    box-shadow: 0 4px 12px rgba(2, 132, 199, 0.25) !important;
+}
+
+body[data-theme="light"] .nav-item.active span,
+body[data-theme="light"] .nav-item.active i {
+    color: #ffffff !important;
+}
+
+body[data-theme="light"] .nav-item[data-tab="cari-ekstre-tab"]:not(.active) {
+    background: #e0f2fe !important;
+    border-color: #7dd3fc !important;
+}
+
+body[data-theme="light"] .nav-item[data-tab="cari-ekstre-tab"]:not(.active) span {
+    color: #0369a1 !important;
+}
+
+body[data-theme="light"] .nav-badge {
+    background: #e2e8f0 !important;
+    color: #0f172a !important;
+    border: 1px solid #cbd5e1 !important;
+}
+
+body[data-theme="light"] .nav-item.active .nav-badge {
+    background: rgba(255, 255, 255, 0.22) !important;
+    color: #ffffff !important;
+    border-color: rgba(255, 255, 255, 0.35) !important;
+}
+
+body[data-theme="light"] .sidebar-footer {
+    background: #f8fafc !important;
+    border-top: 1px solid #e2e8f0 !important;
+}
+
+body[data-theme="light"] .user-profile {
+    background: #ffffff !important;
+    border: 1px solid #cbd5e1 !important;
+    border-radius: 10px !important;
+    padding: 0.45rem 0.55rem !important;
+}
+
+body[data-theme="light"] .user-name {
+    color: #0f172a !important;
+}
+
+body[data-theme="light"] .user-role {
+    color: #475569 !important;
+}
+
+/* Ana Gövde, Üst Bar, Kartlar ve Tablolar Açık Tema */
+body[data-theme="light"] .main-wrapper,
+body[data-theme="light"] .content-body {
+    background: #f1f5f9 !important;
+    color: #0f172a !important;
+}
+
+body[data-theme="light"] .top-navbar {
+    background: rgba(255, 255, 255, 0.95) !important;
+    border-bottom: 1px solid #cbd5e1 !important;
+}
+
+body[data-theme="light"] .logo-erp-live-bar {
+    background: linear-gradient(135deg, #ffffff 0%, #e0f2fe 100%) !important;
+    border: 1px solid #bae6fd !important;
+    box-shadow: 0 4px 12px rgba(2, 132, 199, 0.06) !important;
+}
+
+body[data-theme="light"] .live-bar-title {
+    color: #0369a1 !important;
+}
+
+body[data-theme="light"] .live-bar-sub {
+    color: #334155 !important;
+}
+
+body[data-theme="light"] .inpage-back-btn {
+    background: #ffffff !important;
+    color: #0284c7 !important;
+    border-color: #7dd3fc !important;
+}
+
+body[data-theme="light"] .kpi-card,
+body[data-theme="light"] .table-card,
+body[data-theme="light"] .filter-bar,
+body[data-theme="light"] .visit-card,
+body[data-theme="light"] .task-card,
+body[data-theme="light"] .strategy-card,
+body[data-theme="light"] .smart-agenda-card,
+body[data-theme="light"] .ai-banner {
+    background: #ffffff !important;
+    border-color: #cbd5e1 !important;
+    color: #0f172a !important;
+    box-shadow: 0 4px 14px rgba(15, 23, 42, 0.05) !important;
+}
+
+body[data-theme="light"] .kpi-info h3,
+body[data-theme="light"] .card-title h2,
+body[data-theme="light"] .visit-card-title,
+body[data-theme="light"] .customer-title-cell {
+    color: #0f172a !important;
+}
+
+body[data-theme="light"] .kpi-label,
+body[data-theme="light"] .kpi-sub,
+body[data-theme="light"] .card-title p {
+    color: #475569 !important;
+}
+
+body[data-theme="light"] .table-card-header {
+    background: #f8fafc !important;
+    border-bottom: 1px solid #e2e8f0 !important;
+}
+
+body[data-theme="light"] .dizsan-table th {
+    background: #f1f5f9 !important;
+    color: #1e293b !important;
+    border-bottom: 2px solid #cbd5e1 !important;
+}
+
+body[data-theme="light"] .dizsan-table td {
+    color: #0f172a !important;
+    border-bottom: 1px solid #e2e8f0 !important;
+}
+
+body[data-theme="light"] .dizsan-table tbody tr:hover {
+    background: #e0f2fe !important;
+}
+
+body[data-theme="light"] .form-control,
+body[data-theme="light"] .filter-input,
+body[data-theme="light"] .filter-select,
+body[data-theme="light"] input[type="text"],
+body[data-theme="light"] input[type="number"],
+body[data-theme="light"] input[type="tel"],
+body[data-theme="light"] input[type="password"],
+body[data-theme="light"] select,
+body[data-theme="light"] textarea {
+    background: #ffffff !important;
+    color: #0f172a !important;
+    border-color: #94a3b8 !important;
+}
+
+body[data-theme="light"] .btn-secondary {
+    background: #ffffff !important;
+    color: #1e293b !important;
+    border: 1px solid #cbd5e1 !important;
+}
+
+body[data-theme="light"] .btn-secondary:hover {
+    background: #f1f5f9 !important;
+    color: #0f172a !important;
+    border-color: #94a3b8 !important;
+}
+
+body[data-theme="light"] .modal-box {
+    background: #ffffff !important;
+    color: #0f172a !important;
+    border: 1px solid #cbd5e1 !important;
+}
+
+body[data-theme="light"] .modal-header,
+body[data-theme="light"] .modal-footer {
+    background: #f8fafc !important;
+    border-color: #e2e8f0 !important;
+}
+
+body[data-theme="light"] .modal-header h2,
+body[data-theme="light"] .modal-header h3 {
+    color: #0f172a !important;
+}
+
+/* Inline Koyu Renk Stillerini Açık Temada Otomatik Uyumlama */
+body[data-theme="light"] [style*="background:rgba(15,23,42"],
+body[data-theme="light"] [style*="background: rgba(15, 23, 42"],
+body[data-theme="light"] [style*="background:rgba(30,41,59"],
+body[data-theme="light"] [style*="background: rgba(30, 41, 59"],
+body[data-theme="light"] [style*="background:#0f172a"],
+body[data-theme="light"] [style*="background:#1e293b"],
+body[data-theme="light"] [style*="background: linear-gradient(135deg, rgba(15,23,42"],
+body[data-theme="light"] [style*="background:linear-gradient(135deg, rgba(15,23,42"],
+body[data-theme="light"] [style*="background:linear-gradient(135deg, rgba(2,132,199,0.14)"] {
+    background: #ffffff !important;
+    border-color: #cbd5e1 !important;
+    color: #0f172a !important;
+}
+
+body[data-theme="light"] [style*="color:#fff"]:not(.btn):not(.nav-badge):not(.badge),
+body[data-theme="light"] [style*="color: #fff"]:not(.btn):not(.nav-badge):not(.badge),
+body[data-theme="light"] [style*="color:#f8fafc"],
+body[data-theme="light"] [style*="color:#e2e8f0"],
+body[data-theme="light"] [style*="color:#e0f2fe"] {
+    color: #0f172a !important;
+}
+
+body[data-theme="light"] [style*="color:#94a3b8"],
+body[data-theme="light"] [style*="color:#cbd5e1"],
+body[data-theme="light"] [style*="color:#bae6fd"] {
+    color: #334155 !important;
+}
+
+body[data-theme="light"] .mobile-bottom-nav {
+    background: #ffffff !important;
+    border-top: 1px solid #cbd5e1 !important;
+}
+
+body[data-theme="light"] .mobile-nav-item {
+    color: #475569 !important;
+}
+
+body[data-theme="light"] .mobile-nav-item.active {
+    color: #0284c7 !important;
+}
+
+/* ==========================================================================
+   HER SEKMEDE SABİT GLOBAL MÜŞTERİ ARAMA & TEMA ÇUBUĞU
+   ========================================================================== */
+.global-customer-search-bar {
+    position: sticky;
+    top: 0;
+    z-index: 950;
+    background: linear-gradient(135deg, rgba(15, 23, 42, 0.96), rgba(30, 41, 59, 0.96));
+    backdrop-filter: blur(14px);
+    -webkit-backdrop-filter: blur(14px);
+    border: 1px solid rgba(56, 189, 248, 0.35);
+    border-radius: 14px;
+    padding: 0.7rem 0.95rem;
+    margin-bottom: 1rem;
+    box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.35);
+    transition: all 0.2s ease;
+}
+
+body[data-theme="light"] .global-customer-search-bar {
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.98), rgba(248, 250, 252, 0.98)) !important;
+    border: 1px solid #93c5fd !important;
+    box-shadow: 0 8px 20px -4px rgba(2, 132, 199, 0.12) !important;
+}
+
+.global-search-top-row {
+    display: flex;
+    align-items: center;
+    gap: 0.65rem;
+    flex-wrap: wrap;
+}
+
+.global-search-input-wrap {
+    position: relative;
+    flex: 1;
+    min-width: 240px;
+    display: flex;
+    align-items: center;
+}
+
+.global-search-input-wrap i.search-lead-icon {
+    position: absolute;
+    left: 0.85rem;
+    color: #38bdf8;
+    font-size: 0.95rem;
+    pointer-events: none;
+}
+
+.global-search-input {
+    width: 100%;
+    padding: 0.62rem 2.4rem 0.62rem 2.45rem;
+    border-radius: 10px;
+    border: 1px solid rgba(56, 189, 248, 0.4);
+    background: rgba(9, 13, 22, 0.85);
+    color: #f8fafc;
+    font-size: 0.86rem;
+    font-weight: 500;
+    outline: none;
+    transition: all 0.2s ease;
+}
+
+.global-search-input:focus {
+    border-color: #38bdf8;
+    box-shadow: 0 0 0 3px rgba(56, 189, 248, 0.2);
+}
+
+body[data-theme="light"] .global-search-input {
+    background: #f8fafc !important;
+    color: #0f172a !important;
+    border-color: #60a5fa !important;
+}
+
+.global-search-clear-btn {
+    position: absolute;
+    right: 0.55rem;
+    background: rgba(239, 68, 68, 0.15);
+    color: #f87171;
+    border: none;
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    cursor: pointer;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.78rem;
+}
+
+.global-search-chips {
+    display: flex;
+    align-items: center;
+    gap: 0.35rem;
+    flex-wrap: wrap;
+}
+
+.global-chip {
+    background: rgba(30, 41, 59, 0.85);
+    color: #cbd5e1;
+    border: 1px solid rgba(148, 163, 184, 0.25);
+    padding: 0.32rem 0.62rem;
+    border-radius: 999px;
+    font-size: 0.73rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.15s ease;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3rem;
+    white-space: nowrap;
+}
+
+.global-chip:hover,
+.global-chip.active {
+    background: #0284c7 !important;
+    color: #ffffff !important;
+    border-color: #38bdf8 !important;
+}
+
+body[data-theme="light"] .global-chip {
+    background: #f1f5f9;
+    color: #334155;
+    border-color: #cbd5e1;
+}
+
+.theme-toggle-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    padding: 0.45rem 0.78rem;
+    border-radius: 10px;
+    font-size: 0.78rem;
+    font-weight: 700;
+    cursor: pointer;
+    border: 1px solid rgba(251, 191, 36, 0.45);
+    background: rgba(251, 191, 36, 0.12);
+    color: #fde68a;
+    transition: all 0.2s ease;
+    white-space: nowrap;
+}
+
+.theme-toggle-pill:hover {
+    background: rgba(251, 191, 36, 0.22);
+    transform: translateY(-1px);
+}
+
+body[data-theme="light"] .theme-toggle-pill {
+    background: #0f172a !important;
+    color: #f8fafc !important;
+    border-color: #334155 !important;
+}
+
+.global-search-results-panel {
+    margin-top: 0.65rem;
+    max-height: 410px;
+    overflow-y: auto;
+    border-top: 1px solid rgba(148, 163, 184, 0.2);
+    padding-top: 0.6rem;
+    display: none;
+}
+
+.global-search-result-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem;
+    padding: 0.6rem 0.75rem;
+    border-radius: 10px;
+    background: rgba(15, 23, 42, 0.75);
+    border: 1px solid rgba(148, 163, 184, 0.16);
+    margin-bottom: 0.45rem;
+    transition: all 0.15s ease;
+    flex-wrap: wrap;
+}
+
+.global-search-result-item:hover {
+    border-color: #38bdf8;
+    background: rgba(2, 132, 199, 0.12);
+}
+
+body[data-theme="light"] .global-search-result-item {
+    background: #f8fafc !important;
+    border-color: #cbd5e1 !important;
+}
+
+body[data-theme="light"] .global-search-result-item:hover {
+    background: #e0f2fe !important;
+    border-color: #0284c7 !important;
+}
+
 </style>
 </head>
 <body>
@@ -2459,6 +2921,14 @@ body.dpro-embedded .content-body {
                     </button>
                 </div>
                 <div style="display:flex; gap:0.35rem;">
+                    <button type="button" id="sidebar-theme-toggle-btn" class="btn btn-secondary btn-sm" style="flex:1; justify-content:center; padding:0.4rem 0.35rem; font-size:0.73rem; font-weight:700; border-color:rgba(251,191,36,0.4);" onclick="toggleZiyaretTheme()" title="Sol Bar Dahil Komple Koyu / Açık Tema Değiştir">
+                        <i class="fa-solid fa-sun" id="sidebar-theme-icon" style="color:#fbbf24;"></i> <span id="sidebar-theme-text">Açık Tema</span>
+                    </button>
+                    <button type="button" class="btn btn-secondary btn-sm" style="flex:1; justify-content:center; padding:0.4rem 0.35rem; font-size:0.73rem; font-weight:700; border-color:rgba(56,189,248,0.4);" onclick="focusGlobalCustomerSearch()" title="Müşteri Arama Alanına Odaklan (Ctrl+K)">
+                        <i class="fa-solid fa-magnifying-glass" style="color:#38bdf8;"></i> <span>Müşteri Ara</span>
+                    </button>
+                </div>
+                <div style="display:flex; gap:0.35rem;">
                     <button type="button" class="btn btn-secondary btn-sm" style="flex:1; justify-content:center; padding:0.38rem 0.3rem; font-size:0.72rem;" onclick="openPushTestCenterModal()" title="Web Push & Bildirim Test Merkezi">
                         <i class="fa-solid fa-satellite-dish" style="color:#38bdf8;"></i> <span>Push &amp; Test</span>
                     </button>
@@ -2545,6 +3015,47 @@ body.dpro-embedded .content-body {
 
                 <!-- ÖMER EREN YÖNETİCİ ONAY MERKEZİ (DEĞİŞTİRME VE SİLME ONAYI) -->
                 <div id="omer-approval-center-container"></div>
+
+                <!-- ==============================================================
+                     HER SEKMEDE GÖRÜNÜR GLOBAL MÜŞTERİ ARAMA & TEMA ÇUBUĞU
+                     ============================================================== -->
+                <div id="global-customer-search-bar" class="global-customer-search-bar">
+                    <div class="global-search-top-row">
+                        <div class="global-search-input-wrap">
+                            <i class="fa-solid fa-magnifying-glass search-lead-icon"></i>
+                            <input type="text" id="global-customer-search-input" class="global-search-input" placeholder="Hangi sekmede olursanız olun müşteri arayın: Cari Ünvan, 120 Logo Kodu, Plaka, İl/İlçe, Yetkili veya Telefon... (Ctrl+K)" oninput="handleGlobalCustomerSearchInput(this.value)" onfocus="handleGlobalCustomerSearchInput(this.value)" autocomplete="off">
+                            <button type="button" id="global-customer-search-clear" class="global-search-clear-btn" onclick="clearGlobalCustomerSearch()" title="Aramayı Temizle">
+                                <i class="fa-solid fa-xmark"></i>
+                            </button>
+                        </div>
+
+                        <div class="global-search-chips">
+                            <button type="button" class="global-chip active" data-qfilter="ALL" onclick="setGlobalCustomerQuickFilter('ALL')">
+                                <i class="fa-solid fa-users"></i> Tümü (<span id="global-search-total-count">1.990</span>)
+                            </button>
+                            <button type="button" class="global-chip" data-qfilter="VIP" onclick="setGlobalCustomerQuickFilter('VIP')">
+                                <i class="fa-solid fa-crown" style="color:#fbbf24;"></i> VIP / Yüksek Ciro
+                            </button>
+                            <button type="button" class="global-chip" data-qfilter="BORCLU" onclick="setGlobalCustomerQuickFilter('BORCLU')">
+                                <i class="fa-solid fa-Scale-unbalanced" style="color:#f87171;"></i> Borçlu (B)
+                            </button>
+                            <button type="button" class="global-chip" data-qfilter="ALACAKLI" onclick="setGlobalCustomerQuickFilter('ALACAKLI')">
+                                <i class="fa-solid fa-circle-check" style="color:#34d399;"></i> Alacaklı (A)
+                            </button>
+                            <button type="button" class="global-chip" data-qfilter="CORUM" onclick="setGlobalCustomerQuickFilter('CORUM')">
+                                <i class="fa-solid fa-location-dot" style="color:#38bdf8;"></i> Çorum
+                            </button>
+                        </div>
+
+                        <button type="button" id="global-theme-toggle-btn" class="theme-toggle-pill" onclick="toggleZiyaretTheme()" title="Sol Bar Dahil Komple Koyu / Açık Tema Değiştir">
+                            <i class="fa-solid fa-sun" id="global-theme-icon"></i>
+                            <span id="global-theme-text">Açık Tema</span>
+                        </button>
+                    </div>
+
+                    <!-- Anlık Canlı Müşteri Arama Sonuçları (Her Sekmede Açılır) -->
+                    <div id="global-customer-search-results" class="global-search-results-panel"></div>
+                </div>
 
                 <!-- ==============================================================
                      SEKME 1: GENEL BAKIŞ & KOKPİT (DASHBOARD-TAB)
@@ -5773,7 +6284,7 @@ body.dpro-embedded .content-body {
  */
 
 const INITIAL_APP_VERSION = "v1.3.0";
-const CURRENT_APP_VERSION = "1.5.7";
+const CURRENT_APP_VERSION = "1.5.9";
 let hasShownUpdateNotice = false;
 const VAPID_PUBLIC_KEY = "BJIJfCBiDwya3clZOWS08EDxfuN18xtfJGTX0n_apWBTEW7-kO_FGKNy5VDRvUsMgc46IP5oxLlIHqgrDo-JTkE";
 const STORAGE_KEY_STATE = "dizsan_ziyaret_shared_state_v1";
@@ -6032,6 +6543,250 @@ function getDevicePlatform() {
     if (/Mac/.test(ua)) return "macOS / Masaüstü";
     return "Web Tarayıcı";
 }
+
+// ==========================================================================
+// AKILLI TÜRKİYE TELEFON NUMARASI AYRIŞTIRICI VE WHATSAPP KÖPRÜSÜ
+// ==========================================================================
+const TR_CITY_AREA_CODES = {
+    "corum": "364", "amasya": "358", "tokat": "356", "yozgat": "354",
+    "cankiri": "376", "samsun": "362", "ankara": "312", "istanbul": "212",
+    "kastamonu": "366", "sinop": "368", "kirikkale": "318", "kayseri": "352",
+    "sivas": "346", "ordu": "452", "giresun": "454", "trabzon": "462",
+    "kirsehir": "386", "nevsehir": "384", "konya": "332", "adana": "322",
+    "mersin": "324", "gaziantep": "342", "hatay": "326", "izmir": "232",
+    "bursa": "224", "kocaeli": "262", "sakarya": "264", "bolu": "374",
+    "duzce": "380", "zonguldak": "372", "karabuk": "370", "bartin": "378",
+    "artvin": "466", "rize": "464", "erzurum": "442", "erzincan": "446"
+};
+
+function formatPhone12Display(phone12) {
+    const d = String(phone12 || '').replace(/[^0-9]/g, '');
+    if (d.length === 12 && d.startsWith('90')) {
+        return `0 (${d.slice(2, 5)}) ${d.slice(5, 8)} ${d.slice(8, 10)} ${d.slice(10, 12)}`;
+    }
+    return phone12 || '';
+}
+
+function parseTurkishPhones(rawPhone, city = '') {
+    if (!rawPhone || String(rawPhone).trim().toUpperCase() === 'YOK') {
+        return { wa: '', tel: '', display: '', mobiles: [], all: [], hasPhone: false };
+    }
+    const ac = TR_CITY_AREA_CODES[cleanTR(city)] || '364';
+    const parts = String(rawPhone).split(/[,;/|]+/);
+    const valid = [];
+
+    for (const part of parts) {
+        const digits = part.replace(/[^0-9]/g, '');
+        if (!digits) continue;
+
+        let subparts = [digits];
+        if (digits.length === 14 && !digits.startsWith('0090')) {
+            subparts = [digits.slice(0, 7), digits.slice(7, 14)];
+        } else if (digits.length > 12 && !digits.startsWith('0090')) {
+            const matches = digits.match(/(?:90|0)?(5\d{9}|[2348]\d{9})/g);
+            if (matches && matches.length > 0) {
+                subparts = matches;
+            }
+        }
+
+        for (let d of subparts) {
+            if (d.startsWith('0090') && d.length === 14) {
+                d = d.slice(2);
+            } else if (d.startsWith('90') && d.length === 12) {
+                // Zaten 90XXXXXXXXXX formatında
+            } else if (d.startsWith('0') && d.length === 11) {
+                d = '9' + d;
+            } else if (d.length === 10 && '23458'.includes(d[0])) {
+                d = '90' + d;
+            } else if (d.length === 7) {
+                d = '90' + ac + d;
+            } else if (d.length === 11 && d.startsWith('5')) {
+                const m = d.match(/(5\d{9})/);
+                if (m) d = '90' + m[1];
+            }
+            if (d.length === 12 && d.startsWith('90') && !valid.includes(d)) {
+                valid.push(d);
+            }
+        }
+    }
+
+    const mobiles = valid.filter(v => v.startsWith('905'));
+    const bestWa = mobiles[0] || valid[0] || '';
+    const bestTel = bestWa ? ('+' + bestWa) : '';
+    const display = bestWa ? formatPhone12Display(bestWa) : String(rawPhone);
+
+    return {
+        wa: bestWa,
+        tel: bestTel,
+        display,
+        mobiles,
+        all: valid,
+        hasPhone: Boolean(bestWa)
+    };
+}
+
+function openWhatsAppChat(phoneRaw = '', messageText = '', cityHint = '') {
+    const parsed = parseTurkishPhones(phoneRaw, cityHint);
+    const phoneParam = parsed.wa || '';
+    const textParam = messageText ? encodeURIComponent(String(messageText)) : '';
+
+    const queryParts = [];
+    if (phoneParam) queryParts.push(`phone=${phoneParam}`);
+    if (textParam) queryParts.push(`text=${textParam}`);
+    const queryString = queryParts.join('&');
+
+    const nativeSchemeUrl = `whatsapp://send${queryString ? '?' + queryString : ''}`;
+    const webWaUrl = phoneParam
+        ? `https://wa.me/${phoneParam}${textParam ? '?text=' + textParam : ''}`
+        : `https://wa.me/${textParam ? '?text=' + textParam : ''}`;
+
+    const ua = navigator.userAgent || '';
+    const isMacDesktop = /Macintosh|Mac OS X/.test(ua) && !/iPhone|iPad|iPod/.test(ua);
+    const isLocalServer = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+
+    // 1. Yerel Portal Sunucusu (macOS) aktifse doğrudan LaunchServices ile WhatsApp.app'i sıfır uyarıyla aç
+    if (isLocalServer && isMacDesktop) {
+        fetch('/api/open-whatsapp', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ url: nativeSchemeUrl, webUrl: webWaUrl, phone: phoneParam })
+        }).then(r => {
+            if (!r.ok) {
+                triggerClientWhatsAppRedirect(nativeSchemeUrl, webWaUrl, isMacDesktop);
+            }
+        }).catch(() => {
+            triggerClientWhatsAppRedirect(nativeSchemeUrl, webWaUrl, isMacDesktop);
+        });
+        return;
+    }
+
+    // 2. İstemci tarafı doğrudan yönlendirme (macOS WhatsApp.app / Mobil PWA / Web)
+    triggerClientWhatsAppRedirect(nativeSchemeUrl, webWaUrl, isMacDesktop);
+}
+
+function triggerClientWhatsAppRedirect(nativeSchemeUrl, webWaUrl, isMacDesktop) {
+    try {
+        if (isMacDesktop) {
+            // macOS üzerinde yüklü WhatsApp.app'i boş sekme bırakmadan doğrudan tetikle
+            const a = document.createElement('a');
+            a.href = nativeSchemeUrl;
+            a.style.display = 'none';
+            document.body.appendChild(a);
+            a.click();
+            setTimeout(() => a.remove(), 300);
+            return;
+        }
+        const win = window.open(webWaUrl, '_blank', 'noopener,noreferrer');
+        if (!win) {
+            window.top.location.href = webWaUrl;
+        }
+    } catch (e) {
+        window.location.href = webWaUrl;
+    }
+}
+
+function openCustomerWhatsApp(customerCode, mode = 'DEFAULT', extraIndex = 0) {
+    const customer = (appState.customers || []).find(c => c.code === customerCode);
+    if (!customer) {
+        showToast('Müşteri kaydı bulunamadı.', 'danger');
+        return;
+    }
+    const parsed = parseTurkishPhones(customer.phone, customer.city);
+    if (!parsed.hasPhone) {
+        showToast('Bu müşteriye ait geçerli bir telefon numarası bulunamadı.', 'warning');
+        return;
+    }
+
+    const targetPhone = (extraIndex > 0 && parsed.all[extraIndex]) ? parsed.all[extraIndex] : parsed.wa;
+    const acc = getCustomerAccountingSummary(customer);
+    const senderName = currentUser ? currentUser.name : 'DİZSAN Otomotiv Yetkili Servis';
+
+    let msg = '';
+    if (mode === 'EKSTRE') {
+        msg = [
+            `Sayın *${customer.title}* Yetkilisi${customer.authorized && customer.authorized !== 'Bilinmiyor' ? ` (${customer.authorized})` : ''},`,
+            ``,
+            `*DİZSAN Otomotiv Scania Yetkili Servisi* cari hesap bilgilendirmesidir:`,
+            `• *Cari Kodu:* ${customer.code}`,
+            `• *Toplam Borç:* ${formatMoney(acc.borc)}`,
+            `• *Toplam Alacak:* ${formatMoney(acc.alacak)}`,
+            `• *Güncel Net Bakiye:* *${formatMoney(Math.abs(acc.bakiye))} ${acc.baCode}*`,
+            customer.lastDate ? `• *Son İşlem Tarihi:* ${customer.lastDate}` : '',
+            ``,
+            `Bilgilerinize sunar, iyi çalışmalar dileriz.`,
+            `_${senderName} — DİZSAN Otomotiv Çorum_`
+        ].filter(Boolean).join('\n');
+    } else if (mode === 'INVOICE') {
+        const historyList = customer.serviceHistory || [];
+        const inv = historyList[Number(extraIndex) || 0];
+        if (inv) {
+            const norm = normalizeInvoiceLines(inv);
+            msg = [
+                `Sayın *${customer.title}* Yetkilisi,`,
+                ``,
+                `*DİZSAN Otomotiv* servis işlem ve fatura özetiniz:`,
+                `• *Fatura No:* ${inv.fatura_no || '-'}`,
+                `• *Tarih:* ${inv.tarih || '-'}`,
+                `• *Araç Plakası:* ${(inv.plaka && inv.plaka !== '-') ? inv.plaka : (customer.plates || '-')}`,
+                `• *İşlem:* ${inv.islem || '-'}`,
+                `• *Genel Toplam (KDV Dahil):* *${formatMoney(norm.genelToplam)}*`,
+                ``,
+                `İyi yolculuklar ve hayırlı işler dileriz.`,
+                `_${senderName} — DİZSAN Otomotiv_`
+            ].join('\n');
+        }
+    } else {
+        msg = [
+            `Sayın *${customer.title}* Yetkilisi${customer.authorized && customer.authorized !== 'Bilinmiyor' ? ` (${customer.authorized})` : ''},`,
+            ``,
+            `*DİZSAN Otomotiv (Çorum Scania Yetkili Servisi)* olarak araçlarınızın servis/bakım durumu ve devam eden kampanyalarımız hakkında sizinle iletişime geçiyoruz.`,
+            customer.plates && customer.plates !== 'Plakasız' ? `• *Kayıtlı Araç:* ${customer.plates}` : '',
+            ``,
+            `Müsait olduğunuzda görüşmek dileğiyle, iyi çalışmalar dileriz.`,
+            `_${senderName}_`
+        ].filter(Boolean).join('\n');
+    }
+
+    addAuditLog('WHATSAPP İLETİŞİM', `${customer.code} - ${customer.title} (${formatPhone12Display(targetPhone)}) için WhatsApp mesajı başlatıldı.`);
+    openWhatsAppChat(targetPhone, msg, customer.city);
+}
+
+function shareCustomRouteWhatsApp(routeId) {
+    const rt = (appState.customRoutes || []).find(r => r.id === routeId);
+    if (!rt) return;
+    const customers = (appState.customers || []).filter(c =>
+        (Array.isArray(rt.customerCodes) && rt.customerCodes.includes(c.code)) || c.rut === rt.name
+    );
+
+    const custLines = customers.slice(0, 20).map((c, i) => {
+        const p = parseTurkishPhones(c.phone, c.city);
+        return `${i + 1}. *${c.title}* (${c.district || c.city})${p.hasPhone ? ` - 📞 ${p.display}` : ''}`;
+    });
+    if (customers.length > 20) {
+        custLines.push(`...ve +${customers.length - 20} müşteri daha.`);
+    }
+
+    const msg = [
+        `🚗 *DİZSAN SAHA ZİYARET RUT PLANI*`,
+        `📌 *Rut Adı:* ${rt.name}`,
+        `🛣️ *Güzergah:* ${rt.routeText || '-'}`,
+        `📅 *Plan Tarihi:* ${rt.plannedDate || '-'}`,
+        `👤 *Sorumlu:* ${rt.assignee || '-'}`,
+        `👥 *Toplam Cari:* ${customers.length} Müşteri`,
+        rt.notes ? `📝 *Not:* ${rt.notes}` : '',
+        ``,
+        `*Ziyaret Edilecek Müşteriler:*`,
+        ...custLines
+    ].filter(Boolean).join('\n');
+
+    addAuditLog('WHATSAPP PAYLAŞIM', `"${rt.name}" rut planı WhatsApp üzerinden paylaşıldı.`);
+    openWhatsAppChat('', msg);
+}
+
+window.parseTurkishPhones = parseTurkishPhones;
+window.openWhatsAppChat = openWhatsAppChat;
+window.openCustomerWhatsApp = openCustomerWhatsApp;
+window.shareCustomRouteWhatsApp = shareCustomRouteWhatsApp;
 
 function addAuditLog(category, detail) {
     const actor = currentUser ? currentUser.name : "SİSTEM";
@@ -6343,25 +7098,50 @@ async function forceRefreshFromGitHub() {
 }
 
 async function fetchLiveGitHubData(isInitial = false) {
-    const sources = [
-        'shared_state.json?t=' + Date.now(),
-        'https://raw.githubusercontent.com/Dizsan/ziyaret/main/shared_state.json?t=' + Date.now(),
-        'customer_database.json?t=' + Date.now(),
-        'https://raw.githubusercontent.com/Dizsan/ziyaret/main/customer_database.json?t=' + Date.now()
+    const ts = Date.now();
+    const primarySources = [
+        'https://raw.githubusercontent.com/Dizsan/ziyaret/main/shared_state.json?t=' + ts,
+        'shared_state.json?t=' + ts
+    ];
+    const fallbackSources = [
+        'customer_database.json?t=' + ts,
+        'https://raw.githubusercontent.com/Dizsan/ziyaret/main/customer_database.json?t=' + ts
     ];
 
+    let candidates = [];
+    const settled = await Promise.allSettled(
+        primarySources.map(src => fetch(src, { cache: 'no-store' }).then(r => r.ok ? r.json() : null))
+    );
+    for (const res of settled) {
+        if (res.status === 'fulfilled' && res.value && Array.isArray(res.value.customers) && res.value.customers.length > 0) {
+            candidates.push(res.value);
+        }
+    }
+
     let liveData = null;
-    for (const src of sources) {
-        try {
-            const res = await fetch(src, { cache: 'no-store' });
-            if (res.ok) {
-                const parsed = await res.json();
-                if (parsed && Array.isArray(parsed.customers) && parsed.customers.length > 0) {
-                    liveData = parsed;
-                    break;
+    if (candidates.length > 0) {
+        candidates.sort((a, b) => {
+            const revA = Number(a.stateRevision || 0);
+            const revB = Number(b.stateRevision || 0);
+            if (revA !== revB) return revB - revA;
+            const tA = new Date(a.updatedAt || 0).getTime() || 0;
+            const tB = new Date(b.updatedAt || 0).getTime() || 0;
+            return tB - tA;
+        });
+        liveData = candidates[0];
+    } else {
+        for (const src of fallbackSources) {
+            try {
+                const res = await fetch(src, { cache: 'no-store' });
+                if (res.ok) {
+                    const parsed = await res.json();
+                    if (parsed && Array.isArray(parsed.customers) && parsed.customers.length > 0) {
+                        liveData = parsed;
+                        break;
+                    }
                 }
-            }
-        } catch (e) {}
+            } catch (e) {}
+        }
     }
 
     if (!liveData) {
@@ -6379,12 +7159,40 @@ async function fetchLiveGitHubData(isInitial = false) {
     }
 
     lastSyncedSignature = incomingSignature;
-    if (liveData.updatedAt) {
+    const remoteTime = new Date(liveData.updatedAt || 0).getTime() || 0;
+    const localTime = new Date(appState.updatedAt || 0).getTime() || 0;
+    const isRemoteNewerOrEqual = remoteTime >= localTime || isInitial;
+
+    if (liveData.updatedAt && isRemoteNewerOrEqual) {
         appState.updatedAt = liveData.updatedAt;
+    }
+    if (liveData.stateRevision && Number(liveData.stateRevision) >= Number(appState.stateRevision || 0)) {
+        appState.stateRevision = Number(liveData.stateRevision);
     }
 
     if (liveData.customers && liveData.customers.length > 0) {
-        appState.customers = liveData.customers;
+        // Safari localStorage kotası nedeniyle serviceHistory kırpılmışsa mevcut fatura geçmişini koru
+        const existingHistMap = new Map();
+        (appState.customers || []).forEach(c => {
+            if (Array.isArray(c.serviceHistory) && c.serviceHistory.length > 0) {
+                existingHistMap.set(c.code, c.serviceHistory);
+            }
+        });
+        // Adaylardan birinde serviceHistory varsa onu da haritaya ekle
+        candidates.forEach(cand => {
+            (cand.customers || []).forEach(c => {
+                if (!existingHistMap.has(c.code) && Array.isArray(c.serviceHistory) && c.serviceHistory.length > 0) {
+                    existingHistMap.set(c.code, c.serviceHistory);
+                }
+            });
+        });
+
+        appState.customers = liveData.customers.map(c => {
+            if ((!Array.isArray(c.serviceHistory) || c.serviceHistory.length === 0) && existingHistMap.has(c.code)) {
+                return { ...c, serviceHistory: existingHistMap.get(c.code) };
+            }
+            return c;
+        });
     }
     if (liveData.districtStrategies && Object.keys(liveData.districtStrategies).length > 0) {
         appState.districtStrategies = liveData.districtStrategies;
@@ -6398,16 +7206,16 @@ async function fetchLiveGitHubData(isInitial = false) {
         appState.users = migrateOfficialUserEmails(liveData.users);
     }
 
-    // Cihazdaki bekleyen yerel kayıtları koruyarak bulut ziyaretlerini ve özel rut planlarını birleştir
-    if (Array.isArray(liveData.visits) && liveData.visits.length >= (appState.visits || []).length) {
+    // Bulut verisi daha güncelse veya yerel liste boşsa senkronize et (silme ve düzenlemeleri de yansıtır)
+    if (Array.isArray(liveData.visits) && (isRemoteNewerOrEqual || liveData.visits.length >= (appState.visits || []).length)) {
         appState.visits = liveData.visits;
     }
-    if (Array.isArray(liveData.tasks) && liveData.tasks.length >= (appState.tasks || []).length) {
+    if (Array.isArray(liveData.tasks) && (isRemoteNewerOrEqual || liveData.tasks.length >= (appState.tasks || []).length)) {
         appState.tasks = liveData.tasks;
     }
     if (Array.isArray(liveData.customRoutes)) {
         const localRoutes = Array.isArray(appState.customRoutes) ? appState.customRoutes : [];
-        if (liveData.customRoutes.length >= localRoutes.length) {
+        if (isRemoteNewerOrEqual || liveData.customRoutes.length >= localRoutes.length) {
             appState.customRoutes = liveData.customRoutes;
         }
     }
@@ -6509,7 +7317,7 @@ async function pushStateToGitHubCloud(isRetry = false) {
 
         const putBody = {
             message: `sync: ${appState.version} (${formatNowTR()})`,
-            content: encodeUTF8Base64(JSON.stringify(sanitizeStateForCloud(appState), null, 2))
+            content: encodeUTF8Base64(JSON.stringify(sanitizeStateForCloud(appState)))
         };
         if (lastKnownCloudSha) putBody.sha = lastKnownCloudSha;
 
@@ -6924,11 +7732,26 @@ function switchTab(tabId) {
     window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 
-// D-Pro üst menüsünden gelen sekme geçiş mesajlarını dinle
+// D-Pro üst menüsünden gelen sekme geçiş ve tema mesajlarını dinle
 window.addEventListener('message', (event) => {
     if (!event.data || typeof event.data !== 'object') return;
     if (event.data.type === 'DPRO_SWITCH_SUBMODULE' && event.data.targetTab) {
         switchTab(event.data.targetTab);
+    } else if (event.data.type === 'DPRO_SET_THEME' && event.data.theme) {
+        applyZiyaretTheme(event.data.theme, false);
+    }
+});
+
+// Ctrl+K / Cmd+K ile her sekmede müşteri aramaya odaklan
+document.addEventListener('keydown', (e) => {
+    if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'k') {
+        e.preventDefault();
+        focusGlobalCustomerSearch();
+    } else if (e.key === 'Escape') {
+        const panel = document.getElementById('global-customer-search-results');
+        if (panel && panel.style.display !== 'none') {
+            panel.style.display = 'none';
+        }
     }
 });
 
@@ -7058,8 +7881,8 @@ function renderDashboard() {
             .slice(0, 5);
 
         agendaBox.innerHTML = topVipCandidates.map(c => {
-            const cleanPh = (c.phone || '').replace(/[^0-9]/g, '');
-            const hasPhone = c.phone && c.phone !== 'YOK' && cleanPh.length >= 10;
+            const phInfo = parseTurkishPhones(c.phone, c.city);
+            const hasPhone = phInfo.hasPhone;
             const acc = getCustomerAccountingSummary(c);
             return `
                 <div class="smart-agenda-card">
@@ -7076,12 +7899,12 @@ function renderDashboard() {
                     </div>
                     <div style="display:flex; align-items:center; gap:0.35rem; flex-wrap:wrap;">
                         ${hasPhone ? `
-                            <a href="tel:${c.phone}" class="btn btn-secondary btn-sm" style="padding:0.32rem 0.55rem;" title="Hemen Ara: ${c.phone}">
+                            <a href="tel:${phInfo.tel}" class="btn btn-secondary btn-sm" style="padding:0.32rem 0.55rem;" title="Hemen Ara: ${phInfo.display}">
                                 <i class="fa-solid fa-phone" style="color:#38bdf8;"></i>
                             </a>
-                            <a href="https://wa.me/${cleanPh.startsWith('0') ? '9' + cleanPh : cleanPh}" target="_blank" class="btn btn-secondary btn-sm" style="padding:0.32rem 0.55rem;" title="WhatsApp Mesajı Gönder">
+                            <button type="button" class="btn btn-secondary btn-sm" style="padding:0.32rem 0.55rem;" onclick="openCustomerWhatsApp('${c.code}')" title="WhatsApp Mesajı Gönder (${phInfo.display})">
                                 <i class="fa-brands fa-whatsapp" style="color:#25d366;"></i>
-                            </a>
+                            </button>
                         ` : ''}
                         <button type="button" class="btn btn-secondary btn-sm" style="padding:0.32rem 0.6rem;" onclick="openCustomerDetailModal('${c.code}')" title="Logo Cari Ekstre &amp; Fatura Kalemleri">
                             <i class="fa-solid fa-file-invoice-dollar" style="color:#fbbf24;"></i> Ekstre
@@ -7519,6 +8342,7 @@ function renderLegacyCustomers() {
 
         const isSelectedForDraft = selectedSet.has(c.code);
         const hasSavedRut = c.rut && !/^(RUT-\d+|DİĞER)$/i.test(String(c.rut).trim());
+        const phInfo = parseTurkishPhones(c.phone, c.city);
 
         return `
             <tr style="${isSelectedForDraft ? 'background:rgba(16,185,129,0.08);' : ''}">
@@ -7529,7 +8353,10 @@ function renderLegacyCustomers() {
                 </td>
                 <td style="max-width:145px;">
                     <div style="font-weight:600; color:#e2e8f0; font-size:0.75rem; line-height:1.25;">${c.authorized || '-'}</div>
-                    <a href="tel:${c.phone}" style="color:#38bdf8; font-size:0.72rem; text-decoration:none; display:inline-block; margin-top:2px;"><i class="fa-solid fa-phone"></i> ${c.phone || '-'}</a>
+                    ${phInfo.hasPhone
+                        ? `<a href="tel:${phInfo.tel}" style="color:#38bdf8; font-size:0.72rem; text-decoration:none; display:inline-block; margin-top:2px;" title="${c.phone || ''}"><i class="fa-solid fa-phone"></i> ${phInfo.display}</a>`
+                        : `<span style="color:var(--text-muted); font-size:0.72rem; display:inline-block; margin-top:2px;"><i class="fa-solid fa-phone"></i> ${c.phone || '-'}</span>`
+                    }
                 </td>
                 <td style="white-space:nowrap;">
                     <span class="badge badge-secondary">${c.city} / ${c.district}</span>
@@ -7555,6 +8382,11 @@ function renderLegacyCustomers() {
                 <td style="white-space:nowrap;"><span class="badge ${badgeCls}" title="${c.priority || 'Normal'}">${shortPriority}</span></td>
                 <td style="text-align:right; white-space:nowrap;">
                     <div style="display:flex; justify-content:flex-end; gap:0.28rem;">
+                        ${phInfo.hasPhone ? `
+                            <button type="button" class="btn btn-secondary btn-sm" style="padding:0.28rem 0.48rem; font-size:0.74rem; border-color:rgba(37,211,102,0.4); color:#25d366;" title="WhatsApp Mesajı Gönder (${phInfo.display})" onclick="openCustomerWhatsApp('${c.code}')">
+                                <i class="fa-brands fa-whatsapp"></i>
+                            </button>
+                        ` : ''}
                         <button type="button" class="btn ${isSelectedForDraft ? 'btn-success' : 'btn-secondary'} btn-sm" style="padding:0.28rem 0.5rem; font-size:0.71rem; ${isSelectedForDraft ? '' : 'border-color:rgba(56,189,248,0.4); color:#38bdf8;'}" title="Yeni Rut Planına Ekle / Çıkar" onclick="toggleCustomerInCustomRouteDraft('${c.code}')">
                             <i class="fa-solid ${isSelectedForDraft ? 'fa-check' : 'fa-plus'}"></i> ${isSelectedForDraft ? 'Rutta' : 'Ruta Ekle'}
                         </button>
@@ -7925,7 +8757,7 @@ function openCustomerDetailModal(code) {
         cdSubtitle.innerHTML = `<span style="font-family:monospace; color:#38bdf8; font-weight:700;">${customer.code}</span> | ${customer.city} / ${customer.district} | Durum: <strong style="color:${acc.baCode === '(B)' ? '#f87171' : acc.baCode === '(A)' ? '#34d399' : '#94a3b8'};">${acc.baLabel}</strong> | Logo ERP: <span style="color:#34d399;">Canlı &amp; Doğrulanmış</span>`;
     }
 
-    const cleanPhone = (customer.phone || '').replace(/[^0-9]/g, '');
+    const phInfo = parseTurkishPhones(customer.phone, customer.city);
     const cleanAddress = customer.address || `${customer.title} ${customer.city} ${customer.district}`;
     const mapsUrl = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(cleanAddress)}`;
 
@@ -8034,9 +8866,10 @@ function openCustomerDetailModal(code) {
                     ${customer.loyaltyLevel ? `<div><span style="color:var(--text-muted);">Sadakat Seviyesi:</span> <span class="badge badge-success">${customer.loyaltyLevel}</span></div>` : ''}
                 </div>
                 <div style="display:flex; gap:0.5rem; margin-top:0.75rem; flex-wrap:wrap;">
-                    ${customer.phone && customer.phone !== 'YOK' ? `
-                        <a href="tel:${customer.phone}" class="btn btn-primary btn-sm"><i class="fa-solid fa-phone"></i> Hemen Ara</a>
-                        <a href="https://wa.me/${cleanPhone}" target="_blank" class="btn btn-success btn-sm"><i class="fa-brands fa-whatsapp"></i> WhatsApp</a>
+                    ${phInfo.valid ? `
+                        <a href="tel:${phInfo.tel}" class="btn btn-primary btn-sm"><i class="fa-solid fa-phone"></i> Hemen Ara (${phInfo.display})</a>
+                        <button type="button" class="btn btn-success btn-sm" onclick="openCustomerWhatsApp('${customer.code}')"><i class="fa-brands fa-whatsapp"></i> WhatsApp (${phInfo.display})</button>
+                        <button type="button" class="btn btn-secondary btn-sm" style="border-color:rgba(37,211,102,0.4); color:#25d366;" onclick="openCustomerWhatsApp('${customer.code}', 'EKSTRE')"><i class="fa-brands fa-whatsapp"></i> Ekstre Özeti Gönder</button>
                     ` : ''}
                 </div>
             </div>
@@ -8220,7 +9053,8 @@ function openInvoiceDetailModal(customerCode, invoiceIdx) {
                 </button>
                 <span style="font-size:0.72rem; color:#94a3b8; margin-left:0.35rem;"><i class="fa-solid fa-shield-check" style="color:#34d399;"></i> Dizsan Otomotiv Logo ERP (Salt-Okunur)</span>
             </div>
-            <div style="display:flex; gap:0.5rem;">
+            <div style="display:flex; gap:0.5rem; flex-wrap:wrap;">
+                <button type="button" class="btn btn-success" onclick="openCustomerWhatsApp('${customer.code}', 'INVOICE', ${idxNum})"><i class="fa-brands fa-whatsapp"></i> WhatsApp ile Fatura Özeti</button>
                 <button type="button" class="btn btn-secondary" onclick="window.print()"><i class="fa-solid fa-print"></i> Yazdır / PDF</button>
                 <button type="button" class="btn btn-primary" onclick="closeInvoiceDetailModal()"><i class="fa-solid fa-arrow-left"></i> Ekstreye Dön / Kapat</button>
             </div>
@@ -9381,7 +10215,10 @@ function renderActiveVisits() {
 
                 <div class="visit-meta">
                     ${v.contactPerson ? `<span><i class="fa-solid fa-user-tie"></i> ${v.contactPerson}</span>` : ''}
-                    ${v.phone ? `<span><i class="fa-solid fa-phone"></i> <a href="tel:${v.phone}" style="color:#38bdf8; text-decoration:none;">${v.phone}</a></span>` : ''}
+                    ${v.phone ? (() => {
+                        const vPh = parseTurkishPhones(v.phone);
+                        return `<span><i class="fa-solid fa-phone"></i> <a href="tel:${vPh.tel || v.phone}" style="color:#38bdf8; text-decoration:none;">${vPh.display || v.phone}</a> <a href="javascript:void(0)" onclick="openWhatsAppChat('${(v.phone || '').replace(/'/g, "\\'")}', 'Sayın ${String(v.customerTitle || '').replace(/'/g, "\\'")}, Dizsan Otomotiv adına iyi çalışmalar dileriz.')" style="color:#25d366; margin-left:6px; text-decoration:none;" title="WhatsApp ile Yaz"><i class="fa-brands fa-whatsapp"></i> WhatsApp</a></span>`;
+                    })() : ''}
                     ${v.plate ? `<span><i class="fa-solid fa-truck"></i> ${v.plate}</span>` : ''}
                     ${v.assignedBy ? `<span><i class="fa-solid fa-user-gear"></i> Görevi Veren: <strong>${v.assignedBy}</strong></span>` : ''}
                 </div>
@@ -10921,6 +11758,9 @@ function renderSavedCustomRoutesList() {
                     <button type="button" class="btn btn-secondary btn-sm" style="padding:0.24rem 0.55rem; font-size:0.7rem;" onclick="printCustomRouteSheet('${rt.id}')">
                         <i class="fa-solid fa-print" style="color:#fbbf24;"></i> Yazdır
                     </button>
+                    <button type="button" class="btn btn-secondary btn-sm" style="padding:0.24rem 0.55rem; font-size:0.7rem; border-color:rgba(37,211,102,0.4); color:#25d366;" onclick="shareCustomRouteWhatsApp('${rt.id}')">
+                        <i class="fa-brands fa-whatsapp"></i> WhatsApp
+                    </button>
                     <button type="button" class="btn btn-danger btn-sm" style="padding:0.24rem 0.5rem; font-size:0.7rem; margin-left:auto;" onclick="deleteCustomRoutePlan('${rt.id}')" title="Rutu Sil">
                         <i class="fa-solid fa-trash"></i>
                     </button>
@@ -11500,7 +12340,9 @@ function sendLocalOrServiceWorkerPush(notif) {
 }
 
 function showPhoneReminderModal(task) {
-    const phoneClean = (task.phone || '').replace(/[^0-9+]/g, '');
+    const phInfo = parseTurkishPhones(task.phone);
+    const safePhone = String(task.phone || '').replace(/'/g, "\\'");
+    const safeTitle = String(task.customerTitle || '').replace(/'/g, "\\'");
     const modalHtml = `
         <div id="phone-reminder-active-banner" style="position:fixed; bottom:20px; right:20px; z-index:99999; max-width:420px; width:calc(100% - 40px); background:rgba(15,23,42,0.96); border:2px solid #38bdf8; border-radius:16px; padding:1.2rem; box-shadow:0 15px 45px rgba(0,0,0,0.8), 0 0 30px rgba(56,189,248,0.3); backdrop-filter:blur(15px); animation:fadeInUp 0.3s ease;">
             <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:0.5rem;">
@@ -11518,11 +12360,14 @@ function showPhoneReminderModal(task) {
             <p style="font-size:0.85rem; color:#cbd5e1; margin-bottom:0.75rem; line-height:1.4;">
                 <strong style="color:#fde68a;">${task.customerTitle}</strong> ile saat <strong style="color:#fff;">${task.dueTime}</strong> randevunuz var.${task.contactPerson ? ` (Yetkili: ${task.contactPerson})` : ''}
             </p>
-            <div style="display:flex; gap:0.5rem;">
-                ${phoneClean ? `
-                    <a href="tel:${phoneClean}" class="btn btn-success btn-sm" style="flex:1; justify-content:center; text-decoration:none;">
-                        <i class="fa-solid fa-phone"></i> Hemen Ara (${task.phone})
+            <div style="display:flex; gap:0.5rem; flex-wrap:wrap;">
+                ${phInfo.valid ? `
+                    <a href="tel:${phInfo.tel}" class="btn btn-primary btn-sm" style="flex:1; justify-content:center; text-decoration:none;">
+                        <i class="fa-solid fa-phone"></i> Ara (${phInfo.display})
                     </a>
+                    <button type="button" class="btn btn-success btn-sm" style="flex:1; justify-content:center;" onclick="openWhatsAppChat('${safePhone}', 'Sayın ${safeTitle}, Dizsan Otomotiv adına iyi çalışmalar dileriz.')">
+                        <i class="fa-brands fa-whatsapp"></i> WhatsApp
+                    </button>
                 ` : ''}
                 <button type="button" class="btn btn-secondary btn-sm" onclick="document.getElementById('phone-reminder-active-banner').remove()">
                     Tamam
@@ -11542,7 +12387,9 @@ function openUrgentDepartureModal(task) {
     if (!modal || !body || !footer) return;
 
     const mapsUrl = `https://www.google.com/maps/dir/?api=1&origin=Dizsan+Otomotiv+Corum&destination=${encodeURIComponent(task.location || task.customerTitle)}`;
-    const phoneClean = (task.phone || '').replace(/[^0-9+]/g, '');
+    const phInfo = parseTurkishPhones(task.phone);
+    const safePhone = String(task.phone || '').replace(/'/g, "\\'");
+    const safeTitle = String(task.customerTitle || '').replace(/'/g, "\\'");
 
     body.innerHTML = `
         <div class="urgent-departure-card">
@@ -11579,7 +12426,7 @@ function openUrgentDepartureModal(task) {
 
             ${task.contactPerson || task.phone ? `
                 <div style="font-size:0.82rem; color:#cbd5e1; margin-bottom:0.75rem;">
-                    Yetkili: <strong>${task.contactPerson || '-'}</strong> &bull; Telefon: <strong>${task.phone || '-'}</strong>
+                    Yetkili: <strong>${task.contactPerson || '-'}</strong> &bull; Telefon: <strong>${phInfo.display || task.phone || '-'}</strong>
                 </div>
             ` : ''}
         </div>
@@ -11589,10 +12436,13 @@ function openUrgentDepartureModal(task) {
         <a href="${mapsUrl}" target="_blank" class="btn btn-primary" style="flex:1; justify-content:center; text-decoration:none;">
             <i class="fa-solid fa-diamond-turn-right"></i> Google Haritalar Rota Başlat
         </a>
-        ${phoneClean ? `
-            <a href="tel:${phoneClean}" class="btn btn-success" style="justify-content:center; text-decoration:none;">
-                <i class="fa-solid fa-phone"></i> Müşteriyi Ara
+        ${phInfo.valid ? `
+            <a href="tel:${phInfo.tel}" class="btn btn-primary" style="justify-content:center; text-decoration:none;">
+                <i class="fa-solid fa-phone"></i> Ara
             </a>
+            <button type="button" class="btn btn-success" onclick="openWhatsAppChat('${safePhone}', 'Sayın ${safeTitle}, Dizsan Otomotiv saha ekibimiz ziyaretiniz için yola çıkmıştır.')">
+                <i class="fa-brands fa-whatsapp"></i> WhatsApp
+            </button>
         ` : ''}
         <button type="button" class="btn btn-secondary" onclick="closeUrgentDepartureModal()">
             <i class="fa-solid fa-check"></i> Yola Çıktım / Kapat
@@ -11889,7 +12739,7 @@ function getLivePreferredUrl() {
 function shareAppOnWhatsApp() {
     const url = getLivePreferredUrl();
     const msg = `📢 *DİZSAN Müşteri Ziyaret & Saha Takip Sistemi*\n\n🔗 *Uygulama Giriş Linki:*\n${url}\n\n📲 *Telefon ve Tablete Kurulum:*\n• *iPhone / iPad:* Safari'de açın ➔ *Paylaş (⬆️)* ➔ *Ana Ekrana Ekle*\n• *Android:* Chrome menüsünden *Uygulamayı Yükle* seçin.\n\n🔑 *Giriş Şifresi:* 123 veya 123456`;
-    window.open(`https://wa.me/?text=${encodeURIComponent(msg)}`, '_blank');
+    openWhatsAppChat('', msg);
 }
 
 // PWA Kurulum İstemi Dinleyicisi
@@ -12032,6 +12882,243 @@ window.approveRequest = approveRequest;
 window.rejectRequest = rejectRequest;
 
 // ==========================================================================
+// 10.5 KOYU / AÇIK TEMA SİSTEMİ & HER SEKMEDE GLOBAL MÜŞTERİ ARAMA MOTORU
+// ==========================================================================
+const STORAGE_KEY_THEME = 'dizsan_ziyaret_theme_v1';
+let globalCustomerQuickFilter = 'ALL';
+
+function getSavedZiyaretTheme() {
+    try {
+        return localStorage.getItem(STORAGE_KEY_THEME) || 'dark';
+    } catch (e) {
+        return 'dark';
+    }
+}
+
+function applyZiyaretTheme(theme, notifyParent = true) {
+    const normalized = theme === 'light' ? 'light' : 'dark';
+    document.documentElement.setAttribute('data-theme', normalized);
+    if (document.body) {
+        document.body.setAttribute('data-theme', normalized);
+    }
+    try {
+        localStorage.setItem(STORAGE_KEY_THEME, normalized);
+    } catch (e) {}
+
+    const isLight = normalized === 'light';
+    const globalIcon = document.getElementById('global-theme-icon');
+    const globalText = document.getElementById('global-theme-text');
+    if (globalIcon) {
+        globalIcon.className = isLight ? 'fa-solid fa-moon' : 'fa-solid fa-sun';
+        globalIcon.style.color = isLight ? '#38bdf8' : '#fbbf24';
+    }
+    if (globalText) {
+        globalText.textContent = isLight ? 'Koyu Tema' : 'Açık Tema';
+    }
+
+    const sideIcon = document.getElementById('sidebar-theme-icon');
+    const sideText = document.getElementById('sidebar-theme-text');
+    if (sideIcon) {
+        sideIcon.className = isLight ? 'fa-solid fa-moon' : 'fa-solid fa-sun';
+        sideIcon.style.color = isLight ? '#0284c7' : '#fbbf24';
+    }
+    if (sideText) {
+        sideText.textContent = isLight ? 'Koyu Tema' : 'Açık Tema';
+    }
+
+    if (notifyParent && window.parent && window.parent !== window) {
+        try {
+            window.parent.postMessage({ type: 'DPRO_THEME_CHANGED', theme: normalized }, '*');
+        } catch (e) {}
+    }
+}
+
+function toggleZiyaretTheme() {
+    const current = document.body.getAttribute('data-theme') || getSavedZiyaretTheme();
+    const next = current === 'light' ? 'dark' : 'light';
+    applyZiyaretTheme(next, true);
+}
+
+function focusGlobalCustomerSearch() {
+    const inp = document.getElementById('global-customer-search-input');
+    if (inp) {
+        inp.focus();
+        inp.select();
+        handleGlobalCustomerSearchInput(inp.value);
+    }
+}
+
+function setGlobalCustomerQuickFilter(filterKey) {
+    globalCustomerQuickFilter = filterKey || 'ALL';
+    document.querySelectorAll('#global-customer-search-bar .global-chip').forEach(btn => {
+        btn.classList.toggle('active', btn.getAttribute('data-qfilter') === globalCustomerQuickFilter);
+    });
+    const inp = document.getElementById('global-customer-search-input');
+    const q = inp ? inp.value : '';
+    handleGlobalCustomerSearchInput(q, true);
+}
+
+function clearGlobalCustomerSearch() {
+    const inp = document.getElementById('global-customer-search-input');
+    if (inp) inp.value = '';
+    globalCustomerQuickFilter = 'ALL';
+    document.querySelectorAll('#global-customer-search-bar .global-chip').forEach(btn => {
+        btn.classList.toggle('active', btn.getAttribute('data-qfilter') === 'ALL');
+    });
+    const clearBtn = document.getElementById('global-customer-search-clear');
+    if (clearBtn) clearBtn.style.display = 'none';
+    const panel = document.getElementById('global-customer-search-results');
+    if (panel) {
+        panel.style.display = 'none';
+        panel.innerHTML = '';
+    }
+    syncGlobalSearchToActiveTab('');
+}
+
+function syncGlobalSearchToActiveTab(queryText) {
+    const q = String(queryText || '');
+    const legInp = document.getElementById('legacy-search');
+    if (legInp && legInp.value !== q) {
+        legInp.value = q;
+        if (typeof renderLegacyCustomers === 'function') renderLegacyCustomers(false);
+    }
+    const eksInp = document.getElementById('ekstre-search');
+    if (eksInp && eksInp.value !== q) {
+        eksInp.value = q;
+        if (typeof renderCariEkstreTable === 'function') renderCariEkstreTable(false);
+    }
+    const actInp = document.getElementById('active-search');
+    if (actInp && actInp.value !== q) {
+        actInp.value = q;
+        if (typeof renderActiveVisits === 'function') renderActiveVisits();
+    }
+    const strInp = document.getElementById('strategy-search');
+    if (strInp && strInp.value !== q) {
+        strInp.value = q;
+        if (typeof renderDistrictStrategies === 'function') renderDistrictStrategies();
+    }
+}
+
+function handleGlobalCustomerSearchInput(rawVal, forceShowByChip = false) {
+    const q = String(rawVal || '').trim();
+    const clearBtn = document.getElementById('global-customer-search-clear');
+    if (clearBtn) {
+        clearBtn.style.display = (q.length > 0 || globalCustomerQuickFilter !== 'ALL') ? 'inline-flex' : 'none';
+    }
+
+    const totalEl = document.getElementById('global-search-total-count');
+    if (totalEl && Array.isArray(appState.customers)) {
+        totalEl.textContent = appState.customers.length.toLocaleString('tr-TR');
+    }
+
+    syncGlobalSearchToActiveTab(q);
+
+    const panel = document.getElementById('global-customer-search-results');
+    if (!panel) return;
+
+    if (!q && globalCustomerQuickFilter === 'ALL' && !forceShowByChip) {
+        panel.style.display = 'none';
+        panel.innerHTML = '';
+        return;
+    }
+
+    const normQ = normalizeTR(q);
+    const list = Array.isArray(appState.customers) ? appState.customers : [];
+    const matched = [];
+
+    for (let i = 0; i < list.length; i++) {
+        const c = list[i];
+        if (!c) continue;
+
+        if (globalCustomerQuickFilter === 'VIP') {
+            const p = normalizeTR(c.priority || '');
+            if (!p.includes('vip') && (Number(c.totalRevenue) || 0) < 250000) continue;
+        } else if (globalCustomerQuickFilter === 'BORCLU') {
+            const acc = getCustomerAccountingSummary(c);
+            if (acc.baCode !== 'B') continue;
+        } else if (globalCustomerQuickFilter === 'ALACAKLI') {
+            const acc = getCustomerAccountingSummary(c);
+            if (acc.baCode !== 'A') continue;
+        } else if (globalCustomerQuickFilter === 'CORUM') {
+            if (!normalizeTR(c.city || '').includes('corum')) continue;
+        }
+
+        if (normQ) {
+            const hay = normalizeTR(
+                `${c.title || ''} ${c.code || ''} ${c.city || ''} ${c.district || ''} ${c.authorized || ''} ${c.phone || ''} ${c.plates || ''} ${c.address || ''}`
+            );
+            if (!hay.includes(normQ)) continue;
+        }
+
+        matched.push(c);
+        if (matched.length >= 30) break;
+    }
+
+    if (matched.length === 0) {
+        panel.style.display = 'block';
+        panel.innerHTML = `
+            <div style="padding:0.85rem; text-align:center; color:#94a3b8; font-size:0.82rem;">
+                <i class="fa-solid fa-magnifying-glass"></i> "<strong>${escapeHtml(q)}</strong>" aramasına uygun müşteri bulunamadı.
+                <button type="button" class="btn btn-success btn-sm" style="margin-left:0.6rem;" onclick="openCustomerModal()">
+                    <i class="fa-solid fa-user-plus"></i> Yeni Müşteri Ekle
+                </button>
+            </div>
+        `;
+        return;
+    }
+
+    panel.style.display = 'block';
+    panel.innerHTML = `
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.45rem; font-size:0.75rem; color:#94a3b8; padding:0 0.25rem;">
+            <span><i class="fa-solid fa-bolt" style="color:#38bdf8;"></i> Hızlı Müşteri Sonuçları (İlk ${matched.length} kayıt gösteriliyor — aktif sekme tablosu da eşzamanlı filtrelendi)</span>
+            <button type="button" onclick="document.getElementById('global-customer-search-results').style.display='none'" style="background:none; border:none; color:#38bdf8; cursor:pointer; font-weight:700; font-size:0.74rem;">Listeyi Gizle ▲</button>
+        </div>
+        ${matched.map(c => {
+            const acc = getCustomerAccountingSummary(c);
+            const baColor = acc.baCode === 'B' ? '#f87171' : (acc.baCode === 'A' ? '#34d399' : '#94a3b8');
+            const safeCode = escapeHtml(c.code || '');
+            return `
+                <div class="global-search-result-item">
+                    <div style="flex:1; min-width:220px; cursor:pointer;" onclick="openCustomerDetailModal('${safeCode}')">
+                        <div style="display:flex; align-items:center; gap:0.45rem; flex-wrap:wrap;">
+                            <span style="font-weight:800; font-size:0.86rem; color:#38bdf8;">${escapeHtml(c.title || '-')}</span>
+                            <span style="font-size:0.7rem; padding:0.12rem 0.45rem; border-radius:6px; background:rgba(56,189,248,0.14); color:#38bdf8; font-family:monospace;">${safeCode}</span>
+                            <span style="font-size:0.7rem; padding:0.12rem 0.45rem; border-radius:6px; background:rgba(148,163,184,0.15); color:#cbd5e1;">
+                                <i class="fa-solid fa-location-dot" style="color:#f59e0b;"></i> ${escapeHtml(c.city || '-')} / ${escapeHtml(c.district || '-')}
+                            </span>
+                        </div>
+                        <div style="display:flex; align-items:center; gap:0.85rem; margin-top:0.25rem; font-size:0.74rem; color:#94a3b8; flex-wrap:wrap;">
+                            <span><i class="fa-solid fa-user-tie"></i> ${escapeHtml(c.authorized || 'Yetkili Belirtilmedi')}</span>
+                            <span><i class="fa-solid fa-phone"></i> ${escapeHtml(c.phone || '-')}</span>
+                            <span><i class="fa-solid fa-coins" style="color:#fbbf24;"></i> Ciro: <strong>${formatCurrency(c.totalRevenue || 0)}</strong></span>
+                            <span style="color:${baColor}; font-weight:700;"><i class="fa-solid fa-scale-balanced"></i> Bakiye: ${formatCurrency(acc.absBalance)} (${acc.baCode})</span>
+                        </div>
+                    </div>
+                    <div style="display:flex; align-items:center; gap:0.35rem; flex-wrap:wrap;">
+                        <button type="button" class="btn btn-primary btn-sm" style="padding:0.32rem 0.55rem; font-size:0.73rem;" onclick="openCustomerDetailModal('${safeCode}')" title="360° Cari Detay & Logo Ekstre Aç">
+                            <i class="fa-solid fa-file-invoice-dollar"></i> Ekstre &amp; Detay
+                        </button>
+                        <button type="button" class="btn btn-success btn-sm" style="padding:0.32rem 0.55rem; font-size:0.73rem;" onclick="quickStartVisitForCustomer('${safeCode}')" title="Bu Müşteriye Ziyaret / Telefon Kaydı Gir">
+                            <i class="fa-solid fa-plus"></i> Ziyaret / Arama
+                        </button>
+                        <button type="button" class="btn btn-secondary btn-sm" style="padding:0.32rem 0.5rem; font-size:0.73rem;" onclick="openCustomerWhatsApp('${safeCode}')" title="WhatsApp Gönder">
+                            <i class="fa-brands fa-whatsapp" style="color:#25d366;"></i>
+                        </button>
+                    </div>
+                </div>
+            `;
+        }).join('')}
+    `;
+}
+
+window.toggleZiyaretTheme = toggleZiyaretTheme;
+window.applyZiyaretTheme = applyZiyaretTheme;
+window.focusGlobalCustomerSearch = focusGlobalCustomerSearch;
+window.handleGlobalCustomerSearchInput = handleGlobalCustomerSearchInput;
+window.setGlobalCustomerQuickFilter = setGlobalCustomerQuickFilter;
+window.clearGlobalCustomerSearch = clearGlobalCustomerSearch;
+
+// ==========================================================================
 // 11. BAŞLATICI (INITIALIZATION)
 // ==========================================================================
 function renderAll() {
@@ -12053,6 +13140,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     if (isDproEmbedded) {
         document.body.classList.add('dpro-embedded');
     }
+    applyZiyaretTheme(getSavedZiyaretTheme(), true);
 
     // Eski Service Worker ve önbellekleri zorla temizle (v1.2.0)
     if ('serviceWorker' in navigator) {
@@ -12214,7 +13302,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     // Service Worker Kaydı (Sonsuz yenileme döngüsü yaratmadan sessiz çalışır)
     if ('serviceWorker' in navigator) {
-        navigator.serviceWorker.register('sw.js?v=1.5.8').catch(() => {});
+        navigator.serviceWorker.register('sw.js?v=1.5.9').catch(() => {});
     }
 });
 
