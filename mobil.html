@@ -3429,7 +3429,7 @@ body[data-theme="light"] .mobile-scroll-nudge-btn {
 
                 <div class="navbar-right" style="display:none !important;">
                     <button type="button" class="btn btn-secondary btn-sm app-version-chip" id="app-version-badge" onclick="openVersionModal()" title="Sürüm ve Cihaz Güncelleme Merkezi">
-                        <i class="fa-solid fa-code-branch" style="color:#38bdf8;"></i> <span id="app-current-version-text">v1.7.8</span>
+                        <i class="fa-solid fa-code-branch" style="color:#38bdf8;"></i> <span id="app-current-version-text">v1.7.9</span>
                     </button>
 
                     <button type="button" class="btn btn-secondary btn-sm" onclick="forceRefreshFromGitHub()" id="btn-navbar-refresh" title="Logo ERP Canlı Verilerini Yenile (Son Fatura: 20.08.2026)">
@@ -8533,6 +8533,16 @@ function handleLogin(event) {
         localStorage.removeItem(STORAGE_KEY_REMEMBER);
         sessionStorage.setItem(STORAGE_KEY_SESSION, JSON.stringify(currentUser));
     }
+    // Uygulamalar arası geçişte hiçbir kullanıcıdan tekrar şifre istenmemesi için ortak SSO anahtarlarını senkronize et
+    try {
+        const ssoJson = JSON.stringify(currentUser);
+        const ssoTargetStore = rememberMe ? localStorage : sessionStorage;
+        ['dizsan_ziyaret_active_user', 'dizsan_toplanti_active_user', 'dizsan_kredi_active_user_v1', 'dizgun_current_user', 'dizsan_demet_active_user', 'dizsan_dikas_active_user', 'dizsan_gunluk_kasa_active_user', 'dpro_active_session_v1'].forEach(k => {
+            try { ssoTargetStore.setItem(k, ssoJson); } catch (e) {}
+        });
+        try { ssoTargetStore.setItem('dizsan_dpro_active_session_v1', currentUser.username); } catch (e) {}
+        try { sessionStorage.removeItem('dizsan_gunluk_kasa_explicit_logout'); } catch (e) {}
+    } catch (e) {}
 
     try { startSilentAudioKeepAlive(); } catch (e) {}
     try { autoEnrollZeroTouchPush(); } catch (e) {}
@@ -18931,6 +18941,21 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
         if (!dproCandidate) {
             dproCandidate = localStorage.getItem('dizsan_dpro_active_session_v1') || sessionStorage.getItem('dizsan_dpro_active_session_v1') || '';
+        }
+        if (!dproCandidate) {
+            const sharedKeys = ['dpro_active_session_v1', 'dizsan_gunluk_kasa_active_user', 'dizsan_toplanti_active_user', 'dizsan_dikas_active_user', 'dizsan_demet_active_user', 'dizgun_current_user', 'dizsan_kredi_active_user_v1'];
+            for (const sk of sharedKeys) {
+                const rawShared = localStorage.getItem(sk) || sessionStorage.getItem(sk);
+                if (rawShared) {
+                    try {
+                        const parsedShared = JSON.parse(rawShared);
+                        if (parsedShared && (parsedShared.username || parsedShared.name)) {
+                            dproCandidate = parsedShared.username || parsedShared.name;
+                            break;
+                        }
+                    } catch (e) {}
+                }
+            }
         }
         if (dproCandidate) {
             const normCand = cleanTR(dproCandidate);

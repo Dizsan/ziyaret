@@ -181039,7 +181039,7 @@
       "platform": "Android / Mobil"
     }
   ],
-  "updatedAt": "2026-10-25T20:34:39.370249Z",
+  "updatedAt": "2026-10-25T20:39:34.244947Z",
   "stateRevision": 289,
   "cities": [
     "Adana",
@@ -181210,7 +181210,7 @@
     "scannedPeriods": []
   },
   "routeNotifications": [],
-  "appVersion": "1.7.9",
-  "versionUpdatedAt": "2026-10-25 23:34:39",
-  "versionReleaseNotes": "D-Pro Tek Oturum (SSO) Geçişi: D-Pro platformuna şifreyle girildikten sonra sandviç menüden Dizsan Ziyaret ve diğer uygulamalara geçişte ikinci kez şifre sorma ekranı kaldırıldı."
+  "appVersion": "1.8.0",
+  "versionUpdatedAt": "2026-10-25 23:39:34",
+  "versionReleaseNotes": "Evrensel Tek Oturum (SSO): Tüm kullanıcılar için uygulamalar arası geçişlerde (D-Pro, Ziyaret, Kasa, Toplantı, DiKas, DEMET) ikinci kez şifre sorma zorunluluğu tamamen kaldırıldı."
 }

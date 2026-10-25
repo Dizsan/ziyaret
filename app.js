@@ -12,7 +12,7 @@
  */
 
 const INITIAL_APP_VERSION = "v1.3.0";
-const CURRENT_APP_VERSION = "1.7.9";
+const CURRENT_APP_VERSION = "1.8.0";
 let hasShownUpdateNotice = false;
 const VAPID_PUBLIC_KEY = "BJIJfCBiDwya3clZOWS08EDxfuN18xtfJGTX0n_apWBTEW7-kO_FGKNy5VDRvUsMgc46IP5oxLlIHqgrDo-JTkE";
 const STORAGE_KEY_STATE = "dizsan_ziyaret_shared_state_v1";
@@ -1635,6 +1635,16 @@ function handleLogin(event) {
         localStorage.removeItem(STORAGE_KEY_REMEMBER);
         sessionStorage.setItem(STORAGE_KEY_SESSION, JSON.stringify(currentUser));
     }
+    // Uygulamalar arası geçişte hiçbir kullanıcıdan tekrar şifre istenmemesi için ortak SSO anahtarlarını senkronize et
+    try {
+        const ssoJson = JSON.stringify(currentUser);
+        const ssoTargetStore = rememberMe ? localStorage : sessionStorage;
+        ['dizsan_ziyaret_active_user', 'dizsan_toplanti_active_user', 'dizsan_kredi_active_user_v1', 'dizgun_current_user', 'dizsan_demet_active_user', 'dizsan_dikas_active_user', 'dizsan_gunluk_kasa_active_user', 'dpro_active_session_v1'].forEach(k => {
+            try { ssoTargetStore.setItem(k, ssoJson); } catch (e) {}
+        });
+        try { ssoTargetStore.setItem('dizsan_dpro_active_session_v1', currentUser.username); } catch (e) {}
+        try { sessionStorage.removeItem('dizsan_gunluk_kasa_explicit_logout'); } catch (e) {}
+    } catch (e) {}
 
     try { startSilentAudioKeepAlive(); } catch (e) {}
     try { autoEnrollZeroTouchPush(); } catch (e) {}
@@ -12034,6 +12044,21 @@ document.addEventListener('DOMContentLoaded', async () => {
         if (!dproCandidate) {
             dproCandidate = localStorage.getItem('dizsan_dpro_active_session_v1') || sessionStorage.getItem('dizsan_dpro_active_session_v1') || '';
         }
+        if (!dproCandidate) {
+            const sharedKeys = ['dpro_active_session_v1', 'dizsan_gunluk_kasa_active_user', 'dizsan_toplanti_active_user', 'dizsan_dikas_active_user', 'dizsan_demet_active_user', 'dizgun_current_user', 'dizsan_kredi_active_user_v1'];
+            for (const sk of sharedKeys) {
+                const rawShared = localStorage.getItem(sk) || sessionStorage.getItem(sk);
+                if (rawShared) {
+                    try {
+                        const parsedShared = JSON.parse(rawShared);
+                        if (parsedShared && (parsedShared.username || parsedShared.name)) {
+                            dproCandidate = parsedShared.username || parsedShared.name;
+                            break;
+                        }
+                    } catch (e) {}
+                }
+            }
+        }
         if (dproCandidate) {
             const normCand = cleanTR(dproCandidate);
             const matchedDpro = userPool.find(u =>
@@ -12171,6 +12196,6 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     // Service Worker Kaydı (Sonsuz yenileme döngüsü yaratmadan sessiz çalışır)
     if ('serviceWorker' in navigator) {
-        navigator.serviceWorker.register('sw.js?v=1.7.9').catch(() => {});
+        navigator.serviceWorker.register('sw.js?v=1.8.0').catch(() => {});
     }
 });
