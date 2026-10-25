@@ -12264,6 +12264,6 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     // Service Worker Kaydı (Sonsuz yenileme döngüsü yaratmadan sessiz çalışır)
     if ('serviceWorker' in navigator) {
-        navigator.serviceWorker.register('sw.js?v=v1.8.1: Sadece Ömer Eren'e özel 24 personel uygulama erişim/işlem yetki matrisi ve tam kullanıcı gizlilik kalkanı').catch(() => {});
+        navigator.serviceWorker.register('sw.js?v=1.8.1').catch(() => {});
     }
 });
