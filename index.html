@@ -2574,6 +2574,68 @@ body[data-theme="light"] .modal-header h3 {
 }
 
 /* Inline Koyu Renk Stillerini ve Pastel Metinleri Açık Temada Otomatik Uyumlama (Yüksek Kontrast Kalkanı) */
+.inpage-back-btn {
+    display: none !important;
+}
+
+body[data-theme="light"] .sidebar {
+    background: #ffffff !important;
+    border-right: 1px solid #cbd5e1 !important;
+    box-shadow: 4px 0 20px rgba(15, 23, 42, 0.06) !important;
+}
+
+body[data-theme="light"] .nav-item {
+    color: #334155 !important;
+    background: transparent !important;
+    border-color: transparent !important;
+}
+
+body[data-theme="light"] .nav-item span {
+    color: #1e293b !important;
+}
+
+body[data-theme="light"] .nav-item:hover {
+    background: #f1f5f9 !important;
+    color: #0284c7 !important;
+}
+
+body[data-theme="light"] .nav-item.active {
+    background: linear-gradient(135deg, #e0f2fe, #f0f9ff) !important;
+    border: 1px solid #7dd3fc !important;
+    color: #0369a1 !important;
+}
+
+body[data-theme="light"] .nav-item.active span {
+    color: #0369a1 !important;
+    font-weight: 800 !important;
+}
+
+body[data-theme="light"] #custom-rut-personnel-dropdown {
+    background: #ffffff !important;
+    border: 1px solid #94a3b8 !important;
+    box-shadow: 0 16px 40px rgba(15, 23, 42, 0.18) !important;
+    color: #0f172a !important;
+}
+
+body[data-theme="light"] #custom-rut-assignee-trigger,
+body[data-theme="light"] #custom-rut-multi-districts-box,
+body[data-theme="light"] #custom-rut-cust-results,
+body[data-theme="light"] #custom-rut-districts-badges,
+body[data-theme="light"] #manual-visit-entry-panel {
+    background: #ffffff !important;
+    border-color: #cbd5e1 !important;
+    color: #0f172a !important;
+}
+
+body[data-theme="light"] .smart-agenda-card,
+body[data-theme="light"] .visit-card,
+body[data-theme="light"] #saved-custom-routes-list > div {
+    background: #ffffff !important;
+    border-color: #cbd5e1 !important;
+    color: #0f172a !important;
+    box-shadow: 0 2px 8px rgba(15, 23, 42, 0.05) !important;
+}
+
 body[data-theme="light"] [style*="background:rgba(15,23,42"],
 body[data-theme="light"] [style*="background: rgba(15, 23, 42"],
 body[data-theme="light"] [style*="background:rgba(30,41,59"],
@@ -2599,7 +2661,9 @@ body[data-theme="light"] [style*="color: #fff"]:not(.btn):not(.nav-badge):not(.b
 body[data-theme="light"] [style*="color:#ffffff"]:not(.btn):not(.nav-badge):not(.badge),
 body[data-theme="light"] [style*="color:#f8fafc"],
 body[data-theme="light"] [style*="color:#e2e8f0"],
-body[data-theme="light"] [style*="color:#e0f2fe"] {
+body[data-theme="light"] [style*="color:#e0f2fe"],
+body[data-theme="light"] [style*="color:#d1fae5"],
+body[data-theme="light"] [style*="color:#fef3c7"] {
     color: #0f172a !important;
 }
 
@@ -2613,7 +2677,6 @@ body[data-theme="light"] [style*="color:#64748b"] {
 /* Açık Temada Soluk Sarı / Mavi / Yeşil / Pembe / Mor Yazıları Koyu Kontrasta Çevir */
 body[data-theme="light"] [style*="color:#fde68a"],
 body[data-theme="light"] [style*="color:#fbbf24"],
-body[data-theme="light"] [style*="color:#fef3c7"],
 body[data-theme="light"] [style*="color:#f59e0b"] {
     color: #b45309 !important;
 }
@@ -2641,6 +2704,27 @@ body[data-theme="light"] [style*="color:#e9d5ff"],
 body[data-theme="light"] [style*="color:#ddd6fe"],
 body[data-theme="light"] [style*="color:#c084fc"] {
     color: #6d28d9 !important;
+}
+
+body[data-theme="light"] .badge-secondary {
+    background: #e2e8f0 !important;
+    color: #1e293b !important;
+    border: 1px solid #cbd5e1 !important;
+}
+
+body[data-theme="light"] .dizsan-table th {
+    background: #f1f5f9 !important;
+    color: #0f172a !important;
+    border-bottom: 2px solid #cbd5e1 !important;
+}
+
+body[data-theme="light"] .dizsan-table td {
+    color: #1e293b !important;
+    border-bottom: 1px solid #e2e8f0 !important;
+}
+
+body[data-theme="light"] .dizsan-table tbody tr:hover {
+    background: #f0f9ff !important;
 }
 
 /* Açık Temada Takvim ve Tarih Kutusu Kontrastı */
@@ -3175,7 +3259,7 @@ body[data-theme="light"] .mobile-scroll-nudge-btn {
                 <img src="data:image/jpeg;base64,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" alt="Dizsan" class="sidebar-logo">
                 <div class="sidebar-brand">
                     <h2>DİZSAN SAHA</h2>
-                    <span>Ziyaret &amp; CRM <strong id="sidebar-app-version" style="color:var(--dizsan-light); cursor:pointer;" onclick="openVersionModal()" title="Sürüm ve Cihaz Güncelleme Merkezi">v1.3.0</strong></span>
+                    <span>Ziyaret &amp; CRM <strong id="sidebar-app-version" style="color:var(--dizsan-light); cursor:pointer;" onclick="openVersionModal()" title="Sürüm ve Cihaz Güncelleme Merkezi">v1.7.5</strong></span>
                 </div>
             </div>
 
@@ -3187,15 +3271,15 @@ body[data-theme="light"] .mobile-scroll-nudge-btn {
                     </div>
                 </div>
 
-                <div class="nav-item" data-tab="customer-search-tab" onclick="switchTab('customer-search-tab')" style="border:1px solid rgba(16,185,129,0.4); background:rgba(16,185,129,0.12);">
+                <div class="nav-item" data-tab="customer-search-tab" onclick="switchTab('customer-search-tab')" style="border:1px solid rgba(16,185,129,0.38); background:rgba(16,185,129,0.1);">
                     <div class="nav-item-left">
                         <i class="fa-solid fa-magnifying-glass" style="color:#34d399;"></i>
-                        <span style="font-weight:800; color:#d1fae5;">Müşteri &amp; Detay Ara</span>
+                        <span style="font-weight:800; color:#d1fae5;">Müşteri &amp; Cari Ara</span>
                     </div>
                     <span class="nav-badge" style="background:#10b981; color:#fff; font-weight:800;">ARA</span>
                 </div>
 
-                <div class="nav-item" data-tab="route-plan-tab" onclick="switchTab('route-plan-tab')" style="border:1px solid rgba(245,158,11,0.45); background:rgba(245,158,11,0.12);">
+                <div class="nav-item" data-tab="route-plan-tab" onclick="switchTab('route-plan-tab')" style="border:1px solid rgba(245,158,11,0.42); background:rgba(245,158,11,0.1);">
                     <div class="nav-item-left">
                         <i class="fa-solid fa-route" style="color:#fbbf24;"></i>
                         <span style="font-weight:800; color:#fef3c7;">Yeni Rut Planla</span>
@@ -3203,55 +3287,31 @@ body[data-theme="light"] .mobile-scroll-nudge-btn {
                     <span id="badge-route-plans" class="nav-badge" style="background:#f59e0b; color:#000; font-weight:800;">PLANLA</span>
                 </div>
 
-                <div class="nav-item" data-tab="cari-ekstre-tab" onclick="switchTab('cari-ekstre-tab')" style="border:1px solid rgba(56,189,248,0.28); background:rgba(2,132,199,0.08);">
+                <div class="nav-item" data-tab="cari-ekstre-tab" onclick="switchTab('cari-ekstre-tab')">
                     <div class="nav-item-left">
                         <i class="fa-solid fa-file-invoice-dollar" style="color:#38bdf8;"></i>
-                        <span style="font-weight:700; color:#e0f2fe;">D-Pro Cari &amp; Logo Ekstre</span>
+                        <span style="font-weight:700;">D-Pro Cari &amp; Ekstre</span>
                     </div>
-                    <span id="badge-cari-ekstre" class="nav-badge" style="background:#0284c7; color:#fff;">B/A</span>
-                </div>
-
-                <div class="nav-item" data-tab="legacy-tab" onclick="switchTab('legacy-tab')">
-                    <div class="nav-item-left">
-                        <i class="fa-solid fa-database"></i>
-                        <span>Kayıp Müşteri Planı (Arşiv)</span>
-                    </div>
-                    <span id="badge-legacy-count" class="nav-badge">1.990</span>
+                    <span id="badge-cari-ekstre" class="nav-badge" style="background:#0284c7; color:#fff;">1.990</span>
                 </div>
 
                 <div class="nav-item" data-tab="active-tab" onclick="switchTab('active-tab')">
                     <div class="nav-item-left">
                         <i class="fa-solid fa-car-side"></i>
-                        <span>Güncel Saha &amp; Aramalar</span>
+                        <span>Saha Görüşmeleri &amp; Görevler</span>
                     </div>
                     <span id="badge-active-visits" class="nav-badge warning">0</span>
                 </div>
 
-                <div class="nav-item" data-tab="ai-match-tab" onclick="switchTab('ai-match-tab')">
+                <div class="nav-item" data-tab="reports-tab" onclick="switchTab('reports-tab')">
                     <div class="nav-item-left">
-                        <i class="fa-solid fa-wand-magic-sparkles"></i>
-                        <span>Yapay Zeka Tekleştirme</span>
+                        <i class="fa-solid fa-chart-column" style="color:#34d399;"></i>
+                        <span style="font-weight:700;">Raporlar</span>
                     </div>
-                    <span id="badge-ai-matches" class="nav-badge danger">AI Aktif</span>
+                    <span id="badge-reports-count" class="nav-badge" style="background:#10b981; color:#fff; font-weight:800;">0</span>
                 </div>
 
-                <div class="nav-item" data-tab="tasks-tab" onclick="switchTab('tasks-tab')">
-                    <div class="nav-item-left">
-                        <i class="fa-solid fa-list-check"></i>
-                        <span>Aksiyon &amp; Hatırlatıcılar</span>
-                    </div>
-                    <span id="badge-pending-tasks" class="nav-badge">0</span>
-                </div>
-
-                <div class="nav-item" data-tab="strategy-tab" onclick="switchTab('strategy-tab')">
-                    <div class="nav-item-left">
-                        <i class="fa-solid fa-map-location-dot"></i>
-                        <span>İlçe Rut Strateji Rehberi</span>
-                    </div>
-                    <span class="nav-badge">434</span>
-                </div>
-
-                <div id="nav-item-approvals" class="nav-item" onclick="openApprovalCenterModal()" style="display:none;">
+                <div id="nav-item-approvals" class="nav-item" onclick="openApprovalCenterModal()" style="display:none; margin-top:auto;">
                     <div class="nav-item-left">
                         <i class="fa-solid fa-user-shield" style="color:#f59e0b;"></i>
                         <span>Yönetici Onay Merkezi</span>
@@ -3266,45 +3326,31 @@ body[data-theme="light"] .mobile-scroll-nudge-btn {
                     </div>
                 </div>
 
-                <div class="nav-item" data-tab="reports-tab" onclick="switchTab('reports-tab')" style="margin-top:auto; border:1px solid rgba(16,185,129,0.42); background:rgba(16,185,129,0.12);">
-                    <div class="nav-item-left">
-                        <i class="fa-solid fa-chart-column" style="color:#34d399;"></i>
-                        <span style="font-weight:800; color:#d1fae5;">Raporlar</span>
-                    </div>
-                    <span id="badge-reports-count" class="nav-badge" style="background:#10b981; color:#fff; font-weight:800;">0</span>
-                </div>
+                <!-- Geriye dönük JS rozet referansları için gizli tutucular -->
+                <span id="badge-legacy-count" style="display:none;">1.990</span>
+                <span id="badge-ai-matches" style="display:none;">AI</span>
+                <span id="badge-pending-tasks" style="display:none;">0</span>
             </nav>
 
-            <div class="sidebar-footer" style="display:flex; flex-direction:column; gap:0.55rem;">
+            <div class="sidebar-footer" style="display:flex; flex-direction:column; gap:0.5rem;">
                 <div style="display:grid; grid-template-columns:1fr 1fr; gap:0.35rem;">
-                    <button type="button" class="btn btn-primary btn-sm" style="justify-content:center; padding:0.4rem 0.3rem; font-size:0.74rem;" onclick="openVisitModal()">
-                        <i class="fa-solid fa-plus"></i> <span>Ziyaret Ekle</span>
-                    </button>
-                    <button type="button" class="btn btn-success btn-sm" style="justify-content:center; padding:0.4rem 0.3rem; font-size:0.74rem;" onclick="openCustomerModal()">
+                    <button type="button" class="btn btn-success btn-sm" style="justify-content:center; padding:0.42rem 0.35rem; font-size:0.74rem; font-weight:700;" onclick="openCustomerModal()">
                         <i class="fa-solid fa-user-plus"></i> <span>Yeni Müşteri</span>
                     </button>
-                </div>
-                <div style="display:flex; gap:0.35rem;">
-                    <button type="button" id="sidebar-theme-toggle-btn" class="btn btn-secondary btn-sm" style="flex:1; justify-content:center; padding:0.4rem 0.35rem; font-size:0.73rem; font-weight:700; border-color:rgba(251,191,36,0.4);" onclick="toggleZiyaretTheme()" title="Sol Bar Dahil Komple Koyu / Açık Tema Değiştir">
+                    <button type="button" id="sidebar-theme-toggle-btn" class="btn btn-secondary btn-sm" style="justify-content:center; padding:0.42rem 0.35rem; font-size:0.73rem; font-weight:700; border-color:rgba(251,191,36,0.4);" onclick="toggleZiyaretTheme()" title="Sol Bar Dahil Komple Koyu / Açık Tema Değiştir">
                         <i class="fa-solid fa-sun" id="sidebar-theme-icon" style="color:#fbbf24;"></i> <span id="sidebar-theme-text">Açık Tema</span>
                     </button>
-                    <button type="button" class="btn btn-secondary btn-sm" style="flex:1; justify-content:center; padding:0.4rem 0.35rem; font-size:0.73rem; font-weight:700; border-color:rgba(56,189,248,0.4);" onclick="focusGlobalCustomerSearch()" title="Müşteri Arama Alanına Odaklan (Ctrl+K)">
-                        <i class="fa-solid fa-magnifying-glass" style="color:#38bdf8;"></i> <span>Müşteri Ara</span>
-                    </button>
                 </div>
-                <div style="display:flex; gap:0.35rem;">
-                    <button type="button" class="btn btn-secondary btn-sm" style="flex:1; justify-content:center; padding:0.38rem 0.3rem; font-size:0.72rem;" onclick="openPushTestCenterModal()" title="Web Push & Bildirim Test Merkezi">
-                        <i class="fa-solid fa-satellite-dish" style="color:#38bdf8;"></i> <span>Push &amp; Test</span>
+                <div style="display:grid; grid-template-columns:1fr 1fr; gap:0.35rem;">
+                    <button type="button" class="btn btn-secondary btn-sm" style="justify-content:center; padding:0.38rem 0.35rem; font-size:0.72rem;" onclick="openInstallGuideModal()" title="Mobil Uygulama Kurulum & QR">
+                        <i class="fa-solid fa-qrcode" style="color:#38bdf8;"></i> <span>QR Kurulum</span>
                     </button>
-                    <button type="button" class="btn btn-secondary btn-sm" style="padding:0.38rem 0.55rem;" onclick="openInstallGuideModal()" title="Mobil Uygulama Kurulum & QR">
-                        <i class="fa-solid fa-qrcode" style="color:#38bdf8;"></i>
-                    </button>
-                    <button type="button" class="btn btn-secondary btn-sm" style="padding:0.38rem 0.55rem;" onclick="shareAppOnWhatsApp()" title="WhatsApp Paylaş">
-                        <i class="fa-brands fa-whatsapp" style="color:#25d366;"></i>
+                    <button type="button" class="btn btn-secondary btn-sm" style="justify-content:center; padding:0.38rem 0.35rem; font-size:0.72rem;" onclick="shareAppOnWhatsApp()" title="Uygulamayı WhatsApp'ta Paylaş">
+                        <i class="fa-brands fa-whatsapp" style="color:#25d366;"></i> <span>WhatsApp</span>
                     </button>
                 </div>
                 <div class="user-profile">
-                    <div class="user-info" style="cursor:pointer;" onclick="openChangePasswordModal()" title="Şifre Değiştir">
+                    <div class="user-info" style="cursor:pointer;" onclick="openChangePasswordModal()" title="Şifre Değiştirmek İçin Tıklayın">
                         <img id="current-user-avatar" src="data:image/jpeg;base64,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" alt="User" class="user-avatar">
                         <div class="user-details">
                             <span id="current-user-name" class="user-name">Giriş Yapılmadı</span>
@@ -3312,9 +3358,6 @@ body[data-theme="light"] .mobile-scroll-nudge-btn {
                         </div>
                     </div>
                     <div style="display:flex; align-items:center; gap:0.25rem;">
-                        <button type="button" class="btn-icon" title="Şifre Değiştir" onclick="openChangePasswordModal()" style="color:#fbbf24;">
-                            <i class="fa-solid fa-key"></i>
-                        </button>
                         <button type="button" class="btn-icon" title="Güvenli Çıkış" onclick="handleLogout()">
                             <i class="fa-solid fa-power-off"></i>
                         </button>
@@ -3342,7 +3385,7 @@ body[data-theme="light"] .mobile-scroll-nudge-btn {
 
                 <div class="navbar-right" style="display:none !important;">
                     <button type="button" class="btn btn-secondary btn-sm app-version-chip" id="app-version-badge" onclick="openVersionModal()" title="Sürüm ve Cihaz Güncelleme Merkezi">
-                        <i class="fa-solid fa-code-branch" style="color:#38bdf8;"></i> <span id="app-current-version-text">v1.7.4</span>
+                        <i class="fa-solid fa-code-branch" style="color:#38bdf8;"></i> <span id="app-current-version-text">v1.7.5</span>
                     </button>
 
                     <button type="button" class="btn btn-secondary btn-sm" onclick="forceRefreshFromGitHub()" id="btn-navbar-refresh" title="Logo ERP Canlı Verilerini Yenile (Son Fatura: 20.08.2026)">
@@ -3399,9 +3442,8 @@ body[data-theme="light"] .mobile-scroll-nudge-btn {
                                 <span id="global-search-corner-count" style="display:none; padding:0.38rem 0.75rem; border-radius:8px; font-size:0.8rem; font-weight:800; background:rgba(16,185,129,0.16); border:1px solid rgba(16,185,129,0.45); color:#34d399; white-space:nowrap;">
                                     0 Kayıt
                                 </span>
-                                <button type="button" id="global-theme-toggle-btn" class="theme-toggle-pill" onclick="toggleZiyaretTheme()" title="Koyu / Açık Tema Değiştir">
-                                    <i class="fa-solid fa-sun" id="global-theme-icon"></i>
-                                    <span id="global-theme-text">Açık Tema</span>
+                                <button type="button" class="btn btn-success btn-sm" onclick="openCustomerModal()" style="padding:0.45rem 0.85rem; border-radius:8px; font-size:0.78rem; font-weight:800;">
+                                    <i class="fa-solid fa-user-plus"></i> + Yeni Müşteri Ekle
                                 </button>
                             </div>
                         </div>
@@ -3458,7 +3500,7 @@ body[data-theme="light"] .mobile-scroll-nudge-btn {
 
                     <!-- 6'lı Dengeli CRM & Finans KPI Kartları -->
                     <div class="kpi-grid">
-                        <div class="kpi-card" style="cursor:pointer;" onclick="switchTab('legacy-tab')">
+                        <div class="kpi-card" style="cursor:pointer;" onclick="filterLegacyByPriority('')">
                             <div class="kpi-content">
                                 <h3>Toplam 120 Cari Müşteri</h3>
                                 <div id="kpi-total-customers" class="kpi-value">1.990</div>
@@ -3494,7 +3536,7 @@ body[data-theme="light"] .mobile-scroll-nudge-btn {
                             <div class="kpi-icon blue"><i class="fa-solid fa-phone-volume"></i></div>
                         </div>
 
-                        <div class="kpi-card" style="cursor:pointer;" onclick="switchTab('tasks-tab')">
+                        <div class="kpi-card" style="cursor:pointer;" onclick="switchTab('active-tab')">
                             <div class="kpi-content">
                                 <h3>Bekleyen Ziyaret / Arama</h3>
                                 <div id="kpi-pending-tasks" class="kpi-value" style="color:#fbbf24;">0</div>
@@ -3534,57 +3576,15 @@ body[data-theme="light"] .mobile-scroll-nudge-btn {
                         </div>
                     </div>
 
-                    <!-- Hızlı İşlem, Churn Öncelik, Bölge Potansiyeli & Son Görüşmeler -->
-                    <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(310px, 1fr)); gap:1.1rem; margin-bottom:1.25rem;">
-                        <!-- Sol: Churn Öncelik Dağılımı + Top 3 VIP Önizleme -->
-                        <div class="table-card" style="margin-bottom:0;">
-                            <div class="table-header-row" style="padding:0.75rem 1.1rem;">
-                                <div class="table-header-title" style="font-size:0.9rem;">
-                                    <i class="fa-solid fa-fire" style="color:#ef4444;"></i> Churn Öncelik &amp; VIP Müşteri Grupları
-                                </div>
-                            </div>
-                            <div style="padding:0.95rem; display:flex; flex-direction:column; gap:0.65rem;">
-                                <div style="display:flex; justify-content:space-between; align-items:center; background:rgba(239,68,68,0.1); border:1px solid rgba(239,68,68,0.3); border-radius:10px; padding:0.7rem 0.9rem; cursor:pointer;" onclick="filterLegacyByPriority('P1 - VIP Kritik Filo')">
-                                    <div>
-                                        <strong style="color:#fca5a5; font-size:0.88rem;">P1 - VIP Kritik Filolar (Ciro &ge; 1M TL)</strong>
-                                        <div style="font-size:0.73rem; color:#cbd5e1;">Yüksek ciro geçmişi, çoklu araç filosu, en acil ziyaret</div>
-                                    </div>
-                                    <span id="kpi-p1-vip-count" class="badge badge-p1" style="font-size:0.84rem;">31 Müşteri</span>
-                                </div>
-
-                                <div style="display:flex; justify-content:space-between; align-items:center; background:rgba(245,158,11,0.1); border:1px solid rgba(245,158,11,0.3); border-radius:10px; padding:0.7rem 0.9rem; cursor:pointer;" onclick="filterLegacyByPriority('P1 - Acil Churn')">
-                                    <div>
-                                        <strong style="color:#fde68a; font-size:0.88rem;">P1 - Acil Churn (Son 1-3 Yıldır Gelmeyenler)</strong>
-                                        <div style="font-size:0.73rem; color:#cbd5e1;">Modern portföy, arayı soğutmadan geri kazanım randevusu</div>
-                                    </div>
-                                    <span id="kpi-p1-churn-count" class="badge badge-p2" style="font-size:0.84rem;">1.296 Müşteri</span>
-                                </div>
-
-                                <div style="display:flex; justify-content:space-between; align-items:center; background:rgba(56,189,248,0.1); border:1px solid rgba(56,189,248,0.3); border-radius:10px; padding:0.7rem 0.9rem; cursor:pointer;" onclick="filterLegacyByPriority('P1 - Vefa & Geri Kazanım')">
-                                    <div>
-                                        <strong style="color:#93c5fd; font-size:0.88rem;">P1 - Vefa &amp; Köklü Portföy</strong>
-                                        <div style="font-size:0.73rem; color:#cbd5e1;">Yüksek sadakat puanlı, geri kazanıma en yakın dostlar</div>
-                                    </div>
-                                    <span id="kpi-p1-vefa-count" class="badge badge-p3" style="font-size:0.84rem;">74 Müşteri</span>
-                                </div>
-
-                                <div style="display:flex; justify-content:space-between; align-items:center; background:rgba(148,163,184,0.08); border:1px solid rgba(148,163,184,0.22); border-radius:10px; padding:0.65rem 0.9rem; cursor:pointer;" onclick="filterLegacyByPriority('P2')">
-                                    <div>
-                                        <strong style="color:#e2e8f0; font-size:0.85rem;">P2 - Tarihsel Arşiv &amp; Standart Rut Portföyü</strong>
-                                        <div style="font-size:0.72rem; color:#94a3b8;">Bölge rut ziyaretlerinde uğranacak genel arşiv</div>
-                                    </div>
-                                    <span id="kpi-p2-archive-count" class="badge badge-secondary" style="font-size:0.82rem;">1.173 Müşteri</span>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- Orta: Bölge / İl Yoğunluk & Potansiyel Ciro Özeti -->
+                    <!-- Bölge Potansiyeli & Son Görüşmeler (Sade ve Net 2 Sütunlu) -->
+                    <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(340px, 1fr)); gap:1.1rem; margin-bottom:1.25rem;">
+                        <!-- Sol: Bölge / İl Yoğunluk & Potansiyel Ciro Özeti -->
                         <div class="table-card" style="margin-bottom:0;">
                             <div class="table-header-row" style="padding:0.75rem 1.1rem;">
                                 <div class="table-header-title" style="font-size:0.9rem;">
                                     <i class="fa-solid fa-map-location-dot" style="color:#34d399;"></i> Bölge &amp; İl Bazlı Potansiyel Ciro Yoğunluğu
                                 </div>
-                                <button type="button" class="btn btn-secondary btn-sm" onclick="switchTab('strategy-tab')">434 İlçe Rehberi</button>
+                                <button type="button" class="btn btn-secondary btn-sm" onclick="switchTab('reports-tab')">İl &amp; İlçe Raporu</button>
                             </div>
                             <div id="dashboard-region-bars" style="padding:0.95rem; display:flex; flex-direction:column; gap:0.65rem;">
                                 <!-- Dinamik olarak ilk 5 şehir bar grafiği dolar -->
@@ -3674,8 +3674,19 @@ body[data-theme="light"] .mobile-scroll-nudge-btn {
                                 <option value="HAS_INVOICE">Fatura Kalem Detayı Olanlar (1.725)</option>
                             </select>
 
+                            <select id="ekstre-filter-priority" class="filter-input" onchange="cariEkstrePage=1; renderCariEkstreTable()">
+                                <option value="">Tüm Öncelik &amp; Portföy Grupları</option>
+                                <option value="P1">P1 - Tüm Acil Churn &amp; VIP</option>
+                                <option value="P1 - VIP Kritik Filo">P1 - VIP Kritik Filo (Ciro ≥ 1M ₺)</option>
+                                <option value="P1 - Acil Churn">P1 - Acil Churn (Kayıp Risk)</option>
+                                <option value="P1 - Vefa & Geri Kazanım">P1 - Vefa &amp; Geri Kazanım</option>
+                                <option value="P2">P2 - Standart Arşiv Portföyü</option>
+                                <option value="P3">P3 - Kazanılan &amp; Aktif Portföy</option>
+                            </select>
+
                             <select id="ekstre-sort" class="filter-input" onchange="cariEkstrePage=1; renderCariEkstreTable()">
                                 <option value="BALANCE_DESC">Bakiye Büyüklüğüne Göre (Azalan)</option>
+                                <option value="REVENUE_DESC">Tarihsel Ciroya Göre (Azalan)</option>
                                 <option value="DEBIT_DESC">Borç Tutarlarına Göre (Azalan)</option>
                                 <option value="CREDIT_DESC">Alacak Tutarlarına Göre (Azalan)</option>
                                 <option value="CODE_ASC">Cari Koduna Göre (A-Z)</option>
@@ -3741,33 +3752,21 @@ body[data-theme="light"] .mobile-scroll-nudge-btn {
                      ============================================================== -->
                 <section id="route-plan-tab" class="tab-section">
                     <!-- ÜST BAŞLIK VE ÖZET BANNER -->
-                    <div style="background:linear-gradient(135deg, rgba(245,158,11,0.16), rgba(2,132,199,0.18)); border:1px solid rgba(245,158,11,0.45); border-radius:var(--radius-md); padding:0.9rem 1.2rem; margin-bottom:1rem; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:0.75rem;">
-                        <div style="display:flex; align-items:center; gap:0.85rem; flex-wrap:wrap;">
-                            <button type="button" class="inpage-back-btn" onclick="DizsanBackNav.handleInAppBack()" title="Bir Önceki Sayfaya Dön">
-                                <i class="fa-solid fa-arrow-left"></i> Önceki Sayfa
-                            </button>
+                    <div style="background:linear-gradient(135deg, rgba(245,158,11,0.14), rgba(2,132,199,0.14)); border:1px solid rgba(245,158,11,0.4); border-radius:var(--radius-md); padding:0.8rem 1.15rem; margin-bottom:0.9rem; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:0.65rem;">
+                        <div style="display:flex; align-items:center; gap:0.75rem; flex-wrap:wrap;">
                             <div>
-                                <div style="font-size:1.02rem; font-weight:800; color:#fff; display:flex; align-items:center; gap:0.5rem;">
+                                <div style="font-size:1rem; font-weight:800; color:#fff; display:flex; align-items:center; gap:0.5rem;">
                                     <i class="fa-solid fa-route" style="color:#fbbf24;"></i>
                                     <span id="custom-rut-form-title">RUT PLANLA — Yeni Güzergâh &amp; Ziyaret Planı Oluştur</span>
                                 </div>
-                                <div style="font-size:0.76rem; color:#cbd5e1; margin-top:2px;">
-                                    İl ve ilçeleri ayrı ayrı seçip güzergaha ekleyin, otomatik gelen kayıtlı müşterileri tikleyin veya sistemde olmayan işletmeleri (+ Manuel Ziyaret Ekle) ile plana dahil edin.
+                                <div style="font-size:0.75rem; color:#cbd5e1; margin-top:2px;">
+                                    1. Adım: İl ve ilçeleri seçin &bull; 2. Adım: Müşterileri işaretleyip listeye ekleyin &bull; 3. Adım: Rut planını kaydedin.
                                 </div>
                             </div>
                         </div>
-                        <div style="display:flex; align-items:center; gap:0.5rem; flex-wrap:wrap;">
-                            <span id="custom-rut-selected-counter" class="badge" style="background:rgba(16,185,129,0.2); color:#34d399; border:1px solid rgba(16,185,129,0.45); font-size:0.78rem; font-weight:800; padding:0.35rem 0.7rem;">
-                                Seçilen Hedef: 0 Nokta
-                            </span>
-                            <button type="button" class="btn btn-secondary btn-sm" onclick="toggleManualVisitCollapse(true)" style="border-color:rgba(167,139,250,0.5); color:#e9d5ff;">
-                                <i class="fa-solid fa-plus"></i> + Manuel Ziyaret Ekle
-                            </button>
-                            <button type="button" class="btn btn-secondary btn-sm" onclick="resetCustomRouteForm()" title="Formu Sıfırla">
-                                <i class="fa-solid fa-rotate-left"></i> Formu Temizle
-                            </button>
-                            <button type="button" class="btn btn-success btn-sm" onclick="switchTab('reports-tab')" title="Rut &amp; Ziyaret Raporlarını Aç">
-                                <i class="fa-solid fa-chart-column"></i> Raporlar
+                        <div style="display:flex; align-items:center; gap:0.45rem; flex-wrap:wrap;">
+                            <button type="button" class="btn btn-secondary btn-sm" onclick="resetCustomRouteForm()" title="Yeni Boş Rut Planı Aç">
+                                <i class="fa-solid fa-rotate-left"></i> Yeni Boş Plan
                             </button>
                         </div>
                     </div>
@@ -4173,35 +4172,46 @@ body[data-theme="light"] .mobile-scroll-nudge-btn {
                 </section>
 
                 <!-- ==============================================================
-                     SEKME 3: GÜNCEL SAHA & ZİYARET KAYITLARI (ACTIVE-TAB)
+                     SEKME 3: SAHA GÖRÜŞMELERİ, TELEFON KAYITLARI & HATIRLATICILAR (ACTIVE-TAB)
                      ============================================================== -->
                 <section id="active-tab" class="tab-section">
-                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1.25rem; flex-wrap:wrap; gap:0.75rem;">
-                        <div style="display:flex; align-items:center; gap:0.85rem; flex-wrap:wrap;">
-                            <button type="button" class="inpage-back-btn" onclick="DizsanBackNav.handleInAppBack()" title="Bir Önceki Sayfaya Dön">
-                                <i class="fa-solid fa-arrow-left"></i> Önceki Sayfa
-                            </button>
-                            <div>
-                                <h2 style="font-size:1.15rem; font-weight:800; color:#fff;">🚗 Saha Ziyaretleri &amp; Telefon Görüşme Kayıtları</h2>
-                                <p style="font-size:0.82rem; color:var(--text-sec); margin-top:2px;">Personeller tarafından gerçekleştirilen yüz yüze ziyaretler, yapılan telefon görüşmeleri ve alınan servis randevuları.</p>
-                            </div>
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1.1rem; flex-wrap:wrap; gap:0.75rem;">
+                        <div>
+                            <h2 style="font-size:1.12rem; font-weight:800; color:#fff; display:flex; align-items:center; gap:0.5rem;">
+                                <i class="fa-solid fa-car-side" style="color:#38bdf8;"></i>
+                                <span>Saha Görüşmeleri, Telefon Aramaları &amp; Görev Takibi</span>
+                            </h2>
+                            <p style="font-size:0.8rem; color:var(--text-sec); margin-top:2px;">Gerçekleştirilen yüz yüze ziyaretler, telefon görüşmeleri ve personele atanan terminli takip görevleri.</p>
                         </div>
-                        <div style="display:flex; gap:0.5rem;">
-                            <button type="button" class="btn btn-primary" onclick="openVisitModal()">
+                        <div style="display:flex; gap:0.5rem; flex-wrap:wrap;">
+                            <button type="button" class="btn btn-primary btn-sm" onclick="openVisitModal()">
                                 <i class="fa-solid fa-plus-circle"></i> Yeni Ziyaret / Görüşme Kaydet
                             </button>
-                            <button type="button" class="btn btn-secondary" onclick="printVisitReport()">
+                            <button type="button" class="btn btn-warning btn-sm" onclick="openTaskModal()">
+                                <i class="fa-solid fa-bell"></i> Yeni Görev / Hatırlatıcı Ata
+                            </button>
+                            <button type="button" class="btn btn-secondary btn-sm" onclick="printVisitReport()">
                                 <i class="fa-solid fa-print"></i> Saha Raporu Yazdır (A4)
                             </button>
+                        </div>
+                    </div>
+
+                    <!-- Aksiyon & Hatırlatıcı Görevler Bölümü (Tek Ekranda Birleşik) -->
+                    <div class="table-card" style="margin-bottom:1.15rem; border-color:rgba(245,158,11,0.35);">
+                        <div class="table-header-row" style="padding:0.65rem 1.1rem; background:rgba(245,158,11,0.08);">
+                            <div class="table-header-title" style="font-size:0.88rem;">
+                                <i class="fa-solid fa-bell" style="color:#fbbf24;"></i>
+                                <span>Saha Görevleri &amp; Terminli Hatırlatıcılar</span>
+                            </div>
+                        </div>
+                        <div id="tasks-list-container" style="padding:0.85rem 1.1rem; display:flex; flex-direction:column; gap:0.65rem;">
+                            <!-- Dinamik olarak JS tarafından doldurulur -->
                         </div>
                     </div>
 
                     <!-- Filtreler -->
                     <div class="filter-bar" style="margin-bottom:1rem;">
                         <div class="filter-group">
-                            <button type="button" class="inpage-back-btn" onclick="DizsanBackNav.handleInAppBack()" title="Bir Önceki Sayfaya Dön">
-                                <i class="fa-solid fa-arrow-left"></i> Önceki Sayfa
-                            </button>
                             <input type="text" id="active-search" class="filter-input" placeholder="Müşteri, yetkili, not veya personel ara..." oninput="renderActiveVisits()">
                             <select id="active-filter-type" class="filter-input" onchange="renderActiveVisits()">
                                 <option value="">Tüm Türler (Ziyaret &amp; Telefon)</option>
@@ -4227,59 +4237,16 @@ body[data-theme="light"] .mobile-scroll-nudge-btn {
                 </section>
 
                 <!-- ==============================================================
-                     SEKME 4: 🤖 YAPAY ZEKA DESTEKLİ TEKLEŞTİRME & ANALİZ (AI-MATCH-TAB)
+                     SEKME 4: YAPAY ZEKA DESTEKLİ TEKLEŞTİRME & ANALİZ (AI-MATCH-TAB)
                      ============================================================== -->
                 <section id="ai-match-tab" class="tab-section">
-                    <div style="background:linear-gradient(135deg, rgba(139,92,246,0.2), rgba(2,132,199,0.2)); border:1px solid rgba(139,92,246,0.45); border-radius:var(--radius-md); padding:1.25rem; margin-bottom:1.5rem;">
-                        <div style="display:flex; justify-content:space-between; align-items:flex-start; flex-wrap:wrap; gap:0.75rem;">
-                            <div>
-                                <div style="display:flex; align-items:center; gap:0.75rem; flex-wrap:wrap; margin-bottom:0.35rem;">
-                                    <button type="button" class="inpage-back-btn" onclick="DizsanBackNav.handleInAppBack()" title="Bir Önceki Sayfaya Dön">
-                                        <i class="fa-solid fa-arrow-left"></i> Önceki Sayfa
-                                    </button>
-                                    <h2 style="font-size:1.2rem; font-weight:800; color:#fff; display:flex; align-items:center; gap:0.6rem;">
-                                        <i class="fa-solid fa-brain" style="color:#c084fc;"></i> Yapay Zeka Destekli Akıllı Analiz &amp; Müşteri Tekleştirme Motoru
-                                    </h2>
-                                </div>
-                                <p style="font-size:0.84rem; color:#e2e8f0; margin-top:4px; max-width:760px; line-height:1.5;">
-                                    Eski Excel arşivi (1998-2026) ile yeni Logo ERP / canlı saha kayıtları arasındaki <strong>aynı vergi numarası, telefon, plaka ve unvan benzerliklerini</strong> tarar. Çakışan mükerrer kayıtları tek bir <strong>"Birleşik Master Müşteri Kartı"</strong> altında toplar ve sadeleştirir.
-                                </p>
-                            </div>
-                            <button type="button" class="btn btn-primary" onclick="runAiDeduplicationAnalysis()">
-                                <i class="fa-solid fa-arrows-rotate"></i> AI Analizini Yeniden Çalıştır
-                            </button>
-                        </div>
-                    </div>
-
-                    <!-- AI Eşleşme ve Sadeleştirme Sonuç Listesi -->
-                    <div id="ai-matches-container">
-                        <!-- Dinamik olarak JS tarafından doldurulur -->
-                    </div>
+                    <div id="ai-matches-container"></div>
                 </section>
 
                 <!-- ==============================================================
-                     SEKME 5: AKSİYON & GÖREV TAKİBİ (TASKS-TAB)
+                     SEKME 5: AKSİYON & GÖREV TAKİBİ (TASKS-TAB - ACTIVE-TAB İLE BİRLEŞTİRİLDİ)
                      ============================================================== -->
-                <section id="tasks-tab" class="tab-section">
-                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1.25rem; flex-wrap:wrap; gap:0.75rem;">
-                        <div style="display:flex; align-items:center; gap:0.85rem; flex-wrap:wrap;">
-                            <button type="button" class="inpage-back-btn" onclick="DizsanBackNav.handleInAppBack()" title="Bir Önceki Sayfaya Dön">
-                                <i class="fa-solid fa-arrow-left"></i> Önceki Sayfa
-                            </button>
-                            <div>
-                                <h2 style="font-size:1.15rem; font-weight:800; color:#fff;">🔔 Saha Görevleri &amp; Çift Aşamalı Hatırlatıcılar</h2>
-                                <p style="font-size:0.82rem; color:var(--text-sec); margin-top:2px;">Personele ve yöneticilere atanan arama/ziyaret görevleri. Termin tarihinden <strong>1 gün önce</strong> ve <strong>aynı gün</strong> sesli ve kilit ekranı bildirimi gönderilir.</p>
-                            </div>
-                        </div>
-                        <button type="button" class="btn btn-warning" onclick="openTaskModal()">
-                            <i class="fa-solid fa-plus-circle"></i> Yeni Görev / Hatırlatıcı Ata
-                        </button>
-                    </div>
-
-                    <div id="tasks-list-container" style="display:flex; flex-direction:column; gap:0.75rem;">
-                        <!-- Dinamik olarak JS tarafından doldurulur -->
-                    </div>
-                </section>
+                <section id="tasks-tab" class="tab-section"></section>
 
                 <!-- ==============================================================
                      SEKME 6: İLÇE RUT STRATEJİ & CEO SATIŞ REHBERİ (STRATEGY-TAB)
@@ -4287,9 +4254,6 @@ body[data-theme="light"] .mobile-scroll-nudge-btn {
                 <section id="strategy-tab" class="tab-section">
                     <div class="filter-bar">
                         <div class="filter-group">
-                            <button type="button" class="inpage-back-btn" onclick="DizsanBackNav.handleInAppBack()" title="Bir Önceki Sayfaya Dön">
-                                <i class="fa-solid fa-arrow-left"></i> Önceki Sayfa
-                            </button>
                             <div class="search-box">
                                 <i class="fa-solid fa-magnifying-glass"></i>
                                 <input type="text" id="strategy-search" class="filter-input" placeholder="İl, ilçe veya rut ara..." oninput="renderDistrictStrategies()">
@@ -4297,450 +4261,10 @@ body[data-theme="light"] .mobile-scroll-nudge-btn {
 
                             <select id="strategy-filter-city" class="filter-input" onchange="handleStrategyCityChange()">
                                 <option value="">📍 Tüm İller (76 İl)</option>
-                                <option value="Adana">Adana (12 İlçe • 83 Cari)</option>
-                                <option value="Adıyaman">Adıyaman (3 İlçe • 9 Cari)</option>
-                                <option value="Afyonkarahisar">Afyonkarahisar (8 İlçe • 29 Cari)</option>
-                                <option value="Aksaray">Aksaray (3 İlçe • 9 Cari)</option>
-                                <option value="Amasya">Amasya (6 İlçe • 237 Cari)</option>
-                                <option value="Ankara">Ankara (21 İlçe • 138 Cari)</option>
-                                <option value="Antalya">Antalya (13 İlçe • 47 Cari)</option>
-                                <option value="Ardahan">Ardahan (1 İlçe • 2 Cari)</option>
-                                <option value="Artvin">Artvin (6 İlçe • 22 Cari)</option>
-                                <option value="Aydın">Aydın (2 İlçe • 3 Cari)</option>
-                                <option value="Ağrı">Ağrı (2 İlçe • 3 Cari)</option>
-                                <option value="Balıkesir">Balıkesir (5 İlçe • 12 Cari)</option>
-                                <option value="Bartın">Bartın (2 İlçe • 8 Cari)</option>
-                                <option value="Batman">Batman (1 İlçe • 4 Cari)</option>
-                                <option value="Bayburt">Bayburt (2 İlçe • 3 Cari)</option>
-                                <option value="Bilecik">Bilecik (1 İlçe • 3 Cari)</option>
-                                <option value="Bitlis">Bitlis (1 İlçe • 1 Cari)</option>
-                                <option value="Bolu">Bolu (3 İlçe • 4 Cari)</option>
-                                <option value="Burdur">Burdur (3 İlçe • 18 Cari)</option>
-                                <option value="Bursa">Bursa (7 İlçe • 14 Cari)</option>
-                                <option value="Denizli">Denizli (7 İlçe • 17 Cari)</option>
-                                <option value="Diyarbakır">Diyarbakır (7 İlçe • 8 Cari)</option>
-                                <option value="Düzce">Düzce (2 İlçe • 2 Cari)</option>
-                                <option value="Edirne">Edirne (1 İlçe • 1 Cari)</option>
-                                <option value="Elazığ">Elazığ (4 İlçe • 30 Cari)</option>
-                                <option value="Erzincan">Erzincan (3 İlçe • 17 Cari)</option>
-                                <option value="Erzurum">Erzurum (7 İlçe • 11 Cari)</option>
-                                <option value="Eskişehir">Eskişehir (2 İlçe • 2 Cari)</option>
-                                <option value="Gaziantep">Gaziantep (4 İlçe • 9 Cari)</option>
-                                <option value="Giresun">Giresun (10 İlçe • 66 Cari)</option>
-                                <option value="Gümüşhane">Gümüşhane (3 İlçe • 11 Cari)</option>
-                                <option value="Hatay">Hatay (9 İlçe • 29 Cari)</option>
-                                <option value="Isparta">Isparta (6 İlçe • 16 Cari)</option>
-                                <option value="Iğdır">Iğdır (1 İlçe • 10 Cari)</option>
-                                <option value="Kahramanmaraş">Kahramanmaraş (4 İlçe • 30 Cari)</option>
-                                <option value="Karabük">Karabük (1 İlçe • 4 Cari)</option>
-                                <option value="Karaman">Karaman (1 İlçe • 1 Cari)</option>
-                                <option value="Kars">Kars (4 İlçe • 29 Cari)</option>
-                                <option value="Kastamonu">Kastamonu (11 İlçe • 92 Cari)</option>
-                                <option value="Kayseri">Kayseri (8 İlçe • 24 Cari)</option>
-                                <option value="Kocaeli">Kocaeli (8 İlçe • 20 Cari)</option>
-                                <option value="Konya">Konya (9 İlçe • 44 Cari)</option>
-                                <option value="Kütahya">Kütahya (2 İlçe • 4 Cari)</option>
-                                <option value="Kırklareli">Kırklareli (1 İlçe • 2 Cari)</option>
-                                <option value="Kırıkkale">Kırıkkale (4 İlçe • 43 Cari)</option>
-                                <option value="Kırşehir">Kırşehir (3 İlçe • 13 Cari)</option>
-                                <option value="Malatya">Malatya (3 İlçe • 8 Cari)</option>
-                                <option value="Manisa">Manisa (5 İlçe • 11 Cari)</option>
-                                <option value="Mardin">Mardin (4 İlçe • 6 Cari)</option>
-                                <option value="Mersin">Mersin (8 İlçe • 44 Cari)</option>
-                                <option value="Muğla">Muğla (7 İlçe • 22 Cari)</option>
-                                <option value="Muş">Muş (3 İlçe • 17 Cari)</option>
-                                <option value="Nevşehir">Nevşehir (7 İlçe • 23 Cari)</option>
-                                <option value="Ordu">Ordu (13 İlçe • 121 Cari)</option>
-                                <option value="Osmaniye">Osmaniye (3 İlçe • 49 Cari)</option>
-                                <option value="Rize">Rize (6 İlçe • 44 Cari)</option>
-                                <option value="Sakarya">Sakarya (5 İlçe • 7 Cari)</option>
-                                <option value="Samsun">Samsun (16 İlçe • 282 Cari)</option>
-                                <option value="Siirt">Siirt (2 İlçe • 2 Cari)</option>
-                                <option value="Sinop">Sinop (7 İlçe • 49 Cari)</option>
-                                <option value="Sivas">Sivas (7 İlçe • 29 Cari)</option>
-                                <option value="Tekirdağ">Tekirdağ (1 İlçe • 1 Cari)</option>
-                                <option value="Tokat">Tokat (7 İlçe • 85 Cari)</option>
-                                <option value="Trabzon">Trabzon (12 İlçe • 119 Cari)</option>
-                                <option value="Uşak">Uşak (4 İlçe • 20 Cari)</option>
-                                <option value="Van">Van (3 İlçe • 4 Cari)</option>
-                                <option value="Yalova">Yalova (1 İlçe • 1 Cari)</option>
-                                <option value="Yozgat">Yozgat (12 İlçe • 155 Cari)</option>
-                                <option value="Zonguldak">Zonguldak (6 İlçe • 19 Cari)</option>
-                                <option value="Çanakkale">Çanakkale (3 İlçe • 12 Cari)</option>
-                                <option value="Çankırı">Çankırı (4 İlçe • 49 Cari)</option>
-                                <option value="Çorum">Çorum (13 İlçe • 750 Cari)</option>
-                                <option value="İstanbul">İstanbul (33 İlçe • 102 Cari)</option>
-                                <option value="İzmir">İzmir (8 İlçe • 14 Cari)</option>
-                                <option value="Şanlıurfa">Şanlıurfa (4 İlçe • 4 Cari)</option>
-                                <option value="Şırnak">Şırnak (3 İlçe • 4 Cari)</option>
                             </select>
 
                             <select id="strategy-filter-district" class="filter-input" onchange="renderDistrictStrategies()">
                                 <option value="">🏘️ Tüm İlçeler (364 İlçe)</option>
-                                <option value="19 Mayıs">19 Mayıs (Samsun) • 2 Cari</option>
-                                <option value="Acıgöl">Acıgöl (Nevşehir) • 1 Cari</option>
-                                <option value="Adapazarı">Adapazarı (Sakarya) • 1 Cari</option>
-                                <option value="Akdağmadeni">Akdağmadeni (Yozgat) • 2 Cari</option>
-                                <option value="Akdeniz">Akdeniz (Mersin) • 16 Cari</option>
-                                <option value="Akhisar">Akhisar (Manisa) • 1 Cari</option>
-                                <option value="Akyurt">Akyurt (Ankara) • 2 Cari</option>
-                                <option value="Akçaabat">Akçaabat (Trabzon) • 7 Cari</option>
-                                <option value="Akçakale">Akçakale (Şanlıurfa) • 1 Cari</option>
-                                <option value="Akıncılar">Akıncılar (Sivas) • 1 Cari</option>
-                                <option value="Alaca">Alaca (Çorum) • 56 Cari</option>
-                                <option value="Alanya">Alanya (Antalya) • 4 Cari</option>
-                                <option value="Alaçam">Alaçam (Samsun) • 1 Cari</option>
-                                <option value="Altındağ">Altındağ (Ankara) • 5 Cari</option>
-                                <option value="Altınordu">Altınordu (Ordu) • 15 Cari</option>
-                                <option value="Altınova">Altınova (Yalova) • 1 Cari</option>
-                                <option value="Altınözü">Altınözü (Hatay) • 1 Cari</option>
-                                <option value="Andırın">Andırın (Kahramanmaraş) • 16 Cari</option>
-                                <option value="Antakya">Antakya (Hatay) • 8 Cari</option>
-                                <option value="Araç">Araç (Kastamonu) • 2 Cari</option>
-                                <option value="Ardeşen">Ardeşen (Rize) • 2 Cari</option>
-                                <option value="Arhavi">Arhavi (Artvin) • 1 Cari</option>
-                                <option value="Arsin">Arsin (Trabzon) • 4 Cari</option>
-                                <option value="Artova">Artova (Tokat) • 1 Cari</option>
-                                <option value="Artuklu">Artuklu (Mardin) • 1 Cari</option>
-                                <option value="Asarcık">Asarcık (Samsun) • 1 Cari</option>
-                                <option value="Atakum">Atakum (Samsun) • 8 Cari</option>
-                                <option value="Ataşehir">Ataşehir (İstanbul) • 9 Cari</option>
-                                <option value="Avanos">Avanos (Nevşehir) • 1 Cari</option>
-                                <option value="Avcılar">Avcılar (İstanbul) • 1 Cari</option>
-                                <option value="Ayancık">Ayancık (Sinop) • 3 Cari</option>
-                                <option value="Aybastı">Aybastı (Ordu) • 4 Cari</option>
-                                <option value="Aydıncık">Aydıncık (Yozgat) • 8 Cari</option>
-                                <option value="Azdavay">Azdavay (Kastamonu) • 2 Cari</option>
-                                <option value="Aşkale">Aşkale (Erzurum) • 1 Cari</option>
-                                <option value="Babadağ">Babadağ (Denizli) • 1 Cari</option>
-                                <option value="Bafra">Bafra (Samsun) • 33 Cari</option>
-                                <option value="Bahçelievler">Bahçelievler (İstanbul) • 2 Cari</option>
-                                <option value="Bala">Bala (Ankara) • 2 Cari</option>
-                                <option value="Balışeyh">Balışeyh (Kırıkkale) • 3 Cari</option>
-                                <option value="Banaz">Banaz (Uşak) • 9 Cari</option>
-                                <option value="Bandırma">Bandırma (Balıkesir) • 7 Cari</option>
-                                <option value="Battalgazi">Battalgazi (Malatya) • 4 Cari</option>
-                                <option value="Batıataşehir">Batıataşehir (İstanbul) • 1 Cari</option>
-                                <option value="Bayat">Bayat (Çorum) • 15 Cari</option>
-                                <option value="Baydiğin">Baydiğin (Yozgat) • 1 Cari</option>
-                                <option value="Bayrampaşa">Bayrampaşa (İstanbul) • 1 Cari</option>
-                                <option value="Bağcılar">Bağcılar (İstanbul) • 2 Cari</option>
-                                <option value="Bağlar">Bağlar (Diyarbakır) • 1 Cari</option>
-                                <option value="Başakşehir">Başakşehir (İstanbul) • 1 Cari</option>
-                                <option value="Beykoz">Beykoz (İstanbul) • 3 Cari</option>
-                                <option value="Beylikdüzü">Beylikdüzü (İstanbul) • 1 Cari</option>
-                                <option value="Beyoğlu">Beyoğlu (İstanbul) • 2 Cari</option>
-                                <option value="Beypazarı">Beypazarı (Ankara) • 5 Cari</option>
-                                <option value="Beşikdüzü">Beşikdüzü (Trabzon) • 4 Cari</option>
-                                <option value="Beşiktaş">Beşiktaş (İstanbul) • 3 Cari</option>
-                                <option value="Biga">Biga (Çanakkale) • 5 Cari</option>
-                                <option value="Birecik">Birecik (Şanlıurfa) • 1 Cari</option>
-                                <option value="Bolvadin">Bolvadin (Afyonkarahisar) • 1 Cari</option>
-                                <option value="Bornova">Bornova (İzmir) • 5 Cari</option>
-                                <option value="Boyabat">Boyabat (Sinop) • 25 Cari</option>
-                                <option value="Bozkurt">Bozkurt (Kastamonu) • 1 Cari</option>
-                                <option value="Bozüyük">Bozüyük (Bilecik) • 3 Cari</option>
-                                <option value="Boğazkale">Boğazkale (Çorum) • 2 Cari</option>
-                                <option value="Buca">Buca (İzmir) • 1 Cari</option>
-                                <option value="Bucak">Bucak (Burdur) • 6 Cari</option>
-                                <option value="Bulancak">Bulancak (Giresun) • 3 Cari</option>
-                                <option value="Büyükçekmece">Büyükçekmece (İstanbul) • 3 Cari</option>
-                                <option value="Canik">Canik (Samsun) • 4 Cari</option>
-                                <option value="Ceyhan">Ceyhan (Adana) • 3 Cari</option>
-                                <option value="Cide">Cide (Kastamonu) • 2 Cari</option>
-                                <option value="Cihanbeyli">Cihanbeyli (Konya) • 4 Cari</option>
-                                <option value="Cizre">Cizre (Şırnak) • 2 Cari</option>
-                                <option value="Dalaman">Dalaman (Muğla) • 1 Cari</option>
-                                <option value="Delice">Delice (Kırıkkale) • 9 Cari</option>
-                                <option value="Demirözü">Demirözü (Bayburt) • 1 Cari</option>
-                                <option value="Dereli">Dereli (Giresun) • 2 Cari</option>
-                                <option value="Derinkuyu">Derinkuyu (Nevşehir) • 1 Cari</option>
-                                <option value="Develi">Develi (Kayseri) • 2 Cari</option>
-                                <option value="Devrekani">Devrekani (Kastamonu) • 10 Cari</option>
-                                <option value="Dicle">Dicle (Diyarbakır) • 1 Cari</option>
-                                <option value="Digor">Digor (Kars) • 1 Cari</option>
-                                <option value="Dikmen">Dikmen (Sinop) • 1 Cari</option>
-                                <option value="Dilovası">Dilovası (Kocaeli) • 2 Cari</option>
-                                <option value="Dodurga">Dodurga (Çorum) • 1 Cari</option>
-                                <option value="Durağan">Durağan (Sinop) • 3 Cari</option>
-                                <option value="Dörtyol">Dörtyol (Hatay) • 1 Cari</option>
-                                <option value="Döşemealtı">Döşemealtı (Antalya) • 3 Cari</option>
-                                <option value="Düzköy">Düzköy (Trabzon) • 1 Cari</option>
-                                <option value="Edremit">Edremit (Balıkesir) • 2 Cari</option>
-                                <option value="Elmadağ">Elmadağ (Ankara) • 1 Cari</option>
-                                <option value="Elmalı">Elmalı (Antalya) • 2 Cari</option>
-                                <option value="Erbaa">Erbaa (Tokat) • 5 Cari</option>
-                                <option value="Erdemli">Erdemli (Mersin) • 9 Cari</option>
-                                <option value="Ereğli">Ereğli (Zonguldak) • 20 Cari</option>
-                                <option value="Erfelek">Erfelek (Sinop) • 3 Cari</option>
-                                <option value="Ergani">Ergani (Diyarbakır) • 2 Cari</option>
-                                <option value="Erzin">Erzin (Hatay) • 3 Cari</option>
-                                <option value="Esenler">Esenler (İstanbul) • 1 Cari</option>
-                                <option value="Esenyurt">Esenyurt (İstanbul) • 5 Cari</option>
-                                <option value="Eskil">Eskil (Aksaray) • 1 Cari</option>
-                                <option value="Espiye">Espiye (Giresun) • 8 Cari</option>
-                                <option value="Etimesgut">Etimesgut (Ankara) • 4 Cari</option>
-                                <option value="Eynesil">Eynesil (Giresun) • 3 Cari</option>
-                                <option value="Eyyübiye">Eyyübiye (Şanlıurfa) • 1 Cari</option>
-                                <option value="Eğridir">Eğridir (Isparta) • 1 Cari</option>
-                                <option value="Eşme">Eşme (Uşak) • 1 Cari</option>
-                                <option value="Fatsa">Fatsa (Ordu) • 10 Cari</option>
-                                <option value="Ferizli">Ferizli (Sakarya) • 1 Cari</option>
-                                <option value="Fethiye">Fethiye (Muğla) • 10 Cari</option>
-                                <option value="Gazipaşa">Gazipaşa (Antalya) • 2 Cari</option>
-                                <option value="Gebze">Gebze (Kocaeli) • 6 Cari</option>
-                                <option value="Gediz">Gediz (Kütahya) • 2 Cari</option>
-                                <option value="Gelendost">Gelendost (Isparta) • 1 Cari</option>
-                                <option value="Göksun">Göksun (Kahramanmaraş) • 1 Cari</option>
-                                <option value="Gökçebey">Gökçebey (Zonguldak) • 1 Cari</option>
-                                <option value="Gölbaşı">Gölbaşı (Ankara) • 4 Cari</option>
-                                <option value="Göle">Göle (Ardahan) • 2 Cari</option>
-                                <option value="Gölköy">Gölköy (Ordu) • 8 Cari</option>
-                                <option value="Gönen">Gönen (Balıkesir) • 3 Cari</option>
-                                <option value="Görele">Görele (Giresun) • 3 Cari</option>
-                                <option value="Göynücek">Göynücek (Amasya) • 5 Cari</option>
-                                <option value="Gülşehir">Gülşehir (Nevşehir) • 2 Cari</option>
-                                <option value="Gümüşhacıköy">Gümüşhacıköy (Amasya) • 3 Cari</option>
-                                <option value="Güneysu">Güneysu (Rize) • 1 Cari</option>
-                                <option value="Güngören">Güngören (İstanbul) • 1 Cari</option>
-                                <option value="Gürgentepe">Gürgentepe (Ordu) • 1 Cari</option>
-                                <option value="Hacılar">Hacılar (Kayseri) • 1 Cari</option>
-                                <option value="Haliliye">Haliliye (Şanlıurfa) • 1 Cari</option>
-                                <option value="Hani">Hani (Diyarbakır) • 1 Cari</option>
-                                <option value="Hanönü">Hanönü (Kastamonu) • 1 Cari</option>
-                                <option value="Hasköy">Hasköy (Muş) • 7 Cari</option>
-                                <option value="Hassa">Hassa (Hatay) • 1 Cari</option>
-                                <option value="Havran">Havran (Balıkesir) • 1 Cari</option>
-                                <option value="Havza">Havza (Samsun) • 22 Cari</option>
-                                <option value="Haymana">Haymana (Ankara) • 1 Cari</option>
-                                <option value="Hendek">Hendek (Sakarya) • 2 Cari</option>
-                                <option value="Honaz">Honaz (Denizli) • 1 Cari</option>
-                                <option value="Hopa">Hopa (Artvin) • 8 Cari</option>
-                                <option value="Horasan">Horasan (Erzurum) • 1 Cari</option>
-                                <option value="Hüyük">Hüyük (Konya) • 1 Cari</option>
-                                <option value="Ilgaz">Ilgaz (Çankırı) • 3 Cari</option>
-                                <option value="Kabadüz">Kabadüz (Ordu) • 1 Cari</option>
-                                <option value="Kabataş">Kabataş (Ordu) • 1 Cari</option>
-                                <option value="Kadirli">Kadirli (Osmaniye) • 37 Cari</option>
-                                <option value="Kadıköy">Kadıköy (İstanbul) • 1 Cari</option>
-                                <option value="Kadışehri">Kadışehri (Yozgat) • 1 Cari</option>
-                                <option value="Kahramankazan">Kahramankazan (Ankara) • 4 Cari</option>
-                                <option value="Kahta">Kahta (Adıyaman) • 6 Cari</option>
-                                <option value="Kalkandere">Kalkandere (Rize) • 1 Cari</option>
-                                <option value="Kandıra">Kandıra (Kocaeli) • 3 Cari</option>
-                                <option value="Kangal">Kangal (Sivas) • 1 Cari</option>
-                                <option value="Karabağlar">Karabağlar (İzmir) • 1 Cari</option>
-                                <option value="Karadeniz Ereğli">Karadeniz Ereğli (Zonguldak) • 1 Cari</option>
-                                <option value="Karaisalı">Karaisalı (Adana) • 1 Cari</option>
-                                <option value="Karapınar">Karapınar (Konya) • 4 Cari</option>
-                                <option value="Karatay">Karatay (Konya) • 4 Cari</option>
-                                <option value="Kargı">Kargı (Çorum) • 18 Cari</option>
-                                <option value="Kartal">Kartal (İstanbul) • 3 Cari</option>
-                                <option value="Kartepe">Kartepe (Kocaeli) • 1 Cari</option>
-                                <option value="Kavacık">Kavacık (İstanbul) • 1 Cari</option>
-                                <option value="Kavak">Kavak (Samsun) • 3 Cari</option>
-                                <option value="Kayaş">Kayaş (Ankara) • 1 Cari</option>
-                                <option value="Kaynaşlı">Kaynaşlı (Düzce) • 1 Cari</option>
-                                <option value="Kazan">Kazan (Ankara) • 3 Cari</option>
-                                <option value="Kağıthane">Kağıthane (İstanbul) • 1 Cari</option>
-                                <option value="Kağızman">Kağızman (Kars) • 1 Cari</option>
-                                <option value="Kaş">Kaş (Antalya) • 6 Cari</option>
-                                <option value="Kelkit">Kelkit (Gümüşhane) • 4 Cari</option>
-                                <option value="Kemaliye">Kemaliye (Erzincan) • 1 Cari</option>
-                                <option value="Kemer">Kemer (Antalya) • 1 Cari</option>
-                                <option value="Kepez">Kepez (Antalya) • 8 Cari</option>
-                                <option value="Keçiören">Keçiören (Ankara) • 4 Cari</option>
-                                <option value="Keşap">Keşap (Giresun) • 3 Cari</option>
-                                <option value="Kilimli">Kilimli (Zonguldak) • 3 Cari</option>
-                                <option value="Kocasinan">Kocasinan (Kayseri) • 3 Cari</option>
-                                <option value="Korkut">Korkut (Muş) • 5 Cari</option>
-                                <option value="Korkuteli">Korkuteli (Antalya) • 2 Cari</option>
-                                <option value="Kovancılar">Kovancılar (Elazığ) • 3 Cari</option>
-                                <option value="Koyulhisar">Koyulhisar (Sivas) • 3 Cari</option>
-                                <option value="Kozaklı">Kozaklı (Nevşehir) • 4 Cari</option>
-                                <option value="Kozan">Kozan (Adana) • 32 Cari</option>
-                                <option value="Kumluca">Kumluca (Antalya) • 1 Cari</option>
-                                <option value="Kumru">Kumru (Ordu) • 3 Cari</option>
-                                <option value="Kuşadası">Kuşadası (Aydın) • 2 Cari</option>
-                                <option value="Körfez">Körfez (Kocaeli) • 2 Cari</option>
-                                <option value="Köşk">Köşk (Aydın) • 1 Cari</option>
-                                <option value="Küre">Küre (Kastamonu) • 7 Cari</option>
-                                <option value="Küçükçekmece">Küçükçekmece (İstanbul) • 2 Cari</option>
-                                <option value="Kırkağaç">Kırkağaç (Manisa) • 1 Cari</option>
-                                <option value="Kırıkhan">Kırıkhan (Hatay) • 1 Cari</option>
-                                <option value="Kızıltepe">Kızıltepe (Mardin) • 3 Cari</option>
-                                <option value="Kızılırmak">Kızılırmak (Çankırı) • 12 Cari</option>
-                                <option value="Ladik">Ladik (Samsun) • 11 Cari</option>
-                                <option value="Lüleburgaz">Lüleburgaz (Kırklareli) • 2 Cari</option>
-                                <option value="Maden">Maden (Elazığ) • 1 Cari</option>
-                                <option value="Malkara">Malkara (Tekirdağ) • 1 Cari</option>
-                                <option value="Maltepe">Maltepe (İstanbul) • 6 Cari</option>
-                                <option value="Mamak">Mamak (Ankara) • 7 Cari</option>
-                                <option value="Manavgat">Manavgat (Antalya) • 7 Cari</option>
-                                <option value="Marmaris">Marmaris (Muğla) • 2 Cari</option>
-                                <option value="Maslak">Maslak (İstanbul) • 1 Cari</option>
-                                <option value="Maçka">Maçka (Trabzon) • 3 Cari</option>
-                                <option value="Mecitözü">Mecitözü (Çorum) • 19 Cari</option>
-                                <option value="Melikgazi">Melikgazi (Kayseri) • 4 Cari</option>
-                                <option value="Meram">Meram (Konya) • 1 Cari</option>
-                                <option value="Merkez">Merkez (Çorum) • 1377 Cari</option>
-                                <option value="Merkezefendi">Merkezefendi (Denizli) • 3 Cari</option>
-                                <option value="Merzifon">Merzifon (Amasya) • 64 Cari</option>
-                                <option value="Mesudiye">Mesudiye (Ordu) • 5 Cari</option>
-                                <option value="Midyat">Midyat (Mardin) • 1 Cari</option>
-                                <option value="Mihalgazi">Mihalgazi (Eskişehir) • 1 Cari</option>
-                                <option value="Milas">Milas (Muğla) • 2 Cari</option>
-                                <option value="Mucur">Mucur (Kırşehir) • 2 Cari</option>
-                                <option value="Mudurnu">Mudurnu (Bolu) • 1 Cari</option>
-                                <option value="Muratpaşa">Muratpaşa (Antalya) • 1 Cari</option>
-                                <option value="Murgul">Murgul (Artvin) • 1 Cari</option>
-                                <option value="Mut">Mut (Mersin) • 1 Cari</option>
-                                <option value="Nallıhan">Nallıhan (Ankara) • 3 Cari</option>
-                                <option value="Niksar">Niksar (Tokat) • 7 Cari</option>
-                                <option value="Nilüfer">Nilüfer (Bursa) • 2 Cari</option>
-                                <option value="Nizip">Nizip (Gaziantep) • 2 Cari</option>
-                                <option value="Nusaybin">Nusaybin (Mardin) • 1 Cari</option>
-                                <option value="Of">Of (Trabzon) • 3 Cari</option>
-                                <option value="Oltu">Oltu (Erzurum) • 1 Cari</option>
-                                <option value="Onikişubat">Onikişubat (Kahramanmaraş) • 7 Cari</option>
-                                <option value="Orhangazi">Orhangazi (Bursa) • 1 Cari</option>
-                                <option value="Orta">Orta (Çankırı) • 3 Cari</option>
-                                <option value="Ortahisar">Ortahisar (Trabzon) • 25 Cari</option>
-                                <option value="Ortaköy">Ortaköy (Çorum) • 3 Cari</option>
-                                <option value="Osmancık">Osmancık (Çorum) • 38 Cari</option>
-                                <option value="Osmangazi">Osmangazi (Bursa) • 2 Cari</option>
-                                <option value="Oğuzlar">Oğuzlar (Çorum) • 1 Cari</option>
-                                <option value="Palu">Palu (Elazığ) • 1 Cari</option>
-                                <option value="Pamukkale">Pamukkale (Denizli) • 3 Cari</option>
-                                <option value="Pamukova">Pamukova (Sakarya) • 2 Cari</option>
-                                <option value="Patnos">Patnos (Ağrı) • 1 Cari</option>
-                                <option value="Payas">Payas (Hatay) • 2 Cari</option>
-                                <option value="Pendik">Pendik (İstanbul) • 6 Cari</option>
-                                <option value="Pervari">Pervari (Siirt) • 1 Cari</option>
-                                <option value="Perşembe">Perşembe (Ordu) • 1 Cari</option>
-                                <option value="Polatlı">Polatlı (Ankara) • 11 Cari</option>
-                                <option value="Pozantı">Pozantı (Adana) • 3 Cari</option>
-                                <option value="Pursaklar">Pursaklar (Ankara) • 3 Cari</option>
-                                <option value="Reyhanlı">Reyhanlı (Hatay) • 2 Cari</option>
-                                <option value="Reşadiye">Reşadiye (Tokat) • 6 Cari</option>
-                                <option value="Saimbeyli">Saimbeyli (Adana) • 1 Cari</option>
-                                <option value="Salihli">Salihli (Manisa) • 2 Cari</option>
-                                <option value="Salıpazarı">Salıpazarı (Samsun) • 2 Cari</option>
-                                <option value="Sancaktepe">Sancaktepe (İstanbul) • 3 Cari</option>
-                                <option value="Sapanca">Sapanca (Sakarya) • 1 Cari</option>
-                                <option value="Saraykent">Saraykent (Yozgat) • 1 Cari</option>
-                                <option value="Sarıkaya">Sarıkaya (Yozgat) • 11 Cari</option>
-                                <option value="Sarıyer">Sarıyer (İstanbul) • 4 Cari</option>
-                                <option value="Sarıçam">Sarıçam (Adana) • 9 Cari</option>
-                                <option value="Seferihisar">Seferihisar (İzmir) • 2 Cari</option>
-                                <option value="Selim">Selim (Kars) • 7 Cari</option>
-                                <option value="Selçuklu">Selçuklu (Konya) • 7 Cari</option>
-                                <option value="Senirkent">Senirkent (Isparta) • 3 Cari</option>
-                                <option value="Serik">Serik (Antalya) • 1 Cari</option>
-                                <option value="Serinhisar">Serinhisar (Denizli) • 3 Cari</option>
-                                <option value="Seydikemer">Seydikemer (Muğla) • 4 Cari</option>
-                                <option value="Seyhan">Seyhan (Adana) • 6 Cari</option>
-                                <option value="Silifke">Silifke (Mersin) • 4 Cari</option>
-                                <option value="Silivri">Silivri (İstanbul) • 1 Cari</option>
-                                <option value="Sinanpaşa">Sinanpaşa (Afyonkarahisar) • 2 Cari</option>
-                                <option value="Sincan">Sincan (Ankara) • 9 Cari</option>
-                                <option value="Sincanlı">Sincanlı (Afyonkarahisar) • 1 Cari</option>
-                                <option value="Soma">Soma (Manisa) • 5 Cari</option>
-                                <option value="Sorgun">Sorgun (Yozgat) • 73 Cari</option>
-                                <option value="Sultanbeyli">Sultanbeyli (İstanbul) • 8 Cari</option>
-                                <option value="Suluova">Suluova (Amasya) • 22 Cari</option>
-                                <option value="Sungurlu">Sungurlu (Çorum) • 56 Cari</option>
-                                <option value="Sur">Sur (Diyarbakır) • 1 Cari</option>
-                                <option value="Talas">Talas (Kayseri) • 1 Cari</option>
-                                <option value="Tarsus">Tarsus (Mersin) • 6 Cari</option>
-                                <option value="Tatvan">Tatvan (Bitlis) • 1 Cari</option>
-                                <option value="Taşköprü">Taşköprü (Kastamonu) • 7 Cari</option>
-                                <option value="Taşova">Taşova (Amasya) • 3 Cari</option>
-                                <option value="Tekkeköy">Tekkeköy (Samsun) • 14 Cari</option>
-                                <option value="Tepebaşı">Tepebaşı (Eskişehir) • 1 Cari</option>
-                                <option value="Terme">Terme (Samsun) • 8 Cari</option>
-                                <option value="Tirebolu">Tirebolu (Giresun) • 1 Cari</option>
-                                <option value="Tonya">Tonya (Trabzon) • 4 Cari</option>
-                                <option value="Toprakkale">Toprakkale (Osmaniye) • 1 Cari</option>
-                                <option value="Torbalı">Torbalı (İzmir) • 2 Cari</option>
-                                <option value="Toroslar">Toroslar (Mersin) • 2 Cari</option>
-                                <option value="Tosya">Tosya (Kastamonu) • 6 Cari</option>
-                                <option value="Tufanbeyli">Tufanbeyli (Adana) • 1 Cari</option>
-                                <option value="Turhal">Turhal (Tokat) • 11 Cari</option>
-                                <option value="Tuzla">Tuzla (İstanbul) • 3 Cari</option>
-                                <option value="Tuşba">Tuşba (Van) • 1 Cari</option>
-                                <option value="Türkeli">Türkeli (Sinop) • 2 Cari</option>
-                                <option value="Tınaztepe">Tınaztepe (Afyonkarahisar) • 1 Cari</option>
-                                <option value="Ula">Ula (Muğla) • 2 Cari</option>
-                                <option value="Ulubey">Ulubey (Ordu) • 5 Cari</option>
-                                <option value="Ulus">Ulus (Bartın) • 1 Cari</option>
-                                <option value="Uğurludağ">Uğurludağ (Çorum) • 1 Cari</option>
-                                <option value="Vakfıkebir">Vakfıkebir (Trabzon) • 9 Cari</option>
-                                <option value="Vezirköprü">Vezirköprü (Samsun) • 71 Cari</option>
-                                <option value="Yahyalı">Yahyalı (Kayseri) • 9 Cari</option>
-                                <option value="Yahşihan">Yahşihan (Kırıkkale) • 2 Cari</option>
-                                <option value="Yakutiye">Yakutiye (Erzurum) • 3 Cari</option>
-                                <option value="Yalvaç">Yalvaç (Isparta) • 2 Cari</option>
-                                <option value="Yatağan">Yatağan (Muğla) • 1 Cari</option>
-                                <option value="Yağlıdere">Yağlıdere (Giresun) • 2 Cari</option>
-                                <option value="Yellice">Yellice (Sivas) • 1 Cari</option>
-                                <option value="Yenimahalle">Yenimahalle (Ankara) • 27 Cari</option>
-                                <option value="Yeniçağ">Yeniçağ (Bolu) • 1 Cari</option>
-                                <option value="Yenişehir">Yenişehir (Bursa) • 3 Cari</option>
-                                <option value="Yerköy">Yerköy (Yozgat) • 12 Cari</option>
-                                <option value="Yeşilyurt">Yeşilyurt (Malatya) • 3 Cari</option>
-                                <option value="Yomra">Yomra (Trabzon) • 3 Cari</option>
-                                <option value="Yunak">Yunak (Konya) • 1 Cari</option>
-                                <option value="Yunusemre">Yunusemre (Manisa) • 2 Cari</option>
-                                <option value="Yusufeli">Yusufeli (Artvin) • 4 Cari</option>
-                                <option value="Yüreğir">Yüreğir (Adana) • 8 Cari</option>
-                                <option value="Yıldırım">Yıldırım (Bursa) • 3 Cari</option>
-                                <option value="Zara">Zara (Sivas) • 2 Cari</option>
-                                <option value="Zeytinburnu">Zeytinburnu (İstanbul) • 3 Cari</option>
-                                <option value="Zile">Zile (Tokat) • 18 Cari</option>
-                                <option value="Çamoluk">Çamoluk (Giresun) • 1 Cari</option>
-                                <option value="Çan">Çan (Çanakkale) • 5 Cari</option>
-                                <option value="Çandır">Çandır (Yozgat) • 1 Cari</option>
-                                <option value="Çankaya">Çankaya (Ankara) • 14 Cari</option>
-                                <option value="Çarşamba">Çarşamba (Samsun) • 25 Cari</option>
-                                <option value="Çarşıbaşı">Çarşıbaşı (Trabzon) • 7 Cari</option>
-                                <option value="Çavdır">Çavdır (Burdur) • 5 Cari</option>
-                                <option value="Çay">Çay (Afyonkarahisar) • 1 Cari</option>
-                                <option value="Çaycuma">Çaycuma (Zonguldak) • 1 Cari</option>
-                                <option value="Çayeli">Çayeli (Rize) • 1 Cari</option>
-                                <option value="Çayırova">Çayırova (Kocaeli) • 1 Cari</option>
-                                <option value="Çekerek">Çekerek (Yozgat) • 4 Cari</option>
-                                <option value="Çivril">Çivril (Denizli) • 1 Cari</option>
-                                <option value="Çiçekdağ">Çiçekdağ (Kırşehir) • 1 Cari</option>
-                                <option value="Çiğli">Çiğli (İzmir) • 1 Cari</option>
-                                <option value="Çubuk">Çubuk (Ankara) • 11 Cari</option>
-                                <option value="Çukurova">Çukurova (Adana) • 2 Cari</option>
-                                <option value="Ödemiş">Ödemiş (İzmir) • 1 Cari</option>
-                                <option value="Ümraniye">Ümraniye (İstanbul) • 8 Cari</option>
-                                <option value="Ünye">Ünye (Ordu) • 32 Cari</option>
-                                <option value="Ürgüp">Ürgüp (Nevşehir) • 1 Cari</option>
-                                <option value="Üsküdar">Üsküdar (İstanbul) • 1 Cari</option>
-                                <option value="İdil">İdil (Şırnak) • 1 Cari</option>
-                                <option value="İliç">İliç (Erzincan) • 1 Cari</option>
-                                <option value="İlkadım">İlkadım (Samsun) • 43 Cari</option>
-                                <option value="İmamoğlu">İmamoğlu (Adana) • 3 Cari</option>
-                                <option value="İncesu">İncesu (Kayseri) • 1 Cari</option>
-                                <option value="İnebolu">İnebolu (Kastamonu) • 3 Cari</option>
-                                <option value="İnegöl">İnegöl (Bursa) • 3 Cari</option>
-                                <option value="İscehisar">İscehisar (Afyonkarahisar) • 8 Cari</option>
-                                <option value="İskilip">İskilip (Çorum) • 22 Cari</option>
-                                <option value="İspir">İspir (Erzurum) • 1 Cari</option>
-                                <option value="İyidere">İyidere (Rize) • 1 Cari</option>
-                                <option value="İzmit">İzmit (Kocaeli) • 2 Cari</option>
-                                <option value="Şahinbey">Şahinbey (Gaziantep) • 1 Cari</option>
-                                <option value="Şarkışla">Şarkışla (Sivas) • 1 Cari</option>
-                                <option value="Şavşat">Şavşat (Artvin) • 1 Cari</option>
-                                <option value="Şefaatli">Şefaatli (Yozgat) • 7 Cari</option>
-                                <option value="Şehitkamil">Şehitkamil (Gaziantep) • 5 Cari</option>
-                                <option value="Şenkaya">Şenkaya (Erzurum) • 2 Cari</option>
-                                <option value="Şiran">Şiran (Gümüşhane) • 3 Cari</option>
-                                <option value="Şişli">Şişli (İstanbul) • 2 Cari</option>
-                                <option value="Şuhut">Şuhut (Afyonkarahisar) • 2 Cari</option>
                             </select>
 
                             <select id="strategy-filter-rut" class="filter-input" onchange="renderDistrictStrategies()">
@@ -5166,13 +4690,13 @@ body[data-theme="light"] .mobile-scroll-nudge-btn {
             <i class="fa-solid fa-chart-pie"></i>
             <span>Kokpit</span>
         </div>
+        <div class="mobile-nav-item" data-tab="customer-search-tab" onclick="switchTab('customer-search-tab')">
+            <i class="fa-solid fa-magnifying-glass"></i>
+            <span>Müşteri Ara</span>
+        </div>
         <div class="mobile-nav-item" data-tab="route-plan-tab" onclick="switchTab('route-plan-tab')">
             <i class="fa-solid fa-route"></i>
             <span>Rut Planla</span>
-        </div>
-        <div class="mobile-nav-fab" onclick="openVisitModal()" title="Yeni Görüşme / Ziyaret Ekle">
-            <i class="fa-solid fa-plus"></i>
-            <span>Ekle</span>
         </div>
         <div class="mobile-nav-item" data-tab="reports-tab" onclick="switchTab('reports-tab')">
             <i class="fa-solid fa-chart-column"></i>
@@ -5223,40 +4747,12 @@ body[data-theme="light"] .mobile-scroll-nudge-btn {
                         </div>
                     </div>
 
-                    <!-- OLUMLU SEÇİLİNCE AÇILAN ALT MENÜ: TAKİP EDİLECEK (TEKRAR ARANACAK) -->
-                    <div id="visit-positive-submenu" style="display:block; background:linear-gradient(135deg, rgba(16,185,129,0.14), rgba(245,158,11,0.12)); border:1.5px solid rgba(16,185,129,0.5); border-radius:12px; padding:0.85rem 1rem; margin-bottom:0.85rem; box-shadow:0 6px 18px rgba(16,185,129,0.12);">
-                        <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:0.5rem; margin-bottom:0.65rem;">
-                            <div style="display:flex; align-items:center; gap:0.5rem;">
-                                <span style="background:#10b981; color:#052e16; font-weight:900; font-size:0.72rem; padding:2px 8px; border-radius:6px; letter-spacing:0.3px;">ALT MENÜ</span>
-                                <strong style="color:#6ee7b7; font-size:0.88rem;">
-                                    <i class="fa-solid fa-turn-up fa-rotate-90" style="margin-right:4px;"></i> Olumlu Görüşme Takip Durumu
-                                </strong>
-                            </div>
-                            <span style="font-size:0.74rem; color:#fde68a; font-weight:700;">
-                                <i class="fa-solid fa-phone-volume"></i> Otomatik Hatırlatıcı Bağlantılı
-                            </span>
-                        </div>
-
-                        <div class="grid-2-col" style="display:grid; grid-template-columns:1.25fr 1fr; gap:0.75rem; align-items:end;">
-                            <div class="form-group" style="margin-bottom:0;">
-                                <label style="color:#a7f3d0; font-weight:700; font-size:0.78rem;">Takip / Tekrar Arama Durumu *</label>
-                                <select id="visit-positive-substatus" class="form-control" onchange="handlePositiveSubstatusChange()" style="border-color:rgba(16,185,129,0.55); font-weight:700;">
-                                    <option value="Takip Edilecek (Tekrar Aranacak)" selected>⏳ Takip Edilecek (Tekrar Aranacak)</option>
-                                    <option value="Takip Edilecek (Tekrar Ziyaret)">🚗 Takip Edilecek (Tekrar Ziyaret Edilecek)</option>
-                                    <option value="Randevu Kesinleşti (Servise Gelecek)">📅 Randevu Kesinleşti (Servise Gelecek)</option>
-                                    <option value="Doğrudan Servise Davet (Ek Arama Yok)">✅ Doğrudan Servise Davet (Tekrar Arama Yok)</option>
-                                </select>
-                            </div>
-                            <div id="visit-submenu-datetime-wrap" style="display:grid; grid-template-columns:1fr 0.85fr; gap:0.5rem;">
-                                <div class="form-group" style="margin-bottom:0;">
-                                    <label style="color:#fde68a; font-weight:700; font-size:0.76rem;">Tekrar Arama Tarihi *</label>
-                                    <input type="date" id="visit-submenu-date" class="form-control" onchange="syncSubmenuDateTimeToTask()">
-                                </div>
-                                <div class="form-group" style="margin-bottom:0;">
-                                    <label style="color:#fde68a; font-weight:700; font-size:0.76rem;">Saati *</label>
-                                    <input type="time" id="visit-submenu-time" class="form-control" value="10:00" onchange="syncSubmenuDateTimeToTask()">
-                                </div>
-                            </div>
+                    <!-- Mükerrer tarih kalabalığını önlemek için gizli tutulan alt menü alanları -->
+                    <div id="visit-positive-submenu" style="display:none !important;">
+                        <select id="visit-positive-substatus"><option value="Takip Edilecek (Tekrar Aranacak)" selected>Takip</option></select>
+                        <div id="visit-submenu-datetime-wrap">
+                            <input type="date" id="visit-submenu-date">
+                            <input type="time" id="visit-submenu-time" value="10:00">
                         </div>
                     </div>
 
@@ -9188,6 +8684,16 @@ window.handleChangePasswordSubmit = handleChangePasswordSubmit;
 // 3. SEKME GEÇİŞLERİ VE GÖRÜNÜM YÖNETİMİ (D-PRO EMBED SENKRONLU)
 // ==========================================================================
 function switchTab(tabId) {
+    // Kaldırılan mükerrer sekmeleri birleştirilmiş ana modüllere yönlendir
+    const redirectMap = {
+        'tasks-tab': 'active-tab',
+        'legacy-tab': 'cari-ekstre-tab',
+        'strategy-tab': 'reports-tab',
+        'ai-match-tab': 'customer-search-tab'
+    };
+    if (redirectMap[tabId]) {
+        tabId = redirectMap[tabId];
+    }
     if (tabId === 'logs-tab' && !isOmerEren(currentUser)) {
         tabId = 'dashboard-tab';
     }
@@ -9209,13 +8715,10 @@ function switchTab(tabId) {
 
     const pageTitleMap = {
         'dashboard-tab': '<i class="fa-solid fa-chart-pie" style="color:var(--dizsan-light);"></i> Genel Bakış &amp; Kokpit',
+        'customer-search-tab': '<i class="fa-solid fa-magnifying-glass" style="color:#38bdf8;"></i> Müşteri &amp; Cari Ara (1.990 Kayıt)',
         'route-plan-tab': '<i class="fa-solid fa-route" style="color:#fbbf24;"></i> Yeni Rut Planla &amp; Saha Ziyaret Listesi',
         'cari-ekstre-tab': '<i class="fa-solid fa-file-invoice-dollar" style="color:#38bdf8;"></i> D-Pro Cari &amp; Logo Ekstre (Borç / Alacak / Fatura Detayı)',
-        'legacy-tab': '<i class="fa-solid fa-database" style="color:var(--dizsan-light);"></i> Kayıp Müşteri Ziyaret Planı (1998-2026)',
-        'active-tab': '<i class="fa-solid fa-car-side" style="color:var(--dizsan-light);"></i> Güncel Saha &amp; Telefon Görüşmeleri',
-        'ai-match-tab': '<i class="fa-solid fa-wand-magic-sparkles" style="color:#c084fc;"></i> Yapay Zeka Tekleştirme &amp; Churn Analizi',
-        'tasks-tab': '<i class="fa-solid fa-list-check" style="color:#fbbf24;"></i> Aksiyon &amp; Çift Aşamalı Hatırlatıcılar',
-        'strategy-tab': '<i class="fa-solid fa-map-location-dot" style="color:#34d399;"></i> İlçe Rut Strateji Rehberi',
+        'active-tab': '<i class="fa-solid fa-car-side" style="color:var(--dizsan-light);"></i> Saha Görüşmeleri &amp; Görevler',
         'logs-tab': '<i class="fa-solid fa-shield-halved" style="color:#f59e0b;"></i> Yönetici Denetim İzi',
         'reports-tab': '<i class="fa-solid fa-chart-column" style="color:#34d399;"></i> Saha &amp; Rut Ziyaret Raporları'
     };
@@ -9232,15 +8735,17 @@ function switchTab(tabId) {
         populateFilterOptions();
         if (typeof initCustomRoutePlannerUI === 'function') initCustomRoutePlannerUI();
         if (typeof renderActiveRouteExecutionPanel === 'function') renderActiveRouteExecutionPanel();
-    } else if (tabId === 'legacy-tab') {
-        populateFilterOptions();
-        renderLegacyCustomers();
-    } else if (tabId === 'strategy-tab') {
-        populateStrategyFilters(false);
-        renderDistrictStrategies();
+    } else if (tabId === 'active-tab') {
+        if (typeof renderActiveVisits === 'function') renderActiveVisits();
+        if (typeof renderTasks === 'function') renderTasks();
     } else if (tabId === 'reports-tab') {
         if (typeof populateReportsFilters === 'function') populateReportsFilters();
         if (typeof renderReportsTab === 'function') renderReportsTab();
+    } else if (tabId === 'customer-search-tab') {
+        setTimeout(() => {
+            const inp = document.getElementById('global-customer-search-input');
+            if (inp) inp.focus();
+        }, 80);
     }
 
     const sidebar = document.getElementById('sidebar');
@@ -9497,12 +9002,22 @@ function renderDashboard() {
 }
 
 function filterLegacyByCityQuick(cityName) {
-    switchTab('legacy-tab');
-    const cityInput = document.getElementById('legacy-filter-city');
-    if (cityInput) {
-        cityInput.value = cityName;
-        handleCityFilterChange();
+    switchTab('cari-ekstre-tab');
+    const sInput = document.getElementById('ekstre-search');
+    if (sInput) sInput.value = '';
+    const priSel = document.getElementById('ekstre-filter-priority');
+    if (priSel) priSel.value = '';
+    const baSel = document.getElementById('ekstre-filter-ba');
+    if (baSel) baSel.value = '';
+    const citySel = document.getElementById('ekstre-filter-city');
+    if (citySel) {
+        citySel.value = cityName;
+        if (typeof handleEkstreCityFilterChange === 'function') {
+            handleEkstreCityFilterChange();
+            return;
+        }
     }
+    renderCariEkstreTable(true);
 }
 
 function populateFilterOptions() {
@@ -9765,26 +9280,22 @@ function handleCityFilterChange() {
 }
 
 function filterLegacyByPriority(priorityText) {
-    switchTab('legacy-tab');
-    
-    // Önceki arama veya filtre kalıntılarını temizle (Kullanıcının tıkladığı grubun tümünü görebilmesi için)
-    const sInput = document.getElementById('legacy-search');
-    if (sInput) sInput.value = '';
-    const citySel = document.getElementById('legacy-filter-city');
-    if (citySel) citySel.value = '';
-    const distSel = document.getElementById('legacy-filter-district');
-    if (distSel) distSel.value = '';
-    const rutSel = document.getElementById('legacy-filter-rut');
-    if (rutSel) rutSel.value = '';
-    const balSel = document.getElementById('legacy-filter-balance');
-    if (balSel) balSel.value = '';
-    legacyPage = 1;
+    switchTab('cari-ekstre-tab');
 
-    const sel = document.getElementById('legacy-filter-priority');
-    if (sel) {
-        sel.value = priorityText;
+    // Önceki arama veya filtre kalıntılarını temizle
+    const sInput = document.getElementById('ekstre-search');
+    if (sInput) sInput.value = '';
+    const citySel = document.getElementById('ekstre-filter-city');
+    if (citySel) citySel.value = '';
+    const distSel = document.getElementById('ekstre-filter-district');
+    if (distSel) distSel.value = '';
+    const baSel = document.getElementById('ekstre-filter-ba');
+    if (baSel) baSel.value = '';
+    const priSel = document.getElementById('ekstre-filter-priority');
+    if (priSel) {
+        priSel.value = priorityText || '';
     }
-    renderLegacyCustomers();
+    renderCariEkstreTable(true);
 }
 
 function renderLegacyCustomers() {
@@ -10003,6 +9514,7 @@ function renderCariEkstreTable(resetPage = true) {
     const searchVal = normalizeTR((document.getElementById('ekstre-search') || document.getElementById('ekstre-search-input'))?.value || '');
     const cityVal = (document.getElementById('ekstre-filter-city') || document.getElementById('ekstre-city-filter'))?.value || '';
     const districtVal = document.getElementById('ekstre-filter-district')?.value || '';
+    const priorityVal = document.getElementById('ekstre-filter-priority')?.value || '';
     const statusVal = (document.getElementById('ekstre-filter-ba') || document.getElementById('ekstre-balance-filter'))?.value || '';
     const sortVal = (document.getElementById('ekstre-sort') || document.getElementById('ekstre-sort-filter'))?.value || 'BALANCE_DESC';
 
@@ -10052,6 +9564,13 @@ function renderCariEkstreTable(resetPage = true) {
     let filtered = enriched.filter(({ c, acc, invCount }) => {
         if (cityVal && cityVal !== 'ALL' && normalizeTR(c.city) !== normalizeTR(cityVal)) return false;
         if (districtVal && normalizeTR(c.district) !== normalizeTR(districtVal)) return false;
+        if (priorityVal) {
+            if (priorityVal.includes('VIP')) {
+                if (!((c.priority || '').includes('VIP') || Number(c.totalRevenue || 0) >= 1000000)) return false;
+            } else if (!(c.priority || '').includes(priorityVal)) {
+                return false;
+            }
+        }
         if ((statusVal === 'B' || statusVal === '(B)') && acc.baCode !== '(B)') return false;
         if ((statusVal === 'A' || statusVal === '(A)') && acc.baCode !== '(A)') return false;
         if (statusVal === 'ACTIVE_BAL' && acc.baCode === '-') return false;
@@ -10126,9 +9645,14 @@ function renderCariEkstreTable(resetPage = true) {
                 <td style="text-align:right; font-weight:800; color:${bakiyeColor}; white-space:nowrap;">${formatMoney(Math.abs(acc.bakiye))}</td>
                 <td style="text-align:center; white-space:nowrap;">${baBadge}</td>
                 <td style="text-align:right; white-space:nowrap;" onclick="event.stopPropagation();">
-                    <button type="button" class="btn btn-sm ${invCount > 0 ? 'btn-primary' : 'btn-secondary'}" onclick="openCustomerDetailModal('${c.code}')" style="font-size:0.72rem; padding:0.3rem 0.6rem;">
-                        <i class="fa-solid fa-file-invoice"></i> ${invCount > 0 ? `${invCount} Fatura / Ekstre` : 'Cari Kart'}
-                    </button>
+                    <div style="display:inline-flex; gap:0.25rem; align-items:center;">
+                        <button type="button" class="btn btn-sm ${invCount > 0 ? 'btn-primary' : 'btn-secondary'}" onclick="openCustomerDetailModal('${c.code}')" style="font-size:0.7rem; padding:0.26rem 0.5rem;" title="Logo Fatura Kalemleri ve Cari Ekstre">
+                            <i class="fa-solid fa-file-invoice"></i> ${invCount > 0 ? `${invCount} Fatura` : 'Ekstre'}
+                        </button>
+                        <button type="button" class="btn btn-sm btn-secondary" onclick="quickStartVisitForCustomer('${c.code}')" style="font-size:0.7rem; padding:0.26rem 0.45rem;" title="Ziyaret / Görüşme Kaydı Ekle">
+                            <i class="fa-solid fa-car-side" style="color:#34d399;"></i>
+                        </button>
+                    </div>
                 </td>
             </tr>
         `;
@@ -15082,6 +14606,7 @@ function toggleManualVisitEntryForm() {
         if (titleInput) setTimeout(() => titleInput.focus(), 50);
     }
 }
+window.toggleManualVisitCollapse = toggleManualVisitEntryForm;
 
 function toggleRouteItemInlineDetail(idx) {
     activeExpandedRouteItemIdx = (activeExpandedRouteItemIdx === idx) ? null : idx;
@@ -15195,12 +14720,6 @@ function renderActiveRouteExecutionPanel() {
             </div>
 
             <div style="display:flex; gap:0.35rem; flex-wrap:wrap; align-items:center;">
-                <button type="button" class="btn btn-success btn-sm" style="padding:0.24rem 0.6rem; font-size:0.72rem; font-weight:800;" onclick="shareCustomRouteOnWhatsApp('${rt.id}')">
-                    <i class="fa-brands fa-whatsapp"></i> WhatsApp'ta Paylaş (Linkli)
-                </button>
-                <button type="button" class="btn btn-secondary btn-sm" style="padding:0.24rem 0.6rem; font-size:0.72rem; font-weight:700;" onclick="broadcastRoutePlanNotificationToAllPersonnel('${rt.id}', true)">
-                    <i class="fa-solid fa-bell" style="color:#fbbf24;"></i> Personele Bildirim Gönder &amp; Görev Özeti
-                </button>
                 <button type="button" class="btn ${activeRouteExecutionStatusFilter === 'ALL' ? 'btn-primary' : 'btn-secondary'} btn-sm" style="padding:0.24rem 0.55rem; font-size:0.71rem;" onclick="setActiveRouteExecutionStatusFilter('ALL')">
                     Tümü (${total})
                 </button>

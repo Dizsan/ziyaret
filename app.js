@@ -12,7 +12,7 @@
  */
 
 const INITIAL_APP_VERSION = "v1.3.0";
-const CURRENT_APP_VERSION = "1.7.4";
+const CURRENT_APP_VERSION = "1.7.5";
 let hasShownUpdateNotice = false;
 const VAPID_PUBLIC_KEY = "BJIJfCBiDwya3clZOWS08EDxfuN18xtfJGTX0n_apWBTEW7-kO_FGKNy5VDRvUsMgc46IP5oxLlIHqgrDo-JTkE";
 const STORAGE_KEY_STATE = "dizsan_ziyaret_shared_state_v1";
@@ -179,6 +179,7 @@ let appState = {
     customRoutes: [],
     visits: [],
     tasks: [],
+    deletedIds: [],
     approvalRequests: [],
     unifiedMasterCustomers: [],
     pushSubscriptions: [],
@@ -557,7 +558,7 @@ window.openWhatsAppChat = openWhatsAppChat;
 window.openCustomerWhatsApp = openCustomerWhatsApp;
 window.shareCustomRouteWhatsApp = shareCustomRouteWhatsApp;
 
-function addAuditLog(category, detail) {
+function addAuditLog(category, detail, skipSync = false) {
     const actor = currentUser ? currentUser.name : "SİSTEM";
     const entry = {
         id: "LOG-" + Date.now(),
@@ -567,12 +568,17 @@ function addAuditLog(category, detail) {
         detail: detail,
         platform: getDevicePlatform()
     };
+    if (!Array.isArray(appState.logs)) appState.logs = [];
     appState.logs.unshift(entry);
-    if (appState.logs.length > 500) {
-        appState.logs = appState.logs.slice(0, 500);
+    if (appState.logs.length > 300) {
+        appState.logs = appState.logs.slice(0, 300);
     }
-    syncToServer();
-    renderLogs();
+    if (!skipSync) {
+        syncToServer();
+    }
+    if (document.getElementById('logs-tab')?.classList.contains('active')) {
+        renderLogs();
+    }
 }
 
 // ==========================================================================
@@ -1095,6 +1101,11 @@ async function fetchLiveGitHubData(isInitial = false) {
         appState.users = migrateOfficialUserEmails(liveData.users);
     }
 
+    if (Array.isArray(liveData.deletedIds)) {
+        if (!Array.isArray(appState.deletedIds)) appState.deletedIds = [];
+        liveData.deletedIds.forEach(dId => registerDeletedRecordId(dId));
+    }
+
     // Bulut verisi daha güncelse veya yerel liste boşsa senkronize et (silme ve düzenlemeleri de yansıtır)
     if (Array.isArray(liveData.visits) && (isRemoteNewerOrEqual || (appState.visits || []).length === 0)) {
         appState.visits = mergeRecordListsById(liveData.visits, appState.visits, 'id', isRemoteNewerOrEqual);
@@ -1105,7 +1116,7 @@ async function fetchLiveGitHubData(isInitial = false) {
     if (Array.isArray(liveData.customRoutes)) {
         const localRoutes = Array.isArray(appState.customRoutes) ? appState.customRoutes : [];
         if (localRoutes.length === 0) {
-            appState.customRoutes = liveData.customRoutes;
+            appState.customRoutes = mergeRecordListsById(liveData.customRoutes, [], 'id', true);
         } else if (isRemoteNewerOrEqual) {
             appState.customRoutes = mergeRecordListsById(liveData.customRoutes, localRoutes, 'id', true);
         } else {
@@ -1127,26 +1138,38 @@ async function fetchLiveGitHubData(isInitial = false) {
     return true;
 }
 
+function registerDeletedRecordId(id) {
+    if (!id) return;
+    if (!Array.isArray(appState.deletedIds)) appState.deletedIds = [];
+    const sId = String(id);
+    if (!appState.deletedIds.includes(sId)) {
+        appState.deletedIds.unshift(sId);
+        if (appState.deletedIds.length > 500) {
+            appState.deletedIds = appState.deletedIds.slice(0, 500);
+        }
+    }
+}
 
+let _localSaveTimer = null;
 function saveStateLocally() {
     appState.users = migrateOfficialUserEmails(appState.users);
-    try {
-        localStorage.setItem(STORAGE_KEY_STATE, JSON.stringify(sanitizeStateForCloud(appState)));
-    } catch (e) {
+    syncWithDizGunBridge();
+    if (_localSaveTimer) clearTimeout(_localSaveTimer);
+    _localSaveTimer = setTimeout(() => {
         try {
-            // Safari 5MB localStorage kotası aşılırsa fatura alt kalemlerini (serviceHistory) hariç tutarak kaydet
+            // Mobil tarayıcı çökmesini (OOM / "Tablet çöktü") önlemek için 5.5MB serviceHistory dizisini asla localStorage'a serileştirme!
             const sanitized = sanitizeStateForCloud(appState);
             const lightState = {
                 ...sanitized,
                 customers: (sanitized.customers || []).map(c => {
+                    if (!c || !c.serviceHistory) return c;
                     const { serviceHistory, ...rest } = c;
                     return rest;
                 })
             };
             localStorage.setItem(STORAGE_KEY_STATE, JSON.stringify(lightState));
-        } catch (err2) {}
-    }
-    syncWithDizGunBridge();
+        } catch (err) {}
+    }, 30);
 }
 
 function syncWithDizGunBridge() {
@@ -1217,6 +1240,7 @@ function buildLiveSyncPayload(stateObj) {
         visits: Array.isArray(clean.visits) ? clean.visits : [],
         tasks: Array.isArray(clean.tasks) ? clean.tasks : [],
         customRoutes: Array.isArray(clean.customRoutes) ? clean.customRoutes : [],
+        deletedIds: Array.isArray(clean.deletedIds) ? clean.deletedIds.slice(0, 500) : [],
         customCustomers: customCustomers,
         approvalRequests: Array.isArray(clean.approvalRequests) ? clean.approvalRequests : [],
         routeNotifications: Array.isArray(clean.routeNotifications) ? clean.routeNotifications.slice(0, 50) : [],
@@ -1231,14 +1255,17 @@ function buildLiveSyncPayload(stateObj) {
 function mergeRecordListsById(remoteArr, localArr, idKey = 'id', preferRemoteOrder = true) {
     const rList = Array.isArray(remoteArr) ? remoteArr : [];
     const lList = Array.isArray(localArr) ? localArr : [];
+    const delSet = new Set(Array.isArray(appState.deletedIds) ? appState.deletedIds.map(String) : []);
     const map = new Map();
     const first = preferRemoteOrder ? rList : lList;
     const second = preferRemoteOrder ? lList : rList;
     first.forEach(item => {
-        if (item && item[idKey]) map.set(item[idKey], item);
+        if (item && item[idKey] && !delSet.has(String(item[idKey]))) {
+            map.set(item[idKey], item);
+        }
     });
     second.forEach(item => {
-        if (item && item[idKey] && !map.has(item[idKey])) {
+        if (item && item[idKey] && !delSet.has(String(item[idKey])) && !map.has(item[idKey])) {
             map.set(item[idKey], item);
         }
     });
@@ -1275,20 +1302,34 @@ function applyLiveCloudSyncToAppState(cloudSync, isInitial = false) {
 
     const beforeSig = `${(appState.visits || []).length}|${(appState.tasks || []).length}|${(appState.customRoutes || []).length}|${(appState.approvalRequests || []).length}|${(appState.routeNotifications || []).length}|${appState.updatedAt || ''}`;
 
+    if (Array.isArray(cloudSync.deletedIds)) {
+        if (!Array.isArray(appState.deletedIds)) appState.deletedIds = [];
+        cloudSync.deletedIds.forEach(dId => registerDeletedRecordId(dId));
+    }
+    const delSet = new Set(Array.isArray(appState.deletedIds) ? appState.deletedIds.map(String) : []);
+
     if (Array.isArray(cloudSync.visits)) {
         appState.visits = mergeRecordListsById(cloudSync.visits, appState.visits, 'id', isRemoteNewer);
+    } else if (delSet.size > 0 && Array.isArray(appState.visits)) {
+        appState.visits = appState.visits.filter(v => v && !delSet.has(String(v.id)));
     }
     if (Array.isArray(cloudSync.tasks)) {
         appState.tasks = mergeRecordListsById(cloudSync.tasks, appState.tasks, 'id', isRemoteNewer);
+    } else if (delSet.size > 0 && Array.isArray(appState.tasks)) {
+        appState.tasks = appState.tasks.filter(t => t && !delSet.has(String(t.id)));
     }
     if (Array.isArray(cloudSync.customRoutes)) {
         appState.customRoutes = mergeRecordListsById(cloudSync.customRoutes, appState.customRoutes, 'id', isRemoteNewer);
+    } else if (delSet.size > 0 && Array.isArray(appState.customRoutes)) {
+        appState.customRoutes = appState.customRoutes.filter(r => r && !delSet.has(String(r.id)));
     }
     if (Array.isArray(cloudSync.approvalRequests)) {
         appState.approvalRequests = mergeRecordListsById(cloudSync.approvalRequests, appState.approvalRequests, 'id', isRemoteNewer);
     }
     if (Array.isArray(cloudSync.routeNotifications)) {
-        appState.routeNotifications = mergeRecordListsById(cloudSync.routeNotifications, appState.routeNotifications, 'id', true).slice(0, 50);
+        appState.routeNotifications = mergeRecordListsById(cloudSync.routeNotifications, appState.routeNotifications, 'id', true)
+            .filter(n => n && (!n.routeId || !delSet.has(String(n.routeId))))
+            .slice(0, 50);
     }
     if (Array.isArray(cloudSync.logs) && cloudSync.logs.length > 0) {
         appState.logs = mergeRecordListsById(cloudSync.logs, appState.logs, 'id', isRemoteNewer).slice(0, 300);
@@ -1820,6 +1861,16 @@ window.handleChangePasswordSubmit = handleChangePasswordSubmit;
 // 3. SEKME GEÇİŞLERİ VE GÖRÜNÜM YÖNETİMİ (D-PRO EMBED SENKRONLU)
 // ==========================================================================
 function switchTab(tabId) {
+    // Kaldırılan mükerrer sekmeleri birleştirilmiş ana modüllere yönlendir
+    const redirectMap = {
+        'tasks-tab': 'active-tab',
+        'legacy-tab': 'cari-ekstre-tab',
+        'strategy-tab': 'reports-tab',
+        'ai-match-tab': 'customer-search-tab'
+    };
+    if (redirectMap[tabId]) {
+        tabId = redirectMap[tabId];
+    }
     if (tabId === 'logs-tab' && !isOmerEren(currentUser)) {
         tabId = 'dashboard-tab';
     }
@@ -1841,13 +1892,10 @@ function switchTab(tabId) {
 
     const pageTitleMap = {
         'dashboard-tab': '<i class="fa-solid fa-chart-pie" style="color:var(--dizsan-light);"></i> Genel Bakış &amp; Kokpit',
+        'customer-search-tab': '<i class="fa-solid fa-magnifying-glass" style="color:#38bdf8;"></i> Müşteri &amp; Cari Ara (1.990 Kayıt)',
         'route-plan-tab': '<i class="fa-solid fa-route" style="color:#fbbf24;"></i> Yeni Rut Planla &amp; Saha Ziyaret Listesi',
         'cari-ekstre-tab': '<i class="fa-solid fa-file-invoice-dollar" style="color:#38bdf8;"></i> D-Pro Cari &amp; Logo Ekstre (Borç / Alacak / Fatura Detayı)',
-        'legacy-tab': '<i class="fa-solid fa-database" style="color:var(--dizsan-light);"></i> Kayıp Müşteri Ziyaret Planı (1998-2026)',
-        'active-tab': '<i class="fa-solid fa-car-side" style="color:var(--dizsan-light);"></i> Güncel Saha &amp; Telefon Görüşmeleri',
-        'ai-match-tab': '<i class="fa-solid fa-wand-magic-sparkles" style="color:#c084fc;"></i> Yapay Zeka Tekleştirme &amp; Churn Analizi',
-        'tasks-tab': '<i class="fa-solid fa-list-check" style="color:#fbbf24;"></i> Aksiyon &amp; Çift Aşamalı Hatırlatıcılar',
-        'strategy-tab': '<i class="fa-solid fa-map-location-dot" style="color:#34d399;"></i> İlçe Rut Strateji Rehberi',
+        'active-tab': '<i class="fa-solid fa-car-side" style="color:var(--dizsan-light);"></i> Saha Görüşmeleri &amp; Görevler',
         'logs-tab': '<i class="fa-solid fa-shield-halved" style="color:#f59e0b;"></i> Yönetici Denetim İzi',
         'reports-tab': '<i class="fa-solid fa-chart-column" style="color:#34d399;"></i> Saha &amp; Rut Ziyaret Raporları'
     };
@@ -1864,15 +1912,17 @@ function switchTab(tabId) {
         populateFilterOptions();
         if (typeof initCustomRoutePlannerUI === 'function') initCustomRoutePlannerUI();
         if (typeof renderActiveRouteExecutionPanel === 'function') renderActiveRouteExecutionPanel();
-    } else if (tabId === 'legacy-tab') {
-        populateFilterOptions();
-        renderLegacyCustomers();
-    } else if (tabId === 'strategy-tab') {
-        populateStrategyFilters(false);
-        renderDistrictStrategies();
+    } else if (tabId === 'active-tab') {
+        if (typeof renderActiveVisits === 'function') renderActiveVisits();
+        if (typeof renderTasks === 'function') renderTasks();
     } else if (tabId === 'reports-tab') {
         if (typeof populateReportsFilters === 'function') populateReportsFilters();
         if (typeof renderReportsTab === 'function') renderReportsTab();
+    } else if (tabId === 'customer-search-tab') {
+        setTimeout(() => {
+            const inp = document.getElementById('global-customer-search-input');
+            if (inp) inp.focus();
+        }, 80);
     }
 
     const sidebar = document.getElementById('sidebar');
@@ -2129,12 +2179,22 @@ function renderDashboard() {
 }
 
 function filterLegacyByCityQuick(cityName) {
-    switchTab('legacy-tab');
-    const cityInput = document.getElementById('legacy-filter-city');
-    if (cityInput) {
-        cityInput.value = cityName;
-        handleCityFilterChange();
+    switchTab('cari-ekstre-tab');
+    const sInput = document.getElementById('ekstre-search');
+    if (sInput) sInput.value = '';
+    const priSel = document.getElementById('ekstre-filter-priority');
+    if (priSel) priSel.value = '';
+    const baSel = document.getElementById('ekstre-filter-ba');
+    if (baSel) baSel.value = '';
+    const citySel = document.getElementById('ekstre-filter-city');
+    if (citySel) {
+        citySel.value = cityName;
+        if (typeof handleEkstreCityFilterChange === 'function') {
+            handleEkstreCityFilterChange();
+            return;
+        }
     }
+    renderCariEkstreTable(true);
 }
 
 function populateFilterOptions() {
@@ -2397,26 +2457,22 @@ function handleCityFilterChange() {
 }
 
 function filterLegacyByPriority(priorityText) {
-    switchTab('legacy-tab');
-    
-    // Önceki arama veya filtre kalıntılarını temizle (Kullanıcının tıkladığı grubun tümünü görebilmesi için)
-    const sInput = document.getElementById('legacy-search');
-    if (sInput) sInput.value = '';
-    const citySel = document.getElementById('legacy-filter-city');
-    if (citySel) citySel.value = '';
-    const distSel = document.getElementById('legacy-filter-district');
-    if (distSel) distSel.value = '';
-    const rutSel = document.getElementById('legacy-filter-rut');
-    if (rutSel) rutSel.value = '';
-    const balSel = document.getElementById('legacy-filter-balance');
-    if (balSel) balSel.value = '';
-    legacyPage = 1;
+    switchTab('cari-ekstre-tab');
 
-    const sel = document.getElementById('legacy-filter-priority');
-    if (sel) {
-        sel.value = priorityText;
+    // Önceki arama veya filtre kalıntılarını temizle
+    const sInput = document.getElementById('ekstre-search');
+    if (sInput) sInput.value = '';
+    const citySel = document.getElementById('ekstre-filter-city');
+    if (citySel) citySel.value = '';
+    const distSel = document.getElementById('ekstre-filter-district');
+    if (distSel) distSel.value = '';
+    const baSel = document.getElementById('ekstre-filter-ba');
+    if (baSel) baSel.value = '';
+    const priSel = document.getElementById('ekstre-filter-priority');
+    if (priSel) {
+        priSel.value = priorityText || '';
     }
-    renderLegacyCustomers();
+    renderCariEkstreTable(true);
 }
 
 function renderLegacyCustomers() {
@@ -2635,6 +2691,7 @@ function renderCariEkstreTable(resetPage = true) {
     const searchVal = normalizeTR((document.getElementById('ekstre-search') || document.getElementById('ekstre-search-input'))?.value || '');
     const cityVal = (document.getElementById('ekstre-filter-city') || document.getElementById('ekstre-city-filter'))?.value || '';
     const districtVal = document.getElementById('ekstre-filter-district')?.value || '';
+    const priorityVal = document.getElementById('ekstre-filter-priority')?.value || '';
     const statusVal = (document.getElementById('ekstre-filter-ba') || document.getElementById('ekstre-balance-filter'))?.value || '';
     const sortVal = (document.getElementById('ekstre-sort') || document.getElementById('ekstre-sort-filter'))?.value || 'BALANCE_DESC';
 
@@ -2684,6 +2741,13 @@ function renderCariEkstreTable(resetPage = true) {
     let filtered = enriched.filter(({ c, acc, invCount }) => {
         if (cityVal && cityVal !== 'ALL' && normalizeTR(c.city) !== normalizeTR(cityVal)) return false;
         if (districtVal && normalizeTR(c.district) !== normalizeTR(districtVal)) return false;
+        if (priorityVal) {
+            if (priorityVal.includes('VIP')) {
+                if (!((c.priority || '').includes('VIP') || Number(c.totalRevenue || 0) >= 1000000)) return false;
+            } else if (!(c.priority || '').includes(priorityVal)) {
+                return false;
+            }
+        }
         if ((statusVal === 'B' || statusVal === '(B)') && acc.baCode !== '(B)') return false;
         if ((statusVal === 'A' || statusVal === '(A)') && acc.baCode !== '(A)') return false;
         if (statusVal === 'ACTIVE_BAL' && acc.baCode === '-') return false;
@@ -2758,9 +2822,14 @@ function renderCariEkstreTable(resetPage = true) {
                 <td style="text-align:right; font-weight:800; color:${bakiyeColor}; white-space:nowrap;">${formatMoney(Math.abs(acc.bakiye))}</td>
                 <td style="text-align:center; white-space:nowrap;">${baBadge}</td>
                 <td style="text-align:right; white-space:nowrap;" onclick="event.stopPropagation();">
-                    <button type="button" class="btn btn-sm ${invCount > 0 ? 'btn-primary' : 'btn-secondary'}" onclick="openCustomerDetailModal('${c.code}')" style="font-size:0.72rem; padding:0.3rem 0.6rem;">
-                        <i class="fa-solid fa-file-invoice"></i> ${invCount > 0 ? `${invCount} Fatura / Ekstre` : 'Cari Kart'}
-                    </button>
+                    <div style="display:inline-flex; gap:0.25rem; align-items:center;">
+                        <button type="button" class="btn btn-sm ${invCount > 0 ? 'btn-primary' : 'btn-secondary'}" onclick="openCustomerDetailModal('${c.code}')" style="font-size:0.7rem; padding:0.26rem 0.5rem;" title="Logo Fatura Kalemleri ve Cari Ekstre">
+                            <i class="fa-solid fa-file-invoice"></i> ${invCount > 0 ? `${invCount} Fatura` : 'Ekstre'}
+                        </button>
+                        <button type="button" class="btn btn-sm btn-secondary" onclick="quickStartVisitForCustomer('${c.code}')" style="font-size:0.7rem; padding:0.26rem 0.45rem;" title="Ziyaret / Görüşme Kaydı Ekle">
+                            <i class="fa-solid fa-car-side" style="color:#34d399;"></i>
+                        </button>
+                    </div>
                 </td>
             </tr>
         `;
@@ -4639,10 +4708,13 @@ function requestDeleteVisit(visitId) {
 
     if (isOmerEren(currentUser)) {
         if (!confirm(`'${v.customerTitle}' ziyaret / görüşme kaydını silmek istediğinize emin misiniz? (Yönetici Yetkisi)`)) return;
+        registerDeletedRecordId(visitId);
         appState.visits = (appState.visits || []).filter(x => x.id !== visitId);
-        addAuditLog("ZİYARET SİLME", `${v.customerTitle} kaydı Yönetici ÖMER EREN tarafından silindi.`);
+        addAuditLog("ZİYARET SİLME", `${v.customerTitle} kaydı Yönetici ÖMER EREN tarafından silindi.`, true);
+        renderDashboard();
+        renderActiveVisits();
+        updateRouteAndReportsBadges();
         syncToServer();
-        renderAll();
         showToast(`🗑️ '${v.customerTitle}' kaydı silindi.`, 'success');
         return;
     }
@@ -4657,10 +4729,12 @@ function requestDeleteTask(taskId) {
 
     if (isOmerEren(currentUser)) {
         if (!confirm(`'${t.title}' görev kaydını silmek istediğinize emin misiniz? (Yönetici Yetkisi)`)) return;
+        registerDeletedRecordId(taskId);
         appState.tasks = (appState.tasks || []).filter(x => x.id !== taskId);
-        addAuditLog("GÖREV SİLME", `${t.title} görevi Yönetici ÖMER EREN tarafından silindi.`);
+        addAuditLog("GÖREV SİLME", `${t.title} görevi Yönetici ÖMER EREN tarafından silindi.`, true);
+        renderDashboard();
+        renderTasks();
         syncToServer();
-        renderAll();
         showToast(`🗑️ '${t.title}' görevi silindi.`, 'success');
         return;
     }
@@ -4958,11 +5032,13 @@ function approveRequest(reqId) {
     if (!req || req.status !== 'PENDING') return;
 
     if (req.type === 'DELETE_VISIT') {
+        registerDeletedRecordId(req.targetId);
         appState.visits = (appState.visits || []).filter(v => v.id !== req.targetId);
-        addAuditLog("ONAY İŞLEMİ", `${req.customerTitle} ziyaret kaydı silme talebi Yönetici ÖMER EREN tarafından ONAYLANDI ve kayıt silindi.`);
+        addAuditLog("ONAY İŞLEMİ", `${req.customerTitle} ziyaret kaydı silme talebi Yönetici ÖMER EREN tarafından ONAYLANDI ve kayıt silindi.`, true);
     } else if (req.type === 'DELETE_TASK') {
+        registerDeletedRecordId(req.targetId);
         appState.tasks = (appState.tasks || []).filter(t => t.id !== req.targetId);
-        addAuditLog("ONAY İŞLEMİ", `${req.targetTitle} görev silme talebi Yönetici ÖMER EREN tarafından ONAYLANDI ve görev silindi.`);
+        addAuditLog("ONAY İŞLEMİ", `${req.targetTitle} görev silme talebi Yönetici ÖMER EREN tarafından ONAYLANDI ve görev silindi.`, true);
     } else if (req.type === 'EDIT_VISIT' && req.proposedData) {
         const idx = (appState.visits || []).findIndex(v => v.id === req.targetId);
         if (idx !== -1) {
@@ -7037,24 +7113,26 @@ async function deleteCustomRoutePlan(routeId) {
     if (!rt) return;
     if (!confirm(`"${rt.name}" rut planını silmek istediğinize emin misiniz?`)) return;
 
+    registerDeletedRecordId(routeId);
     appState.customRoutes = (appState.customRoutes || []).filter(r => r.id !== routeId);
+    if (Array.isArray(appState.routeNotifications)) {
+        appState.routeNotifications.forEach(n => {
+            if (n && n.routeId === routeId && n.id) registerDeletedRecordId(n.id);
+        });
+        appState.routeNotifications = appState.routeNotifications.filter(n => !n || n.routeId !== routeId);
+    }
     if (activeSelectedRouteId === routeId) {
         activeSelectedRouteId = appState.customRoutes[0]?.id || null;
     }
 
     syncCustomRoutesToCustomers();
-    populateFilterOptions();
-    populateStrategyFilters(true);
     renderSavedCustomRoutesList();
     renderActiveRouteExecutionPanel();
-    renderLegacyCustomers();
-    renderDistrictStrategies();
-    renderReportsTab();
     updateRouteAndReportsBadges();
 
-    addAuditLog('RUT SİLME', `"${rt.name}" rut planı silindi.`);
-    await syncToServer();
+    addAuditLog('RUT SİLME', `"${rt.name}" rut planı silindi.`, true);
     showToast(`"${rt.name}" rut planı silindi.`, 'info');
+    await syncToServer();
 }
 
 function filterLegacyByCustomRoute(routeName) {
@@ -7705,6 +7783,7 @@ function toggleManualVisitEntryForm() {
         if (titleInput) setTimeout(() => titleInput.focus(), 50);
     }
 }
+window.toggleManualVisitCollapse = toggleManualVisitEntryForm;
 
 function toggleRouteItemInlineDetail(idx) {
     activeExpandedRouteItemIdx = (activeExpandedRouteItemIdx === idx) ? null : idx;
@@ -7818,12 +7897,6 @@ function renderActiveRouteExecutionPanel() {
             </div>
 
             <div style="display:flex; gap:0.35rem; flex-wrap:wrap; align-items:center;">
-                <button type="button" class="btn btn-success btn-sm" style="padding:0.24rem 0.6rem; font-size:0.72rem; font-weight:800;" onclick="shareCustomRouteOnWhatsApp('${rt.id}')">
-                    <i class="fa-brands fa-whatsapp"></i> WhatsApp'ta Paylaş (Linkli)
-                </button>
-                <button type="button" class="btn btn-secondary btn-sm" style="padding:0.24rem 0.6rem; font-size:0.72rem; font-weight:700;" onclick="broadcastRoutePlanNotificationToAllPersonnel('${rt.id}', true)">
-                    <i class="fa-solid fa-bell" style="color:#fbbf24;"></i> Personele Bildirim Gönder &amp; Görev Özeti
-                </button>
                 <button type="button" class="btn ${activeRouteExecutionStatusFilter === 'ALL' ? 'btn-primary' : 'btn-secondary'} btn-sm" style="padding:0.24rem 0.55rem; font-size:0.71rem;" onclick="setActiveRouteExecutionStatusFilter('ALL')">
                     Tümü (${total})
                 </button>
@@ -7845,8 +7918,17 @@ function renderActiveRouteExecutionPanel() {
             </div>
         </div>
 
+        <!-- MOBİL YATAY KAYDIRMA YARDIMCISI -->
+        <div class="mobile-table-scroll-bar">
+            <span><i class="fa-solid fa-arrows-left-right"></i> Tüm sütunları görmek için tabloyu sağa/sola kaydırın</span>
+            <div class="mobile-scroll-nudge-btns">
+                <button type="button" class="mobile-scroll-nudge-btn" onclick="const w=document.getElementById('active-route-table-scroll-wrap');if(w)w.scrollBy({left:-220,behavior:'smooth'});">◀ Sol</button>
+                <button type="button" class="mobile-scroll-nudge-btn" onclick="const w=document.getElementById('active-route-table-scroll-wrap');if(w)w.scrollBy({left:220,behavior:'smooth'});">Sağ ▶</button>
+            </div>
+        </div>
+
         <!-- TEK VE SADE PLANLANAN ZİYARETLER TABLOSU (SATIR İÇİ AÇILIR/KAPANIR DETAY FORMU İLE) -->
-        <div class="table-responsive">
+        <div id="active-route-table-scroll-wrap" class="table-responsive">
             <table class="dizsan-table">
                 <thead>
                     <tr>
@@ -7947,7 +8029,7 @@ function renderActiveRouteExecutionPanel() {
                                     </div>
 
                                     ${isNotVisited ? `
-                                        <div style="display:grid; grid-template-columns:minmax(220px, 1fr) minmax(220px, 1.2fr) minmax(200px, 1fr) auto; gap:0.55rem; align-items:end;">
+                                        <div class="rut-inline-unvisited-grid" style="display:grid; grid-template-columns:minmax(220px, 1fr) minmax(220px, 1.2fr) minmax(200px, 1fr) auto; gap:0.55rem; align-items:end;">
                                             <div>
                                                 <label style="display:block; font-size:0.69rem; font-weight:700; color:#f87171; margin-bottom:0.2rem;">Ziyaret Edilememe Sebebi *</label>
                                                 <select id="ritem-reason-sel-${idx}" class="filter-input" style="width:100%;" onchange="handleUnvisitedReasonSelectChange(${idx})">
@@ -7970,7 +8052,7 @@ function renderActiveRouteExecutionPanel() {
                                             </div>
                                         </div>
                                     ` : `
-                                        <div style="display:grid; grid-template-columns:145px 95px minmax(150px, 1fr) minmax(150px, 1fr) minmax(130px, 0.9fr) minmax(180px, 1.2fr) 145px; gap:0.5rem; margin-bottom:0.5rem; align-items:end;">
+                                        <div class="rut-inline-visited-grid-1" style="display:grid; grid-template-columns:145px 95px minmax(150px, 1fr) minmax(150px, 1fr) minmax(130px, 0.9fr) minmax(180px, 1.2fr) 145px; gap:0.5rem; margin-bottom:0.5rem; align-items:end;">
                                             <div>
                                                 <label style="display:block; font-size:0.68rem; font-weight:600; color:var(--text-sec); margin-bottom:0.18rem;">Ziyaret Tarihi</label>
                                                 <input type="text" id="ritem-date-${idx}" class="filter-input" style="width:100%; font-size:0.74rem;" value="${escapeHtml(vDate)}" placeholder="GG.AA.YYYY">
@@ -8009,7 +8091,7 @@ function renderActiveRouteExecutionPanel() {
                                                 <input type="text" id="ritem-nextdate-${idx}" class="filter-input" style="width:100%; font-size:0.74rem;" value="${escapeHtml(it.nextVisitDate || '')}" placeholder="GG.AA.YYYY">
                                             </div>
                                         </div>
-                                        <div style="display:grid; grid-template-columns:1fr 220px auto; gap:0.5rem; align-items:end;">
+                                        <div class="rut-inline-visited-grid-2" style="display:grid; grid-template-columns:1fr 220px auto; gap:0.5rem; align-items:end;">
                                             <div>
                                                 <label style="display:block; font-size:0.68rem; font-weight:600; color:var(--text-sec); margin-bottom:0.18rem;">Ziyaret Açıklaması (Müşteri Kartına İşlenir)</label>
                                                 <input type="text" id="ritem-notes-${idx}" class="filter-input" style="width:100%; font-size:0.75rem;" value="${escapeHtml(it.visitNotes || '')}" placeholder="Görüşme detayları, araç/servis talebi, müşterinin geri bildirimi...">
@@ -11551,6 +11633,6 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     // Service Worker Kaydı (Sonsuz yenileme döngüsü yaratmadan sessiz çalışır)
     if ('serviceWorker' in navigator) {
-        navigator.serviceWorker.register('sw.js?v=1.7.4').catch(() => {});
+        navigator.serviceWorker.register('sw.js?v=1.7.5').catch(() => {});
     }
 });

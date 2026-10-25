@@ -1,7 +1,7 @@
 {
-  "version": "1.7.4",
-  "build": 174,
-  "releasedAt": "2026-10-25 21:21:00",
-  "releaseNotes": "Kredi Ödemeleri Takip Mobil PWA ve Canlı GitHub Senkronizasyonu (v1.7.4)",
+  "version": "1.7.5",
+  "build": 175,
+  "releasedAt": "2026-10-25 22:44:43",
+  "releaseNotes": "Prestijli 6 menülü sol bar sadeleştirmesi, mükerrer ekran ve butonların temizlenmesi, açık/koyu tema yüksek kontrast iyileştirmesi ve mobil/tablet/PC tam ekran uyumu",
   "author": "Ömer Eren & DİZSAN"
 }
