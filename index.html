@@ -9311,6 +9311,9 @@ function openCustomerDetailModal(code) {
                 <div style="font-size:0.75rem; color:var(--text-muted); margin-top:0.35rem;">
                     Saha Ziyaret / Arama Kaydı: <strong style="color:#38bdf8;">${customerVisits.length} Görüşme</strong> • Bekleyen Aksiyon: <strong style="color:#fbbf24;">${customerTasks.length} Görev</strong>
                 </div>
+                <div style="font-size:0.75rem; color:var(--text-muted); margin-top:0.35rem;">
+                    Saha Ziyaret / Arama Kaydı: <strong style="color:#38bdf8;">${customerVisits.length} Görüşme</strong> • Bekleyen Aksiyon: <strong style="color:#fbbf24;">${customerTasks.length} Görev</strong>
+                </div>
                 <div style="margin-top:0.65rem;">
                     <a href="${mapsUrl}" target="_blank" class="btn btn-secondary btn-sm" style="display:inline-flex; align-items:center; gap:0.35rem;">
                         <i class="fa-solid fa-map-location-dot" style="color:#38bdf8;"></i> Google Haritalar Yol Tarifi
@@ -13943,6 +13946,15 @@ function computeCustomerMatchByMode(c, rawQuery, mode = 'EXACT', scopeOverride =
                 matchedContextHtml: `<div class="matched-field-callout"><i class="fa-solid fa-file-invoice"></i> <span>Fatura Numarasında Bulundu:</span> ${highlightSearchText(fatNoRaw, rawQuery)} (${escapeHtml(h.tarih || '-')})</div>`
             };
         }
+        if (nislComp && nqComp && nqComp.length >= 3 && nislComp.includes(nqComp)) {
+            return {
+                score: 95,
+                reason: `🔧 Fatura İşlem / Parça Eşleşmesi`,
+                isExact: true,
+                matchedWord: rawQuery,
+                matchedContextHtml: `<div class="matched-field-callout"><i class="fa-solid fa-screwdriver-wrench"></i> <span>Fatura İşlem Satırında Bulundu (${escapeHtml(fatNoRaw || '-')}):</span> ${highlightSearchText(islemRaw, rawQuery)}</div>`
+            };
+        }
     }
 
     // D) Kayıtlı Plakalar (c.plates) veya Telefon (c.phone)
@@ -13962,6 +13974,15 @@ function computeCustomerMatchByMode(c, rawQuery, mode = 'EXACT', scopeOverride =
             isExact: true,
             matchedWord: rawQuery,
             matchedContextHtml: `<div class="matched-field-callout"><i class="fa-solid fa-phone"></i> <span>Telefon Numarasında Geçiyor:</span> ${highlightSearchText(phoneRaw, rawQuery)}</div>`
+        };
+    }
+    if (naddrComp && nqComp && nqComp.length >= 3 && naddrComp.includes(nqComp)) {
+        return {
+            score: 95,
+            reason: `📍 Adres Bilgisinde Eşleşme`,
+            isExact: true,
+            matchedWord: rawQuery,
+            matchedContextHtml: `<div class="matched-field-callout"><i class="fa-solid fa-map-pin"></i> <span>Adres Alanında Geçiyor:</span> ${highlightSearchText(addrRaw, rawQuery)}</div>`
         };
     }
 
@@ -14014,6 +14035,8 @@ function computeCustomerMatchByMode(c, rawQuery, mode = 'EXACT', scopeOverride =
                     bestContext = `<div class="matched-field-callout"><i class="fa-solid ${srcObj.icon}"></i> <span>${escapeHtml(srcObj.label)} (1 Harf Farklı Benzer Kelime):</span> ${highlightSearchText(srcObj.text, rawQuery, origW)}</div>`;
                 }
             }
+        }
+    }
 
             if (nqComp.length >= 4 && w.length >= 4) {
                 // Aynı ilk 3 harfle başlayan benzer uzunlukta kelime
@@ -14129,6 +14152,21 @@ function clearGlobalCustomerSearch() {
             </div>
         `;
     }
+}
+
+function selectAiCustomerFromList(code, eventObj) {
+    if (eventObj && typeof eventObj.stopPropagation === 'function') {
+        eventObj.stopPropagation();
+    }
+    selectedAiCustomerCode = code;
+    document.querySelectorAll('.global-search-result-item').forEach(row => {
+        const isCurrent = row.getAttribute('data-cust-code') === code;
+        row.style.borderColor = isCurrent ? '#10b981' : '';
+        row.style.background = isCurrent ? 'rgba(16, 185, 129, 0.14)' : '';
+        const cb = row.querySelector('.ai-cust-select-cb');
+        if (cb) cb.checked = isCurrent;
+    });
+    openCustomerDetailModal(code);
 }
 
 function selectAiCustomerFromList(code, eventObj) {
@@ -14280,6 +14318,10 @@ function handleGlobalCustomerSearchInput(rawVal, forceShowByChip = false, search
         `;
         return;
     }
+
+    const modeBadgeHtml = mode === 'EXACT'
+        ? `<span style="background:rgba(16,185,129,0.2); color:#34d399; border:1px solid rgba(16,185,129,0.45); padding:0.2rem 0.55rem; border-radius:6px; font-weight:800;">🎯 TAM EŞLEŞME LİSTESİ (${scoredList.length} Kayıt)</span>`
+        : `<span style="background:rgba(99,102,241,0.22); color:#a5b4fc; border:1px solid rgba(99,102,241,0.45); padding:0.2rem 0.55rem; border-radius:6px; font-weight:800;">✨ DETAYLI &amp; BENZER ARAMA LİSTESİ (${scoredList.length} Kayıt)</span>`;
 
     panel.style.display = 'block';
     panel.innerHTML = `
