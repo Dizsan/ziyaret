@@ -12,7 +12,7 @@
  */
 
 const INITIAL_APP_VERSION = "v1.3.0";
-const CURRENT_APP_VERSION = "1.8.0";
+const CURRENT_APP_VERSION = "v1.8.1: Sadece Ömer Eren'e özel 24 personel uygulama erişim/işlem yetki matrisi ve tam kullanıcı gizlilik kalkanı";
 let hasShownUpdateNotice = false;
 const VAPID_PUBLIC_KEY = "BJIJfCBiDwya3clZOWS08EDxfuN18xtfJGTX0n_apWBTEW7-kO_FGKNy5VDRvUsMgc46IP5oxLlIHqgrDo-JTkE";
 const STORAGE_KEY_STATE = "dizsan_ziyaret_shared_state_v1";
@@ -12196,6 +12196,6 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     // Service Worker Kaydı (Sonsuz yenileme döngüsü yaratmadan sessiz çalışır)
     if ('serviceWorker' in navigator) {
-        navigator.serviceWorker.register('sw.js?v=1.8.0').catch(() => {});
+        navigator.serviceWorker.register('sw.js?v=v1.8.1: Sadece Ömer Eren'e özel 24 personel uygulama erişim/işlem yetki matrisi ve tam kullanıcı gizlilik kalkanı').catch(() => {});
     }
 });

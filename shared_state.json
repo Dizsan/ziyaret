@@ -181039,7 +181039,7 @@
       "platform": "Android / Mobil"
     }
   ],
-  "updatedAt": "2026-10-25T20:39:34.244947Z",
+  "updatedAt": "2026-10-25T21:13:32.552349Z",
   "stateRevision": 289,
   "cities": [
     "Adana",
@@ -181210,7 +181210,7 @@
     "scannedPeriods": []
   },
   "routeNotifications": [],
-  "appVersion": "1.8.0",
-  "versionUpdatedAt": "2026-10-25 23:39:34",
-  "versionReleaseNotes": "Evrensel Tek Oturum (SSO): Tüm kullanıcılar için uygulamalar arası geçişlerde (D-Pro, Ziyaret, Kasa, Toplantı, DiKas, DEMET) ikinci kez şifre sorma zorunluluğu tamamen kaldırıldı."
+  "appVersion": "v1.8.1: Sadece Ömer Eren'e özel 24 personel uygulama erişim/işlem yetki matrisi ve tam kullanıcı gizlilik kalkanı",
+  "versionUpdatedAt": "2026-10-26 00:13:32",
+  "versionReleaseNotes": "Kredi Ödemeleri Takip Mobil PWA ve Canlı GitHub Senkronizasyonu (vv1.8.1: Sadece Ömer Eren'e özel 24 personel uygulama erişim/işlem yetki matrisi ve tam kullanıcı gizlilik kalkanı)"
 }

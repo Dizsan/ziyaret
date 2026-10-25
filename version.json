@@ -1,7 +1,7 @@
 {
-  "version": "1.8.0",
-  "build": 180,
-  "releasedAt": "2026-10-25 23:39:34",
-  "releaseNotes": "Evrensel Tek Oturum (SSO): Tüm kullanıcılar için uygulamalar arası geçişlerde (D-Pro, Ziyaret, Kasa, Toplantı, DiKas, DEMET) ikinci kez şifre sorma zorunluluğu tamamen kaldırıldı.",
+  "version": "v1.8.1: Sadece Ömer Eren'e özel 24 personel uygulama erişim/işlem yetki matrisi ve tam kullanıcı gizlilik kalkanı",
+  "build": 1792962812,
+  "releasedAt": "2026-10-26 00:13:32",
+  "releaseNotes": "Kredi Ödemeleri Takip Mobil PWA ve Canlı GitHub Senkronizasyonu (vv1.8.1: Sadece Ömer Eren'e özel 24 personel uygulama erişim/işlem yetki matrisi ve tam kullanıcı gizlilik kalkanı)",
   "author": "Ömer Eren & DİZSAN"
 }

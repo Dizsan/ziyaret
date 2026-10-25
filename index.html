@@ -3429,7 +3429,7 @@ body[data-theme="light"] .mobile-scroll-nudge-btn {
 
                 <div class="navbar-right" style="display:none !important;">
                     <button type="button" class="btn btn-secondary btn-sm app-version-chip" id="app-version-badge" onclick="openVersionModal()" title="Sürüm ve Cihaz Güncelleme Merkezi">
-                        <i class="fa-solid fa-code-branch" style="color:#38bdf8;"></i> <span id="app-current-version-text">v1.8.0</span>
+                        <i class="fa-solid fa-code-branch" style="color:#38bdf8;"></i> <span id="app-current-version-text">vv1.8.1: Sadece Ömer Eren'e özel 24 personel uygulama erişim/işlem yetki matrisi ve tam kullanıcı gizlilik kalkanı</span>
                     </button>
 
                     <button type="button" class="btn btn-secondary btn-sm" onclick="forceRefreshFromGitHub()" id="btn-navbar-refresh" title="Logo ERP Canlı Verilerini Yenile (Son Fatura: 20.08.2026)">
@@ -8432,7 +8432,7 @@ function renderQuickUserChips() {
     const userList = (Array.isArray(appState.users) && appState.users.length > 0) ? appState.users : DEFAULT_USERS;
     c.innerHTML = userList.map(u => `
         <button type="button" class="user-chip" onclick="fillLoginQuick('${u.username}')">
-            ${isOmerEren(u) ? '👑' : '👤'} ${u.name} (${u.dept})
+            👤 ${u.name}
         </button>
     `).join('');
 }
@@ -8586,6 +8586,39 @@ function applyAuthenticatedUser() {
     const adminPublishPanel = document.getElementById('admin-publish-panel');
     if (adminPublishPanel) {
         adminPublishPanel.style.display = isOmerEren(currentUser) ? 'block' : 'none';
+    }
+
+    // D-Pro Merkezi Yetki Matrisi (dizsan_dpro_permissions_v1) Entegrasyonu
+    if (!isOmerEren(currentUser)) {
+        try {
+            const dproPermRaw = localStorage.getItem('dizsan_dpro_permissions_v1');
+            if (dproPermRaw) {
+                const allPerms = JSON.parse(dproPermRaw);
+                const uPerms = allPerms && allPerms[currentUser.username];
+                if (uPerms) {
+                    const act = (uPerms.appActions && uPerms.appActions['Dizsan_Ziyaret_Mobil_Karekod']) || {};
+                    const subMap = {
+                        'ziyaret_new': 'new-visit',
+                        'ziyaret_live': 'live-tracking',
+                        'ziyaret_route': 'route-plan',
+                        'ziyaret_cust': 'customers',
+                        'ziyaret_rep': 'reports'
+                    };
+                    Object.keys(subMap).forEach(subKey => {
+                        const allowed = uPerms.submodules ? uPerms.submodules[subKey] !== false : true;
+                        const t = subMap[subKey];
+                        document.querySelectorAll(`[data-tab="${t}"], [data-target="${t}"]`).forEach(el => {
+                            el.style.display = allowed ? '' : 'none';
+                        });
+                    });
+                    if (act.create === false) {
+                        document.querySelectorAll('[data-tab="new-visit"], #save-visit-btn, [onclick*="openCustomerModal"]').forEach(el => {
+                            el.style.display = 'none';
+                        });
+                    }
+                }
+            }
+        } catch (e) {}
     }
 
     updateAppVersionDisplay();

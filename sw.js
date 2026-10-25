@@ -1,5 +1,5 @@
 // DİZSAN Müşteri Ziyaret & Saha Takip Service Worker (v1.4.2)
-const CACHE_NAME = "dizsan-ziyaret-v1.8.0";
+const CACHE_NAME = "dizsan-ziyaret-vv1.8.1: Sadece Ömer Eren'e özel 24 personel uygulama erişim/işlem yetki matrisi ve tam kullanıcı gizlilik kalkanı";
 const ASSETS = [
   './',
   './index.html',
