@@ -541,9 +541,9 @@ body {
 
 /* TOP NAVBAR */
 .top-navbar {
-    height: 70px;
-    padding: 0 1.5rem;
-    background: rgba(11, 15, 25, 0.85);
+    height: 54px;
+    padding: 0 1.15rem;
+    background: rgba(11, 15, 25, 0.92);
     border-bottom: 1px solid var(--border-color);
     display: flex;
     align-items: center;
@@ -554,16 +554,56 @@ body {
     z-index: 900;
 }
 
-@media (min-width: 1025px) {
-    .top-navbar {
-        display: none !important;
-    }
-}
-
 .navbar-left {
     display: flex;
     align-items: center;
-    gap: 1rem;
+    gap: 0.5rem;
+}
+
+.dizsan-global-refresh-btn {
+    display: inline-flex !important;
+    align-items: center;
+    gap: 6px;
+    background: linear-gradient(135deg, rgba(16, 185, 129, 0.22), rgba(15, 23, 42, 0.92));
+    border: 1px solid rgba(16, 185, 129, 0.48);
+    color: #34d399;
+    padding: 0.38rem 0.75rem;
+    border-radius: 9px;
+    font-size: 0.8rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.16s ease;
+    flex-shrink: 0;
+    user-select: none;
+    -webkit-user-select: none;
+}
+
+.dizsan-global-refresh-btn:hover {
+    background: linear-gradient(135deg, rgba(16, 185, 129, 0.38), rgba(5, 150, 105, 0.92));
+    color: #ffffff;
+    border-color: #34d399;
+    transform: translateY(-1px);
+}
+
+.dizsan-global-refresh-btn:active {
+    transform: scale(0.94);
+}
+
+body[data-theme="light"] .dizsan-global-back-btn {
+    background: #e0f2fe !important;
+    border: 1px solid #38bdf8 !important;
+    color: #0369a1 !important;
+}
+
+body[data-theme="light"] .dizsan-global-refresh-btn {
+    background: #d1fae5 !important;
+    border: 1px solid #10b981 !important;
+    color: #047857 !important;
+}
+
+body[data-theme="light"] .page-title,
+body[data-theme="light"] .mobile-menu-btn {
+    color: #0f172a !important;
 }
 
 .mobile-menu-btn {
@@ -3369,23 +3409,26 @@ body[data-theme="light"] .mobile-scroll-nudge-btn {
         <!-- SAĞ ANA İÇERİK (MAIN WRAPPER) -->
         <div class="main-wrapper">
 
-            <!-- ÜST BİLGİ VE AKSİYON ÇUBUĞU (TOP NAVBAR - MÜKERRERLER KALDIRILDI, SADECE MOBİL MENÜ TUŞU) -->
+            <!-- ÜST BİLGİ VE AKSİYON ÇUBUĞU (GERİ + YENİLE + AKTİF MODÜL BAŞLIĞI) -->
             <header class="top-navbar">
                 <div class="navbar-left">
-                    <button type="button" class="dizsan-global-back-btn" id="dizsan-global-back-btn" style="display:none !important;" onclick="DizsanBackNav.handleInAppBack()" title="Geri Dön">
+                    <button type="button" class="dizsan-global-back-btn visible" id="dizsan-global-back-btn" onclick="DizsanBackNav.handleInAppBack()" title="Bir Önceki Ekrana Geri Dön">
                         <i class="fa-solid fa-arrow-left"></i> <span>Geri</span>
+                    </button>
+                    <button type="button" class="dizsan-global-refresh-btn" id="dizsan-global-refresh-btn" onclick="refreshApplicationNow(this)" title="Uygulamayı Yenile">
+                        <i class="fa-solid fa-arrows-rotate"></i> <span>Yenile</span>
                     </button>
                     <button class="mobile-menu-btn" onclick="toggleMobileSidebar()" title="Menü">
                         <i class="fa-solid fa-bars"></i>
                     </button>
-                    <h1 id="page-title" class="page-title" style="display:none !important;">
+                    <h1 id="page-title" class="page-title" style="font-size:0.95rem; margin-left:0.25rem;">
                         <i class="fa-solid fa-chart-pie" style="color:var(--dizsan-light);"></i> <span>Genel Bakış &amp; Kokpit</span>
                     </h1>
                 </div>
 
                 <div class="navbar-right" style="display:none !important;">
                     <button type="button" class="btn btn-secondary btn-sm app-version-chip" id="app-version-badge" onclick="openVersionModal()" title="Sürüm ve Cihaz Güncelleme Merkezi">
-                        <i class="fa-solid fa-code-branch" style="color:#38bdf8;"></i> <span id="app-current-version-text">v1.7.5</span>
+                        <i class="fa-solid fa-code-branch" style="color:#38bdf8;"></i> <span id="app-current-version-text">v1.7.6</span>
                     </button>
 
                     <button type="button" class="btn btn-secondary btn-sm" onclick="forceRefreshFromGitHub()" id="btn-navbar-refresh" title="Logo ERP Canlı Verilerini Yenile (Son Fatura: 20.08.2026)">
@@ -5552,23 +5595,27 @@ body[data-theme="light"] .mobile-scroll-nudge-btn {
         style.textContent = `
             /* Üst Çubuk Evrensel Geri Tuşu */
             .dizsan-global-back-btn {
-                display: none;
+                display: inline-flex !important;
                 align-items: center;
                 gap: 6px;
-                background: rgba(255, 255, 255, 0.08);
-                border: 1px solid rgba(255, 255, 255, 0.16);
+                background: linear-gradient(135deg, rgba(2, 132, 199, 0.25), rgba(15, 23, 42, 0.92));
+                border: 1px solid rgba(56, 189, 248, 0.45);
                 color: #ffffff;
-                padding: 0.38rem 0.72rem;
+                padding: 0.38rem 0.75rem;
                 border-radius: 9px;
-                font-size: 0.82rem;
+                font-size: 0.8rem;
                 font-weight: 700;
                 cursor: pointer;
-                transition: background 0.15s ease, transform 0.1s ease;
-                margin-right: 0.45rem;
+                transition: all 0.16s ease;
                 flex-shrink: 0;
                 -webkit-tap-highlight-color: transparent;
                 user-select: none;
                 -webkit-user-select: none;
+            }
+            .dizsan-global-back-btn:hover {
+                background: linear-gradient(135deg, rgba(2, 132, 199, 0.48), rgba(3, 105, 161, 0.95));
+                border-color: #38bdf8;
+                transform: translateY(-1px);
             }
             .dizsan-global-back-btn:active {
                 transform: scale(0.92);
@@ -5863,20 +5910,55 @@ body[data-theme="light"] .mobile-scroll-nudge-btn {
         });
     }
 
-    // 10. Geri Butonlarını DOM'a Enjekte Et
+    // 10. Geri ve Yenile Butonlarını DOM'a Enjekte Et
+    async function refreshApplicationNow(btnEl) {
+        try {
+            const icon = btnEl ? btnEl.querySelector('i') : document.querySelector('#dizsan-global-refresh-btn i');
+            if (icon) icon.classList.add('fa-spin');
+            showBackToast('Uygulama yenileniyor...');
+            if (typeof window.syncFromServer === 'function') {
+                await Promise.race([
+                    window.syncFromServer(),
+                    new Promise(r => setTimeout(r, 450))
+                ]).catch(() => {});
+            }
+            if ('serviceWorker' in navigator) {
+                const regs = await navigator.serviceWorker.getRegistrations().catch(() => []);
+                for (const reg of regs) {
+                    await reg.update().catch(() => {});
+                }
+            }
+        } catch (e) {}
+        window.location.reload();
+    }
+    window.refreshApplicationNow = refreshApplicationNow;
+
     function injectTopNavbarBackButton() {
+        const targetContainer = document.querySelector('.navbar-left, .topbar-left, .header-left');
         let btn = document.getElementById('dizsan-global-back-btn');
-        if (!btn) {
-            const targetContainer = document.querySelector('.navbar-left, .topbar-left, .header-left');
-            if (targetContainer) {
-                btn = document.createElement('button');
-                btn.type = 'button';
-                btn.id = 'dizsan-global-back-btn';
-                btn.className = 'dizsan-global-back-btn visible';
-                btn.title = 'Geri Dön';
-                btn.innerHTML = '<i class="fa-solid fa-arrow-left"></i> <span>Geri</span>';
-                btn.onclick = handleInAppBack;
-                targetContainer.insertBefore(btn, targetContainer.firstChild);
+        if (!btn && targetContainer) {
+            btn = document.createElement('button');
+            btn.type = 'button';
+            btn.id = 'dizsan-global-back-btn';
+            btn.className = 'dizsan-global-back-btn visible';
+            btn.title = 'Geri Dön';
+            btn.innerHTML = '<i class="fa-solid fa-arrow-left"></i> <span>Geri</span>';
+            btn.onclick = handleInAppBack;
+            targetContainer.insertBefore(btn, targetContainer.firstChild);
+        }
+        let refreshBtn = document.getElementById('dizsan-global-refresh-btn');
+        if (!refreshBtn && targetContainer) {
+            refreshBtn = document.createElement('button');
+            refreshBtn.type = 'button';
+            refreshBtn.id = 'dizsan-global-refresh-btn';
+            refreshBtn.className = 'dizsan-global-refresh-btn';
+            refreshBtn.title = 'Uygulamayı Yenile';
+            refreshBtn.innerHTML = '<i class="fa-solid fa-arrows-rotate"></i> <span>Yenile</span>';
+            refreshBtn.onclick = function () { refreshApplicationNow(refreshBtn); };
+            if (btn && btn.nextSibling) {
+                targetContainer.insertBefore(refreshBtn, btn.nextSibling);
+            } else {
+                targetContainer.appendChild(refreshBtn);
             }
         }
         updateBackButtonVisibility();
@@ -5899,20 +5981,11 @@ body[data-theme="light"] .mobile-scroll-nudge-btn {
         });
     }
 
-    // 11. Geri Butonunun Görünürlüğünü Güncelle
+    // 11. Geri Butonunun Görünürlüğünü Güncelle (Her zaman görünür)
     function updateBackButtonVisibility() {
         const btn = document.getElementById('dizsan-global-back-btn');
         if (!btn) return;
-
-        const hasModal = !!getActiveModal();
-        const hasSidebar = !!getActiveSidebar();
-        const curTab = getActiveTabId();
-        const isNotHome = curTab && !isHomeTab(curTab);
-        const shouldBeVisible = !!(hasModal || hasSidebar || isNotHome);
-
-        if (btn.classList.contains('visible') !== shouldBeVisible) {
-            btn.classList.toggle('visible', shouldBeVisible);
-        }
+        btn.classList.add('visible');
     }
 
     function scheduleVisibilityCheck() {

@@ -181304,7 +181304,7 @@
       "platform": "Android / Mobil"
     }
   ],
-  "updatedAt": "2026-10-25T19:44:43.903208Z",
+  "updatedAt": "2026-10-25T19:56:00.368093Z",
   "stateRevision": 127,
   "logoMetadata": {
     "queryTimestamp": "2026-10-25T15:20:08+03:00",
@@ -181474,7 +181474,7 @@
     "Şanlıurfa": 4
   },
   "customRoutePersonnelPool": [],
-  "appVersion": "1.7.5",
-  "versionUpdatedAt": "2026-10-25 22:44:43",
-  "versionReleaseNotes": "Prestijli 6 menülü sol bar sadeleştirmesi, mükerrer ekran ve butonların temizlenmesi, açık/koyu tema yüksek kontrast iyileştirmesi ve mobil/tablet/PC tam ekran uyumu"
+  "appVersion": "1.7.6",
+  "versionUpdatedAt": "2026-10-25 22:56:00",
+  "versionReleaseNotes": "Geri tuşunun yanına tek tıkla uygulamayı ve canlı verileri yenileyen Yenile tuşu eklendi"
 }

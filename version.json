@@ -1,7 +1,7 @@
 {
-  "version": "1.7.5",
-  "build": 175,
-  "releasedAt": "2026-10-25 22:44:43",
-  "releaseNotes": "Prestijli 6 menülü sol bar sadeleştirmesi, mükerrer ekran ve butonların temizlenmesi, açık/koyu tema yüksek kontrast iyileştirmesi ve mobil/tablet/PC tam ekran uyumu",
+  "version": "1.7.6",
+  "build": 176,
+  "releasedAt": "2026-10-25 22:56:00",
+  "releaseNotes": "Geri tuşunun yanına tek tıkla uygulamayı ve canlı verileri yenileyen Yenile tuşu eklendi",
   "author": "Ömer Eren & DİZSAN"
 }
