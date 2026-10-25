@@ -1,7 +1,7 @@
 {
-  "version": "1.7.1",
-  "build": 171,
-  "releasedAt": "2026-10-24 23:21:53",
-  "releaseNotes": "Telefon ve PC arasinda anlik cift yonlu otomatik GitHub senkronizasyonu (live_sync_state.json)",
+  "version": "1.7.2",
+  "build": 172,
+  "releasedAt": "2026-10-25 15:46:42",
+  "releaseNotes": "Mobil giris ekrani aninda acilis, WhatsApp rut paylasimi ve Ziyaret Plani Gorevi bildirim karti (v1.7.2)",
   "author": "Ömer Eren & DİZSAN"
 }

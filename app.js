@@ -12,7 +12,7 @@
  */
 
 const INITIAL_APP_VERSION = "v1.3.0";
-const CURRENT_APP_VERSION = "1.7.1";
+const CURRENT_APP_VERSION = "1.7.2";
 let hasShownUpdateNotice = false;
 const VAPID_PUBLIC_KEY = "BJIJfCBiDwya3clZOWS08EDxfuN18xtfJGTX0n_apWBTEW7-kO_FGKNy5VDRvUsMgc46IP5oxLlIHqgrDo-JTkE";
 const STORAGE_KEY_STATE = "dizsan_ziyaret_shared_state_v1";
@@ -99,7 +99,7 @@ function resolveUserEmail(u) {
 
 // 24 Resmi Personel + Yönetici Ömer Eren (DizGün ve Dizsan Toplantı ile 100% Ortak)
 const OFFICIAL_PERSONNEL_RAW = [
-    { order: 0,  name: "ÖMER EREN",                  username: "ömer",             mailBox: "oeren",     pinStamp: "2697120930-1230232798-23831670", role: "Yönetici", dept: "Yönetim Kurulu / Sistem Yöneticisi", avatar: "dizsan_logo.jpg" },
+    { order: 0,  name: "ÖMER EREN",                  username: "ömer",             mailBox: "oeren",     pinStamp: "621976239-623787727-2631164839", role: "Yönetici", dept: "Yönetim Kurulu / Sistem Yöneticisi", avatar: "dizsan_logo.jpg" },
     { order: 1,  name: "HAKAN AYDIN",                username: "hakan.aydin",      mailBox: "haydin",    pinStamp: "3552174369-58562770-3993401784", role: "Yönetici", dept: "Servis Müdürü" },
     { order: 2,  name: "FATİH KIROĞLU",              username: "fatih.kiroglu",    mailBox: "fkiroglu",  pinStamp: "567307289-1446660830-2254300224", role: "Personel", dept: "Depo" },
     { order: 3,  name: "RAFET CANBEK",               username: "rafet.canbek",     mailBox: "rcanbek",   pinStamp: DEFAULT_PIN_STAMP, role: "Yönetici", dept: "Genel Müdür" },
@@ -199,10 +199,12 @@ let activePasswordResetRequest = null;
 let legacyPage = 1;
 const LEGACY_PAGE_SIZE = 100;
 
-// GitHub Bulut API Anahtarı
+// GitHub Bulut API Anahtarı (Telefon <-> PC Anlık Otomatik Senkronizasyon)
 const CLOUD_KEY_CODES = [106, 107, 115, 98, 91, 123, 91, 82, 116, 68, 73, 89, 125, 119, 57, 84, 112, 75, 86, 86, 109, 86, 112, 72, 103, 80, 116, 87, 117, 111, 113, 57, 125, 80, 53, 105, 76, 60, 120, 79];
-const CLOUD_API_URL = 'https://api.github.com/repos/Dizsan/ziyaret/contents/shared_state.json';
+const CLOUD_API_URL = 'https://api.github.com/repos/Dizsan/ziyaret/contents/live_sync_state.json';
+const CLOUD_DPRO_API_URL = 'https://api.github.com/repos/Dizsan/dpro/contents/apps/ziyaret/live_sync_state.json';
 let lastKnownCloudSha = null;
+let lastKnownDproSha = null;
 let isCloudPutInFlight = false;
 let hasPendingCloudPut = false;
 let lastLocalSaveTime = 0;
@@ -271,6 +273,289 @@ function getDevicePlatform() {
     if (/Mac/.test(ua)) return "macOS / Masaüstü";
     return "Web Tarayıcı";
 }
+
+// ==========================================================================
+// AKILLI TÜRKİYE TELEFON NUMARASI AYRIŞTIRICI VE WHATSAPP KÖPRÜSÜ
+// ==========================================================================
+const TR_CITY_AREA_CODES = {
+    "corum": "364", "amasya": "358", "tokat": "356", "yozgat": "354",
+    "cankiri": "376", "samsun": "362", "ankara": "312", "istanbul": "212",
+    "kastamonu": "366", "sinop": "368", "kirikkale": "318", "kayseri": "352",
+    "sivas": "346", "ordu": "452", "giresun": "454", "trabzon": "462",
+    "kirsehir": "386", "nevsehir": "384", "konya": "332", "adana": "322",
+    "mersin": "324", "gaziantep": "342", "hatay": "326", "izmir": "232",
+    "bursa": "224", "kocaeli": "262", "sakarya": "264", "bolu": "374",
+    "duzce": "380", "zonguldak": "372", "karabuk": "370", "bartin": "378",
+    "artvin": "466", "rize": "464", "erzurum": "442", "erzincan": "446"
+};
+
+function formatPhone12Display(phone12) {
+    const d = String(phone12 || '').replace(/[^0-9]/g, '');
+    if (d.length === 12 && d.startsWith('90')) {
+        return `0 (${d.slice(2, 5)}) ${d.slice(5, 8)} ${d.slice(8, 10)} ${d.slice(10, 12)}`;
+    }
+    return phone12 || '';
+}
+
+function parseTurkishPhones(rawPhone, city = '') {
+    if (!rawPhone || String(rawPhone).trim().toUpperCase() === 'YOK') {
+        return { wa: '', tel: '', display: '', mobiles: [], all: [], hasPhone: false };
+    }
+    const ac = TR_CITY_AREA_CODES[cleanTR(city)] || '364';
+    const parts = String(rawPhone).split(/[,;/|]+/);
+    const valid = [];
+
+    for (const part of parts) {
+        const digits = part.replace(/[^0-9]/g, '');
+        if (!digits) continue;
+
+        let subparts = [digits];
+        if (digits.length === 14 && !digits.startsWith('0090')) {
+            subparts = [digits.slice(0, 7), digits.slice(7, 14)];
+        } else if (digits.length > 12 && !digits.startsWith('0090')) {
+            const matches = digits.match(/(?:90|0)?(5\d{9}|[2348]\d{9})/g);
+            if (matches && matches.length > 0) {
+                subparts = matches;
+            }
+        }
+
+        for (let d of subparts) {
+            if (d.startsWith('0090') && d.length === 14) {
+                d = d.slice(2);
+            } else if (d.startsWith('90') && d.length === 12) {
+                // Zaten 90XXXXXXXXXX formatında
+            } else if (d.startsWith('0') && d.length === 11) {
+                d = '9' + d;
+            } else if (d.length === 10 && '23458'.includes(d[0])) {
+                d = '90' + d;
+            } else if (d.length === 7) {
+                d = '90' + ac + d;
+            } else if (d.length === 11 && d.startsWith('5')) {
+                const m = d.match(/(5\d{9})/);
+                if (m) d = '90' + m[1];
+            }
+            if (d.length === 12 && d.startsWith('90') && !valid.includes(d)) {
+                valid.push(d);
+            }
+        }
+    }
+
+    const mobiles = valid.filter(v => v.startsWith('905'));
+    const bestWa = mobiles[0] || valid[0] || '';
+    const bestTel = bestWa ? ('+' + bestWa) : '';
+    const display = bestWa ? formatPhone12Display(bestWa) : String(rawPhone);
+
+    return {
+        wa: bestWa,
+        tel: bestTel,
+        display,
+        mobiles,
+        all: valid,
+        hasPhone: Boolean(bestWa)
+    };
+}
+
+function openWhatsAppChat(phoneRaw = '', messageText = '', cityHint = '') {
+    const parsed = parseTurkishPhones(phoneRaw, cityHint);
+    const phoneParam = parsed.wa || '';
+    const textParam = messageText ? encodeURIComponent(String(messageText)) : '';
+
+    const queryParts = [];
+    if (phoneParam) queryParts.push(`phone=${phoneParam}`);
+    if (textParam) queryParts.push(`text=${textParam}`);
+    const queryString = queryParts.join('&');
+
+    const nativeSchemeUrl = `whatsapp://send${queryString ? '?' + queryString : ''}`;
+    const webWaUrl = phoneParam
+        ? `https://wa.me/${phoneParam}${textParam ? '?text=' + textParam : ''}`
+        : `https://wa.me/${textParam ? '?text=' + textParam : ''}`;
+
+    const ua = navigator.userAgent || '';
+    const isMacDesktop = /Macintosh|Mac OS X/.test(ua) && !/iPhone|iPad|iPod/.test(ua);
+    const isLocalServer = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+
+    // 1. Yerel Portal Sunucusu (macOS) aktifse doğrudan LaunchServices ile WhatsApp.app'i sıfır uyarıyla aç
+    if (isLocalServer && isMacDesktop) {
+        fetch('/api/open-whatsapp', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ url: nativeSchemeUrl, webUrl: webWaUrl, phone: phoneParam })
+        }).then(r => {
+            if (!r.ok) {
+                triggerClientWhatsAppRedirect(nativeSchemeUrl, webWaUrl, isMacDesktop);
+            }
+        }).catch(() => {
+            triggerClientWhatsAppRedirect(nativeSchemeUrl, webWaUrl, isMacDesktop);
+        });
+        return;
+    }
+
+    // 2. İstemci tarafı doğrudan yönlendirme (macOS WhatsApp.app / Mobil PWA / Web)
+    triggerClientWhatsAppRedirect(nativeSchemeUrl, webWaUrl, isMacDesktop);
+}
+
+function triggerClientWhatsAppRedirect(nativeSchemeUrl, webWaUrl, isMacDesktop) {
+    try {
+        if (isMacDesktop) {
+            // macOS üzerinde yüklü WhatsApp.app'i boş sekme bırakmadan doğrudan tetikle
+            const a = document.createElement('a');
+            a.href = nativeSchemeUrl;
+            a.style.display = 'none';
+            document.body.appendChild(a);
+            a.click();
+            setTimeout(() => a.remove(), 300);
+            return;
+        }
+        const win = window.open(webWaUrl, '_blank', 'noopener,noreferrer');
+        if (!win) {
+            window.top.location.href = webWaUrl;
+        }
+    } catch (e) {
+        window.location.href = webWaUrl;
+    }
+}
+
+function showToast(message, type = 'info') {
+    if (!message) return;
+    try {
+        let container = document.getElementById('dpro-global-toast-container');
+        if (!container) {
+            container = document.createElement('div');
+            container.id = 'dpro-global-toast-container';
+            container.style.cssText = 'position:fixed; top:18px; right:18px; z-index:9999999; display:flex; flex-direction:column; gap:8px; max-width:420px; pointer-events:none;';
+            document.body.appendChild(container);
+        }
+        const colors = {
+            success: { bg: 'rgba(6, 78, 59, 0.96)', border: '#10b981', text: '#ecfdf5', icon: '✓' },
+            warning: { bg: 'rgba(120, 53, 15, 0.96)', border: '#f59e0b', text: '#fffbeb', icon: '⚠' },
+            danger:  { bg: 'rgba(127, 29, 29, 0.96)', border: '#ef4444', text: '#fef2f2', icon: '✕' },
+            info:    { bg: 'rgba(12, 74, 110, 0.96)', border: '#38bdf8', text: '#f0f9ff', icon: 'ℹ' }
+        };
+        const theme = colors[type] || colors.info;
+        const toast = document.createElement('div');
+        toast.style.cssText = `pointer-events:auto; background:${theme.bg}; color:${theme.text}; border:1.5px solid ${theme.border}; border-radius:10px; padding:0.65rem 0.95rem; font-size:0.8rem; font-weight:700; box-shadow:0 12px 32px rgba(0,0,0,0.55); display:flex; align-items:center; gap:0.55rem; backdrop-filter:blur(10px); transition:all 0.22s ease;`;
+        toast.innerHTML = `<span style="display:inline-flex; align-items:center; justify-content:center; width:20px; height:20px; border-radius:50%; background:${theme.border}; color:#020617; font-weight:900; font-size:0.74rem; flex-shrink:0;">${theme.icon}</span><span style="line-height:1.35;">${escapeHtml(String(message))}</span>`;
+        container.appendChild(toast);
+        setTimeout(() => {
+            toast.style.opacity = '0';
+            toast.style.transform = 'translateY(-6px)';
+            setTimeout(() => toast.remove(), 240);
+        }, 3200);
+    } catch (e) {
+        if (window.DizsanBackNav && typeof window.DizsanBackNav.showToast === 'function') {
+            window.DizsanBackNav.showToast(String(message));
+        }
+    }
+}
+window.showToast = showToast;
+
+function saveStateToLocal() {
+    if (typeof saveStateLocally === 'function') saveStateLocally();
+}
+window.saveStateToLocal = saveStateToLocal;
+
+function openCustomerWhatsApp(customerCode, mode = 'DEFAULT', extraIndex = 0) {
+    const customer = (appState.customers || []).find(c => c.code === customerCode);
+    if (!customer) {
+        showToast('Müşteri kaydı bulunamadı.', 'danger');
+        return;
+    }
+    const parsed = parseTurkishPhones(customer.phone, customer.city);
+    if (!parsed.hasPhone) {
+        showToast('Bu müşteriye ait geçerli bir telefon numarası bulunamadı.', 'warning');
+        return;
+    }
+
+    const targetPhone = (extraIndex > 0 && parsed.all[extraIndex]) ? parsed.all[extraIndex] : parsed.wa;
+    const acc = getCustomerAccountingSummary(customer);
+    const senderName = currentUser ? currentUser.name : 'DİZSAN Otomotiv Yetkili Servis';
+
+    let msg = '';
+    if (mode === 'EKSTRE') {
+        msg = [
+            `Sayın *${customer.title}* Yetkilisi${customer.authorized && customer.authorized !== 'Bilinmiyor' ? ` (${customer.authorized})` : ''},`,
+            ``,
+            `*DİZSAN Otomotiv Scania Yetkili Servisi* cari hesap bilgilendirmesidir:`,
+            `• *Cari Kodu:* ${customer.code}`,
+            `• *Toplam Borç:* ${formatMoney(acc.borc)}`,
+            `• *Toplam Alacak:* ${formatMoney(acc.alacak)}`,
+            `• *Güncel Net Bakiye:* *${formatMoney(Math.abs(acc.bakiye))} ${acc.baCode}*`,
+            customer.lastDate ? `• *Son İşlem Tarihi:* ${customer.lastDate}` : '',
+            ``,
+            `Bilgilerinize sunar, iyi çalışmalar dileriz.`,
+            `_${senderName} — DİZSAN Otomotiv Çorum_`
+        ].filter(Boolean).join('\n');
+    } else if (mode === 'INVOICE') {
+        const historyList = customer.serviceHistory || [];
+        const inv = historyList[Number(extraIndex) || 0];
+        if (inv) {
+            const norm = normalizeInvoiceLines(inv);
+            msg = [
+                `Sayın *${customer.title}* Yetkilisi,`,
+                ``,
+                `*DİZSAN Otomotiv* servis işlem ve fatura özetiniz:`,
+                `• *Fatura No:* ${inv.fatura_no || '-'}`,
+                `• *Tarih:* ${inv.tarih || '-'}`,
+                `• *Araç Plakası:* ${(inv.plaka && inv.plaka !== '-') ? inv.plaka : (customer.plates || '-')}`,
+                `• *İşlem:* ${inv.islem || '-'}`,
+                `• *Genel Toplam (KDV Dahil):* *${formatMoney(norm.genelToplam)}*`,
+                ``,
+                `İyi yolculuklar ve hayırlı işler dileriz.`,
+                `_${senderName} — DİZSAN Otomotiv_`
+            ].join('\n');
+        }
+    } else {
+        msg = [
+            `Sayın *${customer.title}* Yetkilisi${customer.authorized && customer.authorized !== 'Bilinmiyor' ? ` (${customer.authorized})` : ''},`,
+            ``,
+            `*DİZSAN Otomotiv (Çorum Scania Yetkili Servisi)* olarak araçlarınızın servis/bakım durumu ve devam eden kampanyalarımız hakkında sizinle iletişime geçiyoruz.`,
+            customer.plates && customer.plates !== 'Plakasız' ? `• *Kayıtlı Araç:* ${customer.plates}` : '',
+            ``,
+            `Müsait olduğunuzda görüşmek dileğiyle, iyi çalışmalar dileriz.`,
+            `_${senderName}_`
+        ].filter(Boolean).join('\n');
+    }
+
+    addAuditLog('WHATSAPP İLETİŞİM', `${customer.code} - ${customer.title} (${formatPhone12Display(targetPhone)}) için WhatsApp mesajı başlatıldı.`);
+    openWhatsAppChat(targetPhone, msg, customer.city);
+}
+
+function shareCustomRouteWhatsApp(routeId) {
+    const rt = (appState.customRoutes || []).find(r => r.id === routeId);
+    if (!rt) return;
+    const customers = (appState.customers || []).filter(c =>
+        (Array.isArray(rt.customerCodes) && rt.customerCodes.includes(c.code)) || c.rut === rt.name
+    );
+
+    const custLines = customers.slice(0, 20).map((c, i) => {
+        const p = parseTurkishPhones(c.phone, c.city);
+        return `${i + 1}. *${c.title}* (${c.district || c.city})${p.hasPhone ? ` - 📞 ${p.display}` : ''}`;
+    });
+    if (customers.length > 20) {
+        custLines.push(`...ve +${customers.length - 20} müşteri daha.`);
+    }
+
+    const msg = [
+        `🚗 *DİZSAN SAHA ZİYARET RUT PLANI*`,
+        `📌 *Rut Adı:* ${rt.name}`,
+        `🛣️ *Güzergah:* ${rt.routeText || '-'}`,
+        `📅 *Plan Tarihi:* ${rt.plannedDate || '-'}`,
+        `👤 *Sorumlu:* ${rt.assignee || '-'}`,
+        `👥 *Toplam Cari:* ${customers.length} Müşteri`,
+        rt.notes ? `📝 *Not:* ${rt.notes}` : '',
+        ``,
+        `*Ziyaret Edilecek Müşteriler:*`,
+        ...custLines
+    ].filter(Boolean).join('\n');
+
+    addAuditLog('WHATSAPP PAYLAŞIM', `"${rt.name}" rut planı WhatsApp üzerinden paylaşıldı.`);
+    openWhatsAppChat('', msg);
+}
+
+window.parseTurkishPhones = parseTurkishPhones;
+window.openWhatsAppChat = openWhatsAppChat;
+window.openCustomerWhatsApp = openCustomerWhatsApp;
+window.shareCustomRouteWhatsApp = shareCustomRouteWhatsApp;
 
 function addAuditLog(category, detail) {
     const actor = currentUser ? currentUser.name : "SİSTEM";
@@ -520,6 +805,7 @@ function computeStateSignature(stateObj) {
 async function loadInitialData() {
     // 1. Aşama: Kullanıcıyı asla bekletmemek için yerel önbellek varsa 0 ms ile yükle
     const raw = localStorage.getItem(STORAGE_KEY_STATE);
+    let hasLocalCache = false;
     if (raw) {
         try {
             const parsed = JSON.parse(raw);
@@ -531,15 +817,32 @@ async function loadInitialData() {
                 syncCustomRoutesToCustomers();
                 lastSyncedSignature = computeStateSignature(appState);
                 updateLogoLiveIndicator();
+                hasLocalCache = true;
             }
         } catch (e) {}
     }
 
-    // 2. Aşama: DizGün ekosistem köprüsünü senkronize et
+    // 2. Aşama: Hafif bulut durumunu (live_sync_state.json - yeni rut planları ve bildirimler) anında çek
+    try {
+        const quickCloud = await fetchLiveCloudSyncState();
+        if (quickCloud) {
+            applyLiveCloudSyncToAppState(quickCloud, true);
+            syncCustomRoutesToCustomers();
+        }
+    } catch (e) {}
+
+    // 3. Aşama: DizGün ekosistem köprüsünü senkronize et
     syncWithDizGunBridge();
 
-    // 3. Aşama: Logo ERP ve müşteri verilerini yerel/GitHub'dan çek
-    await fetchLiveGitHubData(true);
+    // 4. Aşama: Ağır müşteri/fatura verisini (shared_state.json) ekranı ve girişi ASLA bloklamadan arka planda çek!
+    setTimeout(async () => {
+        try {
+            await fetchLiveGitHubData(true);
+            if (typeof checkIncomingRouteNotifications === 'function') {
+                checkIncomingRouteNotifications();
+            }
+        } catch (e) {}
+    }, hasLocalCache ? 80 : 10);
 }
 
 function updateLogoLiveIndicator() {
@@ -581,26 +884,150 @@ async function forceRefreshFromGitHub() {
     }
 }
 
-async function fetchLiveGitHubData(isInitial = false) {
-    const sources = [
-        'shared_state.json?t=' + Date.now(),
-        'https://raw.githubusercontent.com/Dizsan/ziyaret/main/shared_state.json?t=' + Date.now(),
-        'customer_database.json?t=' + Date.now(),
-        'https://raw.githubusercontent.com/Dizsan/ziyaret/main/customer_database.json?t=' + Date.now()
-    ];
+function parseSqlEntryDateObj(val) {
+    if (!val || val === '-') return null;
+    const s = String(val).trim();
+    if (s.includes('.')) {
+        const p = s.split('.');
+        if (p.length === 3) {
+            const d = parseInt(p[0], 10), m = parseInt(p[1], 10), y = parseInt(p[2], 10);
+            if (y > 1950 && m >= 1 && m <= 12 && d >= 1 && d <= 31) return new Date(y, m - 1, d);
+        }
+    } else if (s.includes('-')) {
+        const p = s.slice(0, 10).split('-');
+        if (p.length === 3) {
+            const y = parseInt(p[0], 10), m = parseInt(p[1], 10), d = parseInt(p[2], 10);
+            if (y > 1950 && m >= 1 && m <= 12 && d >= 1 && d <= 31) return new Date(y, m - 1, d);
+        }
+    }
+    return null;
+}
 
-    let liveData = null;
-    for (const src of sources) {
+function formatSqlEntryDateTR(dt) {
+    if (!dt || isNaN(dt.getTime())) return '-';
+    return `${String(dt.getDate()).padStart(2, '0')}.${String(dt.getMonth() + 1).padStart(2, '0')}.${dt.getFullYear()}`;
+}
+
+function resolveCustomerLatestSqlDate(c) {
+    if (!c) return '-';
+    let bestDt = parseSqlEntryDateObj(c.lastDate);
+    if (Array.isArray(c.serviceHistory) && c.serviceHistory.length > 0) {
+        c.serviceHistory.sort((a, b) => {
+            const da = parseSqlEntryDateObj(a && a.tarih);
+            const db = parseSqlEntryDateObj(b && b.tarih);
+            return (db ? db.getTime() : 0) - (da ? da.getTime() : 0);
+        });
+        for (const h of c.serviceHistory) {
+            if (!h) continue;
+            const hd = parseSqlEntryDateObj(h.tarih);
+            if (hd) {
+                h.tarih = formatSqlEntryDateTR(hd);
+                if (!bestDt || hd.getTime() > bestDt.getTime()) {
+                    bestDt = hd;
+                    if (h.islem) c.lastOperation = h.islem;
+                }
+            }
+        }
+    }
+    if (bestDt) {
+        const formatted = formatSqlEntryDateTR(bestDt);
+        c.lastDate = formatted;
+        return formatted;
+    }
+    return c.lastDate || '-';
+}
+
+async function triggerAutoSqlLiveSync() {
+    const endpoints = ['/api/logo-live-sync', 'http://localhost:8000/api/logo-live-sync'];
+    for (const ep of endpoints) {
         try {
-            const res = await fetch(src, { cache: 'no-store' });
+            const ctrl = new AbortController();
+            const timer = setTimeout(() => ctrl.abort(), 3500);
+            const res = await fetch(ep + '?t=' + Date.now(), { cache: 'no-store', signal: ctrl.signal });
+            clearTimeout(timer);
             if (res.ok) {
-                const parsed = await res.json();
-                if (parsed && Array.isArray(parsed.customers) && parsed.customers.length > 0) {
-                    liveData = parsed;
-                    break;
+                const data = await res.json();
+                if (data && Array.isArray(data.customers) && data.customers.length > 0) {
+                    data.customers.forEach(c => resolveCustomerLatestSqlDate(c));
+                    if (appState) {
+                        appState.customers = data.customers;
+                        if (data.logoMetadata) appState.logoMetadata = data.logoMetadata;
+                    }
+                    return data;
                 }
             }
         } catch (e) {}
+    }
+    return null;
+}
+
+async function fetchLiveGitHubData(isInitial = false) {
+    const ts = Date.now();
+    let candidates = [];
+
+    // 1. Önce yerel shared_state.json dosyasını hızlıca oku (5.47MB dosyayı aynı anda hem yerelden hem GitHub'dan çift indirme!)
+    try {
+        const localRes = await fetch('shared_state.json?t=' + ts, { cache: 'no-store' });
+        if (localRes.ok) {
+            const localJson = await localRes.json();
+            if (localJson && Array.isArray(localJson.customers) && localJson.customers.length > 0) {
+                candidates.push(localJson);
+            }
+        }
+    } catch (e) {}
+
+    // 2. Yalnızca yerel dosya bulunamazsa GitHub raw üzerinden çek
+    if (candidates.length === 0) {
+        try {
+            const remoteRes = await fetch('https://raw.githubusercontent.com/Dizsan/ziyaret/main/shared_state.json?t=' + ts, { cache: 'no-store' });
+            if (remoteRes.ok) {
+                const remoteJson = await remoteRes.json();
+                if (remoteJson && Array.isArray(remoteJson.customers) && remoteJson.customers.length > 0) {
+                    candidates.push(remoteJson);
+                }
+            }
+        } catch (e) {}
+    }
+
+    // 3. Canlı SQL senkronizasyonunu açılışı bloklamadan arka planda tetikle
+    setTimeout(async () => {
+        try {
+            const sqlLiveRes = await triggerAutoSqlLiveSync();
+            if (sqlLiveRes && Array.isArray(sqlLiveRes.customers) && sqlLiveRes.customers.length > 0) {
+                updateLogoLiveIndicator();
+            }
+        } catch (e) {}
+    }, 600);
+
+    const fallbackSources = [
+        'customer_database.json?t=' + ts,
+        'https://raw.githubusercontent.com/Dizsan/ziyaret/main/customer_database.json?t=' + ts
+    ];
+
+    let liveData = null;
+    if (candidates.length > 0) {
+        candidates.sort((a, b) => {
+            const revA = Number(a.stateRevision || 0);
+            const revB = Number(b.stateRevision || 0);
+            if (revA !== revB) return revB - revA;
+            const tA = new Date(a.updatedAt || 0).getTime() || 0;
+            const tB = new Date(b.updatedAt || 0).getTime() || 0;
+            return tB - tA;
+        });
+        liveData = candidates[0];
+    } else {
+        for (const src of fallbackSources) {
+            try {
+                const res = await fetch(src, { cache: 'no-store' });
+                if (res.ok) {
+                    const parsed = await res.json();
+                    if (parsed && Array.isArray(parsed.customers) && parsed.customers.length > 0) {
+                        liveData = parsed;
+                        break;
+                    }
+                }
+            } catch (e) {}
+        }
     }
 
     if (!liveData) {
@@ -618,12 +1045,43 @@ async function fetchLiveGitHubData(isInitial = false) {
     }
 
     lastSyncedSignature = incomingSignature;
-    if (liveData.updatedAt) {
+    const remoteTime = new Date(liveData.updatedAt || 0).getTime() || 0;
+    const localTime = new Date(appState.updatedAt || 0).getTime() || 0;
+    const isRemoteNewerOrEqual = remoteTime >= localTime || isInitial;
+
+    if (liveData.updatedAt && isRemoteNewerOrEqual) {
         appState.updatedAt = liveData.updatedAt;
+    }
+    if (liveData.stateRevision && Number(liveData.stateRevision) >= Number(appState.stateRevision || 0)) {
+        appState.stateRevision = Number(liveData.stateRevision);
     }
 
     if (liveData.customers && liveData.customers.length > 0) {
-        appState.customers = liveData.customers;
+        // Safari localStorage kotası nedeniyle serviceHistory kırpılmışsa mevcut fatura geçmişini koru
+        const existingHistMap = new Map();
+        (appState.customers || []).forEach(c => {
+            if (Array.isArray(c.serviceHistory) && c.serviceHistory.length > 0) {
+                existingHistMap.set(c.code, c.serviceHistory);
+            }
+        });
+        // Adaylardan birinde serviceHistory varsa onu da haritaya ekle
+        candidates.forEach(cand => {
+            (cand.customers || []).forEach(c => {
+                if (!existingHistMap.has(c.code) && Array.isArray(c.serviceHistory) && c.serviceHistory.length > 0) {
+                    existingHistMap.set(c.code, c.serviceHistory);
+                }
+            });
+        });
+
+        appState.customers = liveData.customers.map(c => {
+            if ((!Array.isArray(c.serviceHistory) || c.serviceHistory.length === 0) && existingHistMap.has(c.code)) {
+                const merged = { ...c, serviceHistory: existingHistMap.get(c.code) };
+                resolveCustomerLatestSqlDate(merged);
+                return merged;
+            }
+            resolveCustomerLatestSqlDate(c);
+            return c;
+        });
     }
     if (liveData.districtStrategies && Object.keys(liveData.districtStrategies).length > 0) {
         appState.districtStrategies = liveData.districtStrategies;
@@ -637,19 +1095,30 @@ async function fetchLiveGitHubData(isInitial = false) {
         appState.users = migrateOfficialUserEmails(liveData.users);
     }
 
-    // Cihazdaki bekleyen yerel kayıtları koruyarak bulut ziyaretlerini ve özel rut planlarını birleştir
-    if (Array.isArray(liveData.visits) && liveData.visits.length >= (appState.visits || []).length) {
-        appState.visits = liveData.visits;
+    // Bulut verisi daha güncelse veya yerel liste boşsa senkronize et (silme ve düzenlemeleri de yansıtır)
+    if (Array.isArray(liveData.visits) && (isRemoteNewerOrEqual || (appState.visits || []).length === 0)) {
+        appState.visits = mergeRecordListsById(liveData.visits, appState.visits, 'id', isRemoteNewerOrEqual);
     }
-    if (Array.isArray(liveData.tasks) && liveData.tasks.length >= (appState.tasks || []).length) {
-        appState.tasks = liveData.tasks;
+    if (Array.isArray(liveData.tasks) && (isRemoteNewerOrEqual || (appState.tasks || []).length === 0)) {
+        appState.tasks = mergeRecordListsById(liveData.tasks, appState.tasks, 'id', isRemoteNewerOrEqual);
     }
     if (Array.isArray(liveData.customRoutes)) {
         const localRoutes = Array.isArray(appState.customRoutes) ? appState.customRoutes : [];
-        if (liveData.customRoutes.length >= localRoutes.length) {
+        if (localRoutes.length === 0) {
             appState.customRoutes = liveData.customRoutes;
+        } else if (isRemoteNewerOrEqual) {
+            appState.customRoutes = mergeRecordListsById(liveData.customRoutes, localRoutes, 'id', true);
+        } else {
+            appState.customRoutes = mergeRecordListsById(liveData.customRoutes, localRoutes, 'id', false);
         }
     }
+
+    try {
+        const cloudSync = await fetchLiveCloudSyncState();
+        if (cloudSync) {
+            applyLiveCloudSyncToAppState(cloudSync, isInitial);
+        }
+    } catch (e) {}
 
     syncCustomRoutesToCustomers();
     saveStateLocally();
@@ -732,6 +1201,121 @@ async function syncToServer() {
     }
 }
 
+function buildLiveSyncPayload(stateObj) {
+    const clean = sanitizeStateForCloud(stateObj);
+    const customCustomers = (clean.customers || [])
+        .filter(c => c && (c.isCustom || c._modifiedAt || String(c.code || '').startsWith('120.YENI')))
+        .map(c => {
+            const { serviceHistory, ...rest } = c;
+            return rest;
+        });
+    return {
+        version: clean.version || CURRENT_APP_VERSION,
+        latestVersion: clean.latestVersion || null,
+        stateRevision: Number(clean.stateRevision || 1),
+        updatedAt: clean.updatedAt || new Date().toISOString(),
+        visits: Array.isArray(clean.visits) ? clean.visits : [],
+        tasks: Array.isArray(clean.tasks) ? clean.tasks : [],
+        customRoutes: Array.isArray(clean.customRoutes) ? clean.customRoutes : [],
+        customCustomers: customCustomers,
+        approvalRequests: Array.isArray(clean.approvalRequests) ? clean.approvalRequests : [],
+        routeNotifications: Array.isArray(clean.routeNotifications) ? clean.routeNotifications.slice(0, 50) : [],
+        pushSubscriptions: Array.isArray(clean.pushSubscriptions) ? clean.pushSubscriptions : [],
+        pushTestRequests: Array.isArray(clean.pushTestRequests) ? clean.pushTestRequests : [],
+        pushNotificationLogs: Array.isArray(clean.pushNotificationLogs) ? clean.pushNotificationLogs.slice(0, 100) : [],
+        logs: Array.isArray(clean.logs) ? clean.logs.slice(0, 150) : [],
+        users: Array.isArray(clean.users) ? clean.users : []
+    };
+}
+
+function mergeRecordListsById(remoteArr, localArr, idKey = 'id', preferRemoteOrder = true) {
+    const rList = Array.isArray(remoteArr) ? remoteArr : [];
+    const lList = Array.isArray(localArr) ? localArr : [];
+    const map = new Map();
+    const first = preferRemoteOrder ? rList : lList;
+    const second = preferRemoteOrder ? lList : rList;
+    first.forEach(item => {
+        if (item && item[idKey]) map.set(item[idKey], item);
+    });
+    second.forEach(item => {
+        if (item && item[idKey] && !map.has(item[idKey])) {
+            map.set(item[idKey], item);
+        }
+    });
+    return Array.from(map.values());
+}
+
+async function fetchLiveCloudSyncState() {
+    try {
+        const token = getCloudAuthToken();
+        const res = await fetch(`${CLOUD_API_URL}?t=${Date.now()}`, {
+            headers: { 'Authorization': `token ${token}`, 'Accept': 'application/vnd.github.v3+json' },
+            cache: 'no-store'
+        });
+        if (res.ok) {
+            const meta = await res.json();
+            if (meta && meta.sha) lastKnownCloudSha = meta.sha;
+            if (meta && meta.content) {
+                return JSON.parse(decodeUTF8Base64(meta.content));
+            }
+        }
+    } catch (e) {}
+    try {
+        const rawRes = await fetch(`https://raw.githubusercontent.com/Dizsan/ziyaret/main/live_sync_state.json?t=${Date.now()}`, { cache: 'no-store' });
+        if (rawRes.ok) return await rawRes.json();
+    } catch (e) {}
+    return null;
+}
+
+function applyLiveCloudSyncToAppState(cloudSync, isInitial = false) {
+    if (!cloudSync || typeof cloudSync !== 'object') return false;
+    const remoteTime = new Date(cloudSync.updatedAt || 0).getTime() || 0;
+    const localTime = new Date(appState.updatedAt || 0).getTime() || 0;
+    const isRemoteNewer = remoteTime >= localTime || isInitial;
+
+    const beforeSig = `${(appState.visits || []).length}|${(appState.tasks || []).length}|${(appState.customRoutes || []).length}|${(appState.approvalRequests || []).length}|${(appState.routeNotifications || []).length}|${appState.updatedAt || ''}`;
+
+    if (Array.isArray(cloudSync.visits)) {
+        appState.visits = mergeRecordListsById(cloudSync.visits, appState.visits, 'id', isRemoteNewer);
+    }
+    if (Array.isArray(cloudSync.tasks)) {
+        appState.tasks = mergeRecordListsById(cloudSync.tasks, appState.tasks, 'id', isRemoteNewer);
+    }
+    if (Array.isArray(cloudSync.customRoutes)) {
+        appState.customRoutes = mergeRecordListsById(cloudSync.customRoutes, appState.customRoutes, 'id', isRemoteNewer);
+    }
+    if (Array.isArray(cloudSync.approvalRequests)) {
+        appState.approvalRequests = mergeRecordListsById(cloudSync.approvalRequests, appState.approvalRequests, 'id', isRemoteNewer);
+    }
+    if (Array.isArray(cloudSync.routeNotifications)) {
+        appState.routeNotifications = mergeRecordListsById(cloudSync.routeNotifications, appState.routeNotifications, 'id', true).slice(0, 50);
+    }
+    if (Array.isArray(cloudSync.logs) && cloudSync.logs.length > 0) {
+        appState.logs = mergeRecordListsById(cloudSync.logs, appState.logs, 'id', isRemoteNewer).slice(0, 300);
+    }
+    if (Array.isArray(cloudSync.customCustomers) && cloudSync.customCustomers.length > 0 && Array.isArray(appState.customers)) {
+        const custMap = new Map(appState.customers.map(c => [c.code, c]));
+        cloudSync.customCustomers.forEach(cc => {
+            if (!cc || !cc.code) return;
+            if (custMap.has(cc.code)) {
+                const existing = custMap.get(cc.code);
+                Object.assign(existing, { ...cc, serviceHistory: existing.serviceHistory || [] });
+            } else {
+                appState.customers.unshift({ ...cc, serviceHistory: cc.serviceHistory || [] });
+            }
+        });
+    }
+    if (isRemoteNewer && cloudSync.updatedAt) {
+        appState.updatedAt = cloudSync.updatedAt;
+    }
+    if (cloudSync.stateRevision && Number(cloudSync.stateRevision) > Number(appState.stateRevision || 0)) {
+        appState.stateRevision = Number(cloudSync.stateRevision);
+    }
+
+    const afterSig = `${(appState.visits || []).length}|${(appState.tasks || []).length}|${(appState.customRoutes || []).length}|${(appState.approvalRequests || []).length}|${(appState.routeNotifications || []).length}|${appState.updatedAt || ''}`;
+    return beforeSig !== afterSig;
+}
+
 async function pushStateToGitHubCloud(isRetry = false) {
     try {
         const token = getCloudAuthToken();
@@ -743,12 +1327,20 @@ async function pushStateToGitHubCloud(isRetry = false) {
             if (getRes.ok) {
                 const meta = await getRes.json();
                 lastKnownCloudSha = meta.sha;
+                if (meta.content && isRetry) {
+                    try {
+                        const remoteSync = JSON.parse(decodeUTF8Base64(meta.content));
+                        applyLiveCloudSyncToAppState(remoteSync, false);
+                    } catch (e) {}
+                }
             }
         }
 
+        const payloadStr = JSON.stringify(buildLiveSyncPayload(appState));
+        const encodedContent = encodeUTF8Base64(payloadStr);
         const putBody = {
             message: `sync: ${appState.version} (${formatNowTR()})`,
-            content: encodeUTF8Base64(JSON.stringify(sanitizeStateForCloud(appState), null, 2))
+            content: encodedContent
         };
         if (lastKnownCloudSha) putBody.sha = lastKnownCloudSha;
 
@@ -772,14 +1364,123 @@ async function pushStateToGitHubCloud(isRetry = false) {
             lastKnownCloudSha = null;
             await pushStateToGitHubCloud(true);
         }
+
+        // Aynı anda D-Pro deposundaki live_sync_state.json dosyasını da arka planda yedekle
+        (async () => {
+            try {
+                if (!lastKnownDproSha) {
+                    const g2 = await fetch(`${CLOUD_DPRO_API_URL}?t=${Date.now()}`, {
+                        headers: { 'Authorization': `token ${token}`, 'Accept': 'application/vnd.github.v3+json' },
+                        cache: 'no-store'
+                    });
+                    if (g2.ok) {
+                        const m2 = await g2.json();
+                        lastKnownDproSha = m2.sha;
+                    }
+                }
+                const body2 = { message: `sync: ${appState.version} (${formatNowTR()})`, content: encodedContent };
+                if (lastKnownDproSha) body2.sha = lastKnownDproSha;
+                const p2 = await fetch(CLOUD_DPRO_API_URL, {
+                    method: 'PUT',
+                    headers: { 'Authorization': `token ${token}`, 'Accept': 'application/vnd.github.v3+json', 'Content-Type': 'application/json' },
+                    body: JSON.stringify(body2)
+                });
+                if (p2.ok) {
+                    const pd2 = await p2.json();
+                    if (pd2 && pd2.content && pd2.content.sha) lastKnownDproSha = pd2.content.sha;
+                } else {
+                    lastKnownDproSha = null;
+                }
+            } catch (e2) {}
+        })();
     } catch (e) {}
 }
 
 async function syncFromServer() {
-    if (isCloudPutInFlight || hasPendingCloudPut || (Date.now() - lastLocalSaveTime < 6000)) return;
+    if (isCloudPutInFlight || hasPendingCloudPut || (Date.now() - lastLocalSaveTime < 3500)) return;
     try {
-        await fetchLiveGitHubData(false);
+        const cloudSync = await fetchLiveCloudSyncState();
+        if (cloudSync && applyLiveCloudSyncToAppState(cloudSync, false)) {
+            syncCustomRoutesToCustomers();
+            saveStateLocally();
+            renderAll();
+        }
+        if (typeof checkIncomingRouteNotifications === 'function') {
+            checkIncomingRouteNotifications();
+        }
     } catch (e) {}
+}
+
+function openCustomerModal() {
+    const m = document.getElementById('customer-modal');
+    if (!m) return;
+    const form = document.getElementById('customer-form');
+    if (form) form.reset();
+    const codeIn = document.getElementById('cust-code');
+    if (codeIn && !codeIn.value) {
+        codeIn.value = '120.YENI.' + String(Date.now()).slice(-4);
+    }
+    m.classList.add('open');
+}
+
+function closeCustomerModal() {
+    const m = document.getElementById('customer-modal');
+    if (m) m.classList.remove('open');
+}
+
+function saveNewCustomer(event) {
+    if (event) event.preventDefault();
+    const code = (document.getElementById('cust-code')?.value || '').trim() || ('120.YENI.' + String(Date.now()).slice(-4));
+    const title = (document.getElementById('cust-title')?.value || '').trim();
+    const authorized = (document.getElementById('cust-auth')?.value || '').trim();
+    const phone = (document.getElementById('cust-phone')?.value || '').trim();
+    const city = (document.getElementById('cust-city')?.value || '').trim();
+    const district = (document.getElementById('cust-district')?.value || '').trim();
+    const rut = (document.getElementById('cust-rut')?.value || '').trim();
+    const plates = (document.getElementById('cust-plates')?.value || '').trim();
+    const model = (document.getElementById('cust-model')?.value || '').trim();
+    const address = (document.getElementById('cust-address')?.value || '').trim();
+
+    if (!title) {
+        alert('Lütfen müşteri / cari ünvanını giriniz!');
+        return;
+    }
+
+    const newCust = {
+        code,
+        title,
+        authorized,
+        phone,
+        city,
+        district,
+        rut: rut || `${city} Rutu`,
+        plates,
+        vehicleModel: model,
+        address,
+        totalRevenue: 0,
+        balance: 0,
+        ba: '-',
+        priority: 'P2 - Yeni Potansiyel',
+        lastVisit: formatNowTR().slice(0, 10),
+        visitStatus: 'Yeni Kayıt',
+        isCustom: true,
+        _modifiedAt: new Date().toISOString(),
+        serviceHistory: []
+    };
+
+    if (!Array.isArray(appState.customers)) appState.customers = [];
+    const existingIdx = appState.customers.findIndex(c => c && c.code === code);
+    if (existingIdx !== -1) {
+        appState.customers[existingIdx] = { ...appState.customers[existingIdx], ...newCust };
+    } else {
+        appState.customers.unshift(newCust);
+    }
+
+    addAuditLog('YENİ MÜŞTERİ', `${title} (${code} - ${city}/${district}) sisteme eklendi ve GitHub ile senkronize edildi.`);
+    syncToServer();
+    closeCustomerModal();
+    renderAll();
+    showToast(`✅ '${title}' kaydedildi ve tüm cihazlarınızla senkronize edildi.`, 'success');
 }
 
 // ==========================================================================
@@ -788,9 +1489,10 @@ async function syncFromServer() {
 function renderQuickUserChips() {
     const c = document.getElementById('quick-user-list');
     if (!c) return;
-    c.innerHTML = appState.users.filter(u => isOmerEren(u)).map(u => `
+    const userList = (Array.isArray(appState.users) && appState.users.length > 0) ? appState.users : DEFAULT_USERS;
+    c.innerHTML = userList.map(u => `
         <button type="button" class="user-chip" onclick="fillLoginQuick('${u.username}')">
-            👑 ${u.name} (${u.dept})
+            ${isOmerEren(u) ? '👑' : '👤'} ${u.name} (${u.dept})
         </button>
     `).join('');
 }
@@ -820,30 +1522,29 @@ function loadRememberedCredentials() {
 }
 
 function handleLogin(event) {
-    event.preventDefault();
-    const uVal = normalizeTR(document.getElementById('login-username').value);
-    const pVal = (document.getElementById('login-password').value || '').trim();
+    if (event && typeof event.preventDefault === 'function') event.preventDefault();
+    const uInEl = document.getElementById('login-username');
+    const pInEl = document.getElementById('login-password');
+    const uVal = normalizeTR(uInEl ? uInEl.value : '');
+    const pVal = (pInEl ? pInEl.value : '').trim();
     const rememberMe = document.getElementById('login-remember-me')?.checked;
     const errBox = document.getElementById('login-error');
 
-    const matched = appState.users.find(u =>
-        (normalizeTR(u.username) === uVal || normalizeTR(u.name) === uVal || normalizeTR(u.email) === uVal) &&
+    const userPool = (Array.isArray(appState.users) && appState.users.length > 0) ? appState.users : DEFAULT_USERS;
+    const matched = userPool.find(u =>
+        (normalizeTR(u.username) === uVal || normalizeTR(u.name) === uVal || normalizeTR(u.email) === uVal || (uVal === 'OMER' && isOmerEren(u))) &&
         verifyUserPin(u, pVal)
     );
 
     if (!matched) {
-        errBox.style.display = 'block';
-        errBox.innerHTML = '<i class="fa-solid fa-circle-exclamation"></i> Kullanıcı adı veya şifre hatalı! Şifrenizi unuttuysanız <b>"Şifremi Unuttum?"</b> bağlantısını kullanabilirsiniz.';
-        return;
+        if (errBox) {
+            errBox.style.display = 'block';
+            errBox.innerHTML = '<i class="fa-solid fa-circle-exclamation"></i> Kullanıcı adı veya şifre hatalı! Şifrenizi unuttuysanız <b>"Şifremi Unuttum?"</b> bağlantısını kullanabilirsiniz.';
+        }
+        return false;
     }
 
-    if (!isOmerEren(matched)) {
-        errBox.style.display = 'block';
-        errBox.innerHTML = '<i class="fa-solid fa-lock"></i> <b>ERİŞİM KAPALI:</b> Uygulama şu anda yalnızca <b>ÖMER EREN</b> çalışma erişimine açıktır. Diğer tüm kullanıcıların girişi geçici olarak kapatılmıştır.';
-        return;
-    }
-
-    errBox.style.display = 'none';
+    if (errBox) errBox.style.display = 'none';
     currentUser = matched;
 
     if (rememberMe) {
@@ -854,28 +1555,33 @@ function handleLogin(event) {
         sessionStorage.setItem(STORAGE_KEY_SESSION, JSON.stringify(currentUser));
     }
 
-    startSilentAudioKeepAlive();
-    autoEnrollZeroTouchPush();
-    addAuditLog("GİRİŞ / ÇIKIŞ", `${currentUser.name} (${currentUser.dept}) sisteme giriş yaptı.`);
+    try { startSilentAudioKeepAlive(); } catch (e) {}
+    try { autoEnrollZeroTouchPush(); } catch (e) {}
     applyAuthenticatedUser();
+    try { addAuditLog("GİRİŞ / ÇIKIŞ", `${currentUser.name} (${currentUser.dept}) sisteme giriş yaptı.`); } catch (e) {}
+    return false;
 }
+window.handleLogin = handleLogin;
 
 function applyAuthenticatedUser() {
     const overlay = document.getElementById('login-overlay');
-    if (currentUser && !isOmerEren(currentUser)) {
-        currentUser = null;
-        localStorage.removeItem(STORAGE_KEY_SESSION);
-        sessionStorage.removeItem(STORAGE_KEY_SESSION);
-    }
     if (!currentUser) {
-        overlay.classList.remove('hidden');
+        if (overlay) {
+            overlay.classList.remove('hidden');
+            overlay.style.display = 'flex';
+        }
         loadRememberedCredentials();
         return;
     }
-    overlay.classList.add('hidden');
+    if (overlay) {
+        overlay.classList.add('hidden');
+        overlay.style.display = 'none';
+    }
 
-    document.getElementById('current-user-name').textContent = currentUser.name;
-    document.getElementById('current-user-role').textContent = `${currentUser.dept || currentUser.role}`;
+    const nameEl = document.getElementById('current-user-name');
+    if (nameEl) nameEl.textContent = currentUser.name;
+    const roleEl = document.getElementById('current-user-role');
+    if (roleEl) roleEl.textContent = `${currentUser.dept || currentUser.role}`;
     const avatarEl = document.getElementById('current-user-avatar');
     if (avatarEl) {
         avatarEl.src = currentUser.avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(currentUser.name)}&background=0284c7&color=fff&bold=true`;
@@ -894,19 +1600,26 @@ function applyAuthenticatedUser() {
     }
 
     updateAppVersionDisplay();
-    initBackgroundAlarmWorker();
-    autoEnrollZeroTouchPush();
+    try { initBackgroundAlarmWorker(); } catch (e) {}
+    try { autoEnrollZeroTouchPush(); } catch (e) {}
     renderAll();
+    if (typeof checkIncomingRouteNotifications === 'function') {
+        setTimeout(() => checkIncomingRouteNotifications(), 120);
+    }
 }
 
 function handleLogout() {
     if (currentUser) {
-        addAuditLog("GİRİŞ / ÇIKIŞ", `${currentUser.name} sistemden güvenli çıkış yaptı.`);
+        try { addAuditLog("GİRİŞ / ÇIKIŞ", `${currentUser.name} sistemden güvenli çıkış yaptı.`); } catch (e) {}
     }
     currentUser = null;
     localStorage.removeItem(STORAGE_KEY_SESSION);
     sessionStorage.removeItem(STORAGE_KEY_SESSION);
-    document.getElementById('login-overlay').classList.remove('hidden');
+    const overlay = document.getElementById('login-overlay');
+    if (overlay) {
+        overlay.classList.remove('hidden');
+        overlay.style.display = 'flex';
+    }
     loadRememberedCredentials();
 }
 
@@ -1128,13 +1841,15 @@ function switchTab(tabId) {
 
     const pageTitleMap = {
         'dashboard-tab': '<i class="fa-solid fa-chart-pie" style="color:var(--dizsan-light);"></i> Genel Bakış &amp; Kokpit',
+        'route-plan-tab': '<i class="fa-solid fa-route" style="color:#fbbf24;"></i> Yeni Rut Planla &amp; Saha Ziyaret Listesi',
         'cari-ekstre-tab': '<i class="fa-solid fa-file-invoice-dollar" style="color:#38bdf8;"></i> D-Pro Cari &amp; Logo Ekstre (Borç / Alacak / Fatura Detayı)',
         'legacy-tab': '<i class="fa-solid fa-database" style="color:var(--dizsan-light);"></i> Kayıp Müşteri Ziyaret Planı (1998-2026)',
         'active-tab': '<i class="fa-solid fa-car-side" style="color:var(--dizsan-light);"></i> Güncel Saha &amp; Telefon Görüşmeleri',
         'ai-match-tab': '<i class="fa-solid fa-wand-magic-sparkles" style="color:#c084fc;"></i> Yapay Zeka Tekleştirme &amp; Churn Analizi',
         'tasks-tab': '<i class="fa-solid fa-list-check" style="color:#fbbf24;"></i> Aksiyon &amp; Çift Aşamalı Hatırlatıcılar',
         'strategy-tab': '<i class="fa-solid fa-map-location-dot" style="color:#34d399;"></i> İlçe Rut Strateji Rehberi',
-        'logs-tab': '<i class="fa-solid fa-shield-halved" style="color:#f59e0b;"></i> Yönetici Denetim İzi'
+        'logs-tab': '<i class="fa-solid fa-shield-halved" style="color:#f59e0b;"></i> Yönetici Denetim İzi',
+        'reports-tab': '<i class="fa-solid fa-chart-column" style="color:#34d399;"></i> Saha &amp; Rut Ziyaret Raporları'
     };
 
     const titleEl = document.getElementById('page-title');
@@ -1145,12 +1860,19 @@ function switchTab(tabId) {
     if (tabId === 'cari-ekstre-tab') {
         populateFilterOptions();
         renderCariEkstreTable(false);
+    } else if (tabId === 'route-plan-tab') {
+        populateFilterOptions();
+        if (typeof initCustomRoutePlannerUI === 'function') initCustomRoutePlannerUI();
+        if (typeof renderActiveRouteExecutionPanel === 'function') renderActiveRouteExecutionPanel();
     } else if (tabId === 'legacy-tab') {
         populateFilterOptions();
         renderLegacyCustomers();
     } else if (tabId === 'strategy-tab') {
         populateStrategyFilters(false);
         renderDistrictStrategies();
+    } else if (tabId === 'reports-tab') {
+        if (typeof populateReportsFilters === 'function') populateReportsFilters();
+        if (typeof renderReportsTab === 'function') renderReportsTab();
     }
 
     const sidebar = document.getElementById('sidebar');
@@ -1163,11 +1885,26 @@ function switchTab(tabId) {
     window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 
-// D-Pro üst menüsünden gelen sekme geçiş mesajlarını dinle
+// D-Pro üst menüsünden gelen sekme geçiş ve tema mesajlarını dinle
 window.addEventListener('message', (event) => {
     if (!event.data || typeof event.data !== 'object') return;
     if (event.data.type === 'DPRO_SWITCH_SUBMODULE' && event.data.targetTab) {
         switchTab(event.data.targetTab);
+    } else if (event.data.type === 'DPRO_SET_THEME' && event.data.theme) {
+        applyZiyaretTheme(event.data.theme, false);
+    }
+});
+
+// Ctrl+K / Cmd+K ile her sekmede müşteri aramaya odaklan
+document.addEventListener('keydown', (e) => {
+    if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'k') {
+        e.preventDefault();
+        focusGlobalCustomerSearch();
+    } else if (e.key === 'Escape') {
+        const panel = document.getElementById('global-customer-search-results');
+        if (panel && panel.style.display !== 'none') {
+            panel.style.display = 'none';
+        }
     }
 });
 
@@ -1297,8 +2034,8 @@ function renderDashboard() {
             .slice(0, 5);
 
         agendaBox.innerHTML = topVipCandidates.map(c => {
-            const cleanPh = (c.phone || '').replace(/[^0-9]/g, '');
-            const hasPhone = c.phone && c.phone !== 'YOK' && cleanPh.length >= 10;
+            const phInfo = parseTurkishPhones(c.phone, c.city);
+            const hasPhone = phInfo.hasPhone;
             const acc = getCustomerAccountingSummary(c);
             return `
                 <div class="smart-agenda-card">
@@ -1310,17 +2047,17 @@ function renderDashboard() {
                         </div>
                         <strong style="color:#fff; font-size:0.83rem; display:block; cursor:pointer;" onclick="openCustomerDetailModal('${c.code}')">${c.title}</strong>
                         <div style="font-size:0.72rem; color:var(--text-sec); margin-top:2px;">
-                            <i class="fa-solid fa-location-dot" style="color:#38bdf8;"></i> ${c.city} / ${c.district} &bull; Ciro: <strong style="color:#34d399;">${formatMoney(c.totalRevenue)}</strong> &bull; Son: ${c.lastDate || '-'}
+                            <i class="fa-solid fa-location-dot" style="color:#38bdf8;"></i> ${c.city} / ${c.district} &bull; Ciro: <strong style="color:#34d399;">${formatMoney(c.totalRevenue)}</strong> &bull; Son: ${resolveCustomerLatestSqlDate(c)}
                         </div>
                     </div>
                     <div style="display:flex; align-items:center; gap:0.35rem; flex-wrap:wrap;">
                         ${hasPhone ? `
-                            <a href="tel:${c.phone}" class="btn btn-secondary btn-sm" style="padding:0.32rem 0.55rem;" title="Hemen Ara: ${c.phone}">
+                            <a href="tel:${phInfo.tel}" class="btn btn-secondary btn-sm" style="padding:0.32rem 0.55rem;" title="Hemen Ara: ${phInfo.display}">
                                 <i class="fa-solid fa-phone" style="color:#38bdf8;"></i>
                             </a>
-                            <a href="https://wa.me/${cleanPh.startsWith('0') ? '9' + cleanPh : cleanPh}" target="_blank" class="btn btn-secondary btn-sm" style="padding:0.32rem 0.55rem;" title="WhatsApp Mesajı Gönder">
+                            <button type="button" class="btn btn-secondary btn-sm" style="padding:0.32rem 0.55rem;" onclick="openCustomerWhatsApp('${c.code}')" title="WhatsApp Mesajı Gönder (${phInfo.display})">
                                 <i class="fa-brands fa-whatsapp" style="color:#25d366;"></i>
-                            </a>
+                            </button>
                         ` : ''}
                         <button type="button" class="btn btn-secondary btn-sm" style="padding:0.32rem 0.6rem;" onclick="openCustomerDetailModal('${c.code}')" title="Logo Cari Ekstre &amp; Fatura Kalemleri">
                             <i class="fa-solid fa-file-invoice-dollar" style="color:#fbbf24;"></i> Ekstre
@@ -1472,7 +2209,7 @@ function populateFilterOptions() {
     const customRutAssignee = document.getElementById('custom-rut-assignee');
 
     const fillSelect = (el) => {
-        if (!el || el.options.length > 0) return;
+        if (!el || !el.options || el.options.length > 0) return;
         appState.users.forEach(u => {
             const opt = document.createElement('option');
             opt.value = u.name;
@@ -1717,8 +2454,11 @@ function renderLegacyCustomers() {
         if (balance && c.balanceStatus !== balance) return false;
 
         if (search) {
-            const hay = normalizeTR(`${c.code} ${c.title} ${c.authorized} ${c.phone} ${c.plates} ${c.city} ${c.district} ${c.rut || ''}`);
-            if (!hay.includes(search)) return false;
+            const rawLegacyQ = document.getElementById('legacy-search')?.value || '';
+            const nqComp = typeof normCompactTR === 'function' ? normCompactTR(rawLegacyQ) : search;
+            const hayStr = `${c.code || ''} ${c.title || ''} ${c.authorized || ''} ${c.phone || ''} ${c.plates || ''} ${c.city || ''} ${c.district || ''} ${c.rut || ''} ${(c.serviceHistory || []).map(h => `${h.sofor || ''} ${h.plaka || ''} ${h.fatura_no || ''}`).join(' ')}`;
+            const hayComp = typeof normCompactTR === 'function' ? normCompactTR(hayStr) : normalizeTR(hayStr);
+            if (!hayComp.includes(nqComp) && !normalizeTR(hayStr).includes(search)) return false;
         }
         return true;
     });
@@ -1746,6 +2486,9 @@ function renderLegacyCustomers() {
         ? customRouteDraftSelectedCodes
         : new Set();
 
+    const rawLegacyHighlightQ = (document.getElementById('legacy-search')?.value || '').trim();
+    const hlLegacy = (txt) => (rawLegacyHighlightQ && typeof highlightSearchText === 'function') ? highlightSearchText(txt, rawLegacyHighlightQ) : escapeHtml(txt);
+
     tbody.innerHTML = pageItems.map(c => {
         const isVip = (c.priority || '').includes('VIP');
         const isChurn = (c.priority || '').includes('Acil Churn');
@@ -1758,17 +2501,21 @@ function renderLegacyCustomers() {
 
         const isSelectedForDraft = selectedSet.has(c.code);
         const hasSavedRut = c.rut && !/^(RUT-\d+|DİĞER)$/i.test(String(c.rut).trim());
+        const phInfo = parseTurkishPhones(c.phone, c.city);
 
         return `
             <tr style="${isSelectedForDraft ? 'background:rgba(16,185,129,0.08);' : ''}">
-                <td style="font-family:monospace; color:var(--dizsan-light); font-weight:700; font-size:0.75rem; white-space:nowrap;">${c.code}</td>
+                <td style="font-family:monospace; color:var(--dizsan-light); font-weight:700; font-size:0.75rem; white-space:nowrap;">${hlLegacy(c.code || '')}</td>
                 <td style="max-width:210px;">
-                    <strong style="color:#fff; font-size:0.8rem; display:block; cursor:pointer; line-height:1.25;" onclick="openCustomerDetailModal('${c.code}')" title="Detay ve Logo ERP Fatura/Servis Geçmişini Gör">${c.title}</strong>
-                    <span style="font-size:0.68rem; color:var(--text-muted); cursor:pointer; display:block; margin-top:2px; line-height:1.2;" onclick="openCustomerDetailModal('${c.code}')">${c.address || c.era || ''}</span>
+                    <strong style="color:#fff; font-size:0.8rem; display:block; cursor:pointer; line-height:1.25;" onclick="openCustomerDetailModal('${c.code}')" title="Detay ve Logo ERP Fatura/Servis Geçmişini Gör">${hlLegacy(c.title || '')}</strong>
+                    <span style="font-size:0.68rem; color:var(--text-muted); cursor:pointer; display:block; margin-top:2px; line-height:1.2;" onclick="openCustomerDetailModal('${c.code}')">${hlLegacy(c.address || c.era || '')}</span>
                 </td>
                 <td style="max-width:145px;">
-                    <div style="font-weight:600; color:#e2e8f0; font-size:0.75rem; line-height:1.25;">${c.authorized || '-'}</div>
-                    <a href="tel:${c.phone}" style="color:#38bdf8; font-size:0.72rem; text-decoration:none; display:inline-block; margin-top:2px;"><i class="fa-solid fa-phone"></i> ${c.phone || '-'}</a>
+                    <div style="font-weight:600; color:#e2e8f0; font-size:0.75rem; line-height:1.25;">${hlLegacy(c.authorized || '-')}</div>
+                    ${phInfo.hasPhone
+                        ? `<a href="tel:${phInfo.tel}" style="color:#38bdf8; font-size:0.72rem; text-decoration:none; display:inline-block; margin-top:2px;" title="${c.phone || ''}"><i class="fa-solid fa-phone"></i> ${hlLegacy(phInfo.display)}</a>`
+                        : `<span style="color:var(--text-muted); font-size:0.72rem; display:inline-block; margin-top:2px;"><i class="fa-solid fa-phone"></i> ${hlLegacy(c.phone || '-')}</span>`
+                    }
                 </td>
                 <td style="white-space:nowrap;">
                     <span class="badge badge-secondary">${c.city} / ${c.district}</span>
@@ -1778,12 +2525,12 @@ function renderLegacyCustomers() {
                     }
                 </td>
                 <td style="max-width:130px;">
-                    <div style="font-weight:600; font-size:0.74rem; color:#fde68a; line-height:1.25;">${c.plates || 'Plakasız'}</div>
+                    <div style="font-weight:600; font-size:0.74rem; color:#fde68a; line-height:1.25;">${hlLegacy(c.plates || 'Plakasız')}</div>
                     <span style="font-size:0.68rem; color:var(--text-sec); display:block; margin-top:1px;">${c.vehicleModel || 'Ağır Vasıta'}</span>
                 </td>
                 <td style="font-weight:700; color:#34d399; font-size:0.76rem; white-space:nowrap;">${formatMoney(c.totalRevenue)}</td>
                 <td style="font-size:0.72rem; white-space:nowrap;">
-                    <div>${c.lastDate || '-'}</div>
+                    <div>${resolveCustomerLatestSqlDate(c)}</div>
                     <span style="color:#f87171; font-size:0.67rem;">${c.churnDuration || ''}</span>
                 </td>
                 <td style="white-space:nowrap;">
@@ -1794,6 +2541,11 @@ function renderLegacyCustomers() {
                 <td style="white-space:nowrap;"><span class="badge ${badgeCls}" title="${c.priority || 'Normal'}">${shortPriority}</span></td>
                 <td style="text-align:right; white-space:nowrap;">
                     <div style="display:flex; justify-content:flex-end; gap:0.28rem;">
+                        ${phInfo.hasPhone ? `
+                            <button type="button" class="btn btn-secondary btn-sm" style="padding:0.28rem 0.48rem; font-size:0.74rem; border-color:rgba(37,211,102,0.4); color:#25d366;" title="WhatsApp Mesajı Gönder (${phInfo.display})" onclick="openCustomerWhatsApp('${c.code}')">
+                                <i class="fa-brands fa-whatsapp"></i>
+                            </button>
+                        ` : ''}
                         <button type="button" class="btn ${isSelectedForDraft ? 'btn-success' : 'btn-secondary'} btn-sm" style="padding:0.28rem 0.5rem; font-size:0.71rem; ${isSelectedForDraft ? '' : 'border-color:rgba(56,189,248,0.4); color:#38bdf8;'}" title="Yeni Rut Planına Ekle / Çıkar" onclick="toggleCustomerInCustomRouteDraft('${c.code}')">
                             <i class="fa-solid ${isSelectedForDraft ? 'fa-check' : 'fa-plus'}"></i> ${isSelectedForDraft ? 'Rutta' : 'Ruta Ekle'}
                         </button>
@@ -1939,8 +2691,11 @@ function renderCariEkstreTable(resetPage = true) {
         if ((statusVal === 'WITH_INVOICE' || statusVal === 'HAS_INVOICE') && invCount === 0) return false;
 
         if (searchVal) {
-            const hay = normalizeTR(`${c.code} ${c.title} ${c.address} ${c.district} ${c.city} ${c.plates} ${c.phone}`);
-            if (!hay.includes(searchVal)) return false;
+            const rawEkstreQ = (document.getElementById('ekstre-search') || document.getElementById('ekstre-search-input'))?.value || '';
+            const nqComp = typeof normCompactTR === 'function' ? normCompactTR(rawEkstreQ) : searchVal;
+            const hayStr = `${c.code || ''} ${c.title || ''} ${c.address || ''} ${c.district || ''} ${c.city || ''} ${c.plates || ''} ${c.phone || ''} ${c.authorized || ''} ${(c.serviceHistory || []).map(h => `${h.sofor || ''} ${h.plaka || ''} ${h.fatura_no || ''}`).join(' ')}`;
+            const hayComp = typeof normCompactTR === 'function' ? normCompactTR(hayStr) : normalizeTR(hayStr);
+            if (!hayComp.includes(nqComp) && !normalizeTR(hayStr).includes(searchVal)) return false;
         }
         return true;
     });
@@ -1973,6 +2728,9 @@ function renderCariEkstreTable(resetPage = true) {
         return;
     }
 
+    const rawEkstreHighlightQ = ((document.getElementById('ekstre-search') || document.getElementById('ekstre-search-input'))?.value || '').trim();
+    const hlEkstre = (txt) => (rawEkstreHighlightQ && typeof highlightSearchText === 'function') ? highlightSearchText(txt, rawEkstreHighlightQ) : escapeHtml(txt);
+
     tbody.innerHTML = pageItems.map(({ c, acc, invCount }) => {
         const baBadge = acc.baCode === '(B)'
             ? `<span class="badge" style="background:rgba(239,68,68,0.16); color:#f87171; border:1px solid rgba(239,68,68,0.35); font-weight:800;">(B) Borçlu</span>`
@@ -1984,15 +2742,15 @@ function renderCariEkstreTable(resetPage = true) {
 
         return `
             <tr style="cursor:pointer;" onclick="openCustomerDetailModal('${c.code}')">
-                <td style="font-family:monospace; font-weight:700; color:#38bdf8; white-space:nowrap;">${c.code}</td>
+                <td style="font-family:monospace; font-weight:700; color:#38bdf8; white-space:nowrap;">${hlEkstre(c.code || '')}</td>
                 <td>
-                    <div style="font-weight:700; color:#fff; font-size:0.82rem;">${c.title}</div>
+                    <div style="font-weight:700; color:#fff; font-size:0.82rem;">${hlEkstre(c.title || '')}</div>
                     <div style="font-size:0.69rem; color:var(--text-muted); display:flex; gap:0.45rem; align-items:center; margin-top:2px;">
-                        ${c.plates && c.plates !== 'Plakasız' ? `<span style="color:#fde68a;"><i class="fa-solid fa-truck"></i> ${c.plates}</span>` : ''}
-                        ${c.lastDate ? `<span>Son Fatura: ${c.lastDate}</span>` : ''}
+                        ${c.plates && c.plates !== 'Plakasız' ? `<span style="color:#fde68a;"><i class="fa-solid fa-truck"></i> ${hlEkstre(c.plates)}</span>` : ''}
+                        <span>Son Fatura: ${resolveCustomerLatestSqlDate(c)}</span>
                     </div>
                 </td>
-                <td style="max-width:250px; font-size:0.74rem; color:#cbd5e1; white-space:normal; line-height:1.35;">${c.address || '-'}</td>
+                <td style="max-width:250px; font-size:0.74rem; color:#cbd5e1; white-space:normal; line-height:1.35;">${hlEkstre(c.address || '-')}</td>
                 <td style="font-size:0.76rem; color:#e2e8f0; white-space:nowrap;">${c.district || '-'}</td>
                 <td style="font-size:0.76rem; font-weight:600; color:#38bdf8; white-space:nowrap;">${c.city || '-'}</td>
                 <td style="text-align:right; font-weight:700; color:#f87171; white-space:nowrap;">${formatMoney(acc.borc)}</td>
@@ -2164,9 +2922,20 @@ function openCustomerDetailModal(code) {
         cdSubtitle.innerHTML = `<span style="font-family:monospace; color:#38bdf8; font-weight:700;">${customer.code}</span> | ${customer.city} / ${customer.district} | Durum: <strong style="color:${acc.baCode === '(B)' ? '#f87171' : acc.baCode === '(A)' ? '#34d399' : '#94a3b8'};">${acc.baLabel}</strong> | Logo ERP: <span style="color:#34d399;">Canlı &amp; Doğrulanmış</span>`;
     }
 
-    const cleanPhone = (customer.phone || '').replace(/[^0-9]/g, '');
+    const phInfo = parseTurkishPhones(customer.phone, customer.city);
     const cleanAddress = customer.address || `${customer.title} ${customer.city} ${customer.district}`;
     const mapsUrl = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(cleanAddress)}`;
+
+    const activeSearchQuery = (
+        document.getElementById('global-customer-search-input')?.value ||
+        document.getElementById('ekstre-search')?.value ||
+        document.getElementById('legacy-search')?.value ||
+        ''
+    ).trim();
+    const activeMatchInfo = (activeSearchQuery && typeof computeCustomerMatchByMode === 'function')
+        ? computeCustomerMatchByMode(customer, activeSearchQuery, 'SIMILAR')
+        : { matchedWord: '', matchedContextHtml: '' };
+    const hl = (txt) => (typeof highlightSearchText === 'function' ? highlightSearchText(txt, activeSearchQuery, activeMatchInfo.matchedWord || '') : escapeHtml(txt));
 
     const historyItems = customer.serviceHistory || [];
     let historyHtml = '';
@@ -2179,17 +2948,29 @@ function openCustomerDetailModal(code) {
             return { ...h, borc, runningBalance, originalIndex: historyItems.length - 1 - revIdx };
         }).reverse();
 
+        const qCompModal = typeof normCompactTR === 'function' ? normCompactTR(activeSearchQuery) : '';
+        if (qCompModal) {
+            chronological.sort((a, b) => {
+                const aComp = typeof normCompactTR === 'function' ? normCompactTR(`${a.sofor || ''} ${a.plaka || ''} ${a.fatura_no || ''} ${a.islem || ''}`) : '';
+                const bComp = typeof normCompactTR === 'function' ? normCompactTR(`${b.sofor || ''} ${b.plaka || ''} ${b.fatura_no || ''} ${b.islem || ''}`) : '';
+                const aM = aComp.includes(qCompModal) ? 1 : 0;
+                const bM = bComp.includes(qCompModal) ? 1 : 0;
+                return bM - aM;
+            });
+        }
+
         historyHtml = `
             <div style="margin-bottom:0.5rem; font-size:0.76rem; color:#94a3b8; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:0.5rem;">
                 <span><i class="fa-solid fa-hand-pointer" style="color:#38bdf8;"></i> <strong>İpucu:</strong> Fatura içindeki yedek parça, işçilik ve <strong>TDR Tedarik</strong> kalemlerini görmek için herhangi bir faturanın üzerine tıklayın.</span>
                 <span style="font-family:monospace; color:#fde68a;">Toplam ${historyItems.length} Resmi Logo Faturası</span>
             </div>
-            <div style="overflow-x:auto; max-height:340px; border:1px solid var(--border-color); border-radius:var(--radius-md);">
+            <div style="overflow-x:auto; max-height:360px; border:1px solid var(--border-color); border-radius:var(--radius-md);">
                 <table class="service-history-table">
                     <thead>
                         <tr>
                             <th>Tarih</th>
                             <th>Fatura No</th>
+                            <th>Şoför &amp; Plaka</th>
                             <th>Belge / Tür</th>
                             <th>Yapılan İşlem &amp; Kalem Özeti</th>
                             <th style="text-align:right;">Borç (Fatura ₺)</th>
@@ -2203,13 +2984,19 @@ function openCustomerDetailModal(code) {
                             const normInfo = normalizeInvoiceLines(h);
                             const kalemCount = normInfo.lines.length;
                             const hasTdr = normInfo.lines.some(l => l.cls.category.includes('Tedarik'));
+                            const rowTextComp = typeof normCompactTR === 'function' ? normCompactTR(`${h.sofor || ''} ${h.plaka || ''} ${h.fatura_no || ''} ${h.islem || ''}`) : '';
+                            const isRowMatched = qCompModal && rowTextComp.includes(qCompModal);
                             return `
-                            <tr style="cursor:pointer; transition:background 0.15s;" onmouseover="this.style.background='rgba(56,189,248,0.08)'" onmouseout="this.style.background='transparent'" onclick="openInvoiceDetailModal('${customer.code}', ${h.originalIndex})">
+                            <tr style="cursor:pointer; transition:background 0.15s; ${isRowMatched ? 'background:rgba(250,204,21,0.16); border-left:4px solid #facc15;' : ''}" onmouseover="this.style.background='rgba(56,189,248,0.08)'" onmouseout="this.style.background='${isRowMatched ? 'rgba(250,204,21,0.16)' : 'transparent'}'" onclick="openInvoiceDetailModal('${customer.code}', ${h.originalIndex})">
                                 <td style="white-space:nowrap; font-weight:700; color:#38bdf8;">${h.tarih || '-'}</td>
-                                <td style="font-family:monospace; font-weight:700; color:#fff; font-size:0.76rem;">${h.fatura_no || '-'}</td>
+                                <td style="font-family:monospace; font-weight:700; color:#fff; font-size:0.76rem;">${hl(h.fatura_no || '-')}</td>
+                                <td style="font-size:0.75rem; color:#d1fae5; white-space:nowrap;">
+                                    <div><i class="fa-solid fa-id-badge" style="color:#34d399;"></i> ${hl(h.sofor || '-')}</div>
+                                    <div style="font-family:monospace; color:#fde68a; font-size:0.71rem;"><i class="fa-solid fa-truck-front"></i> ${hl(h.plaka || '-')}</div>
+                                </td>
                                 <td style="font-size:0.72rem; color:#cbd5e1;">${h.fatura_turu || h.odeme_tipi || 'Satış Faturası'}</td>
                                 <td style="max-width:260px; white-space:normal; font-size:0.75rem; color:#e2e8f0;">
-                                    ${h.islem || '-'}
+                                    ${hl(h.islem || '-')}
                                     ${hasTdr ? `<span class="badge" style="background:rgba(245,158,11,0.18); color:#fbbf24; font-size:0.62rem; margin-left:4px;">TDR Tedarik</span>` : ''}
                                 </td>
                                 <td style="text-align:right; font-weight:800; color:#f87171; white-space:nowrap;">${formatMoney(normInfo.genelToplam)}</td>
@@ -2232,13 +3019,53 @@ function openCustomerDetailModal(code) {
         historyHtml = `
             <div style="background:rgba(255,255,255,0.02); border:1px dashed var(--border-color); border-radius:var(--radius-md); padding:1rem; text-align:center; color:var(--text-sec); font-size:0.82rem;">
                 <i class="fa-solid fa-circle-info" style="color:#38bdf8;"></i> Bu cari karta ait ayrıntılı servis fatura satırı bulunmamaktadır.<br>
-                Logo ERP son hareket tarihi: <strong style="color:#fff;">${customer.lastDate || '-'}</strong> | Bakiye: <strong style="color:#fff;">${formatMoney(Math.abs(acc.bakiye))} ${acc.baCode}</strong>
+                Logo ERP son hareket tarihi: <strong style="color:#fff;">${resolveCustomerLatestSqlDate(customer)}</strong> | Bakiye: <strong style="color:#fff;">${formatMoney(Math.abs(acc.bakiye))} ${acc.baCode}</strong>
             </div>
         `;
     }
 
+    const customerVisits = (appState.visits || []).filter(v => v.customerCode === customer.code || normalizeTR(v.customerTitle || '') === normalizeTR(customer.title || ''));
+    const customerTasks = (appState.tasks || []).filter(t => t.customerCode === customer.code || normalizeTR(t.customerTitle || '') === normalizeTR(customer.title || ''));
+    const uniqueDrivers = Array.from(new Set((customer.serviceHistory || []).map(h => (h.sofor || '').trim()).filter(Boolean)));
+    const uniqueHistoryPlates = Array.from(new Set((customer.serviceHistory || []).map(h => (h.plaka || '').trim()).filter(Boolean)));
+    const allPlatesText = customer.plates || (uniqueHistoryPlates.length > 0 ? uniqueHistoryPlates.join(', ') : 'Plaka Kaydı Yok');
+    const allDriversText = uniqueDrivers.length > 0 ? uniqueDrivers.join(', ') : (customer.authorized || 'Belirtilmedi');
+
     cdBody.innerHTML = `
-        <div class="detail-kpi-grid" style="grid-template-columns:repeat(auto-fit, minmax(175px, 1fr));">
+        <div style="background:linear-gradient(135deg, rgba(2,132,199,0.14), rgba(15,23,42,0.85)); border:1px solid rgba(56,189,248,0.35); border-radius:12px; padding:0.9rem 1rem; margin-bottom:1rem;">
+            <div style="display:flex; justify-content:space-between; align-items:flex-start; gap:0.75rem; flex-wrap:wrap;">
+                <div>
+                    <div style="font-size:0.72rem; text-transform:uppercase; letter-spacing:0.06em; color:#38bdf8; font-weight:800; margin-bottom:0.2rem;">
+                        <i class="fa-solid fa-id-card-clip"></i> 360° Müşteri Tam Kimlik &amp; CRM Özeti
+                    </div>
+                    <div style="font-size:1.05rem; font-weight:800; color:#fff;">${hl(customer.title || '-')}</div>
+                    <div style="font-size:0.8rem; color:#cbd5e1; margin-top:0.25rem;">
+                        Cari Kod: <strong style="color:#38bdf8; font-family:monospace;">${hl(customer.code || '-')}</strong> •
+                        Bölge: <strong>${hl(customer.city || '-')} / ${hl(customer.district || '-')}</strong> •
+                        Rut: <strong>${hl(customer.rut || '-')}</strong>
+                        ${customer.isManualIntro ? `<span class="badge" style="background:rgba(139,92,246,0.25); color:#e9d5ff; border:1px solid rgba(167,139,250,0.45); margin-left:6px;">🤝 Tanışma (Elle Giriş)</span>` : ''}
+                    </div>
+                    ${activeMatchInfo.matchedContextHtml || ''}
+                </div>
+                <div style="display:flex; gap:0.4rem; flex-wrap:wrap;">
+                    <span class="badge" style="background:rgba(245,158,11,0.18); color:#fbbf24; border:1px solid rgba(245,158,11,0.4); font-size:0.74rem; padding:0.3rem 0.6rem;">
+                        Öncelik: ${customer.priority || 'Standart'}
+                    </span>
+                    <span class="badge" style="background:rgba(16,185,129,0.18); color:#34d399; border:1px solid rgba(16,185,129,0.4); font-size:0.74rem; padding:0.3rem 0.6rem;">
+                        Kazanım Skoru: ${customer.recoveryScore ?? 70}/100
+                    </span>
+                </div>
+            </div>
+        </div>
+
+        ${typeof buildCustomerAreaVisitEntryHtml === 'function' ? buildCustomerAreaVisitEntryHtml(customer) : ''}
+
+        <div class="detail-kpi-grid" style="grid-template-columns:repeat(auto-fit, minmax(155px, 1fr));">
+            <div class="detail-kpi-card">
+                <span class="detail-kpi-title">Tarihsel Toplam Ciro</span>
+                <span class="detail-kpi-value" style="color:#fbbf24;">${formatMoney(customer.totalRevenue || acc.borc || 0)}</span>
+                <span class="detail-kpi-sub">1998–2026 Kümülatif</span>
+            </div>
             <div class="detail-kpi-card">
                 <span class="detail-kpi-title">Toplam Borç (Faturalanan)</span>
                 <span class="detail-kpi-value" style="color:#f87171;">${formatMoney(acc.borc)}</span>
@@ -2251,42 +3078,49 @@ function openCustomerDetailModal(code) {
             </div>
             <div class="detail-kpi-card" style="border-color:rgba(56,189,248,0.35);">
                 <span class="detail-kpi-title">Net Cari Bakiye &amp; (B/A)</span>
-                <span class="detail-kpi-value" style="color:${acc.baCode === '(B)' ? '#f87171' : acc.baCode === '(A)' ? '#34d399' : '#94a3b8'};">
+                <span class="detail-kpi-value" style="color:${acc.baCode === '(B)' || acc.baCode === 'B' ? '#f87171' : acc.baCode === '(A)' || acc.baCode === 'A' ? '#34d399' : '#94a3b8'};">
                     ${formatMoney(Math.abs(acc.bakiye))} <small style="font-size:0.75rem;">${acc.baCode}</small>
                 </span>
                 <span class="detail-kpi-sub">${acc.baLabel}</span>
             </div>
             <div class="detail-kpi-card">
-                <span class="detail-kpi-title">Son Fatura &amp; Araç</span>
-                <span class="detail-kpi-value" style="font-size:0.9rem; color:#fde68a;">${customer.lastDate || '-'}</span>
+                <span class="detail-kpi-title">Son Fatura &amp; Araç Plakası</span>
+                <span class="detail-kpi-value" style="font-size:0.9rem; color:#fde68a;">${resolveCustomerLatestSqlDate(customer)}</span>
                 <span class="detail-kpi-sub">${customer.plates || 'Plakasız'} (${customer.churnDuration || '-'})</span>
             </div>
         </div>
 
         <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(280px, 1fr)); gap:1rem; margin-bottom:1.15rem;">
             <div style="background:rgba(255,255,255,0.02); border:1px solid var(--border-color); border-radius:var(--radius-md); padding:0.85rem;">
-                <div class="detail-section-title"><i class="fa-solid fa-address-book"></i> Yetkili ve İletişim Bilgileri</div>
-                <div style="display:flex; flex-direction:column; gap:0.45rem; font-size:0.81rem;">
-                    <div><span style="color:var(--text-muted);">Cari Kodu:</span> <strong style="color:#38bdf8; font-family:monospace;">${customer.code}</strong></div>
-                    <div><span style="color:var(--text-muted);">Yetkili / Şoför:</span> <strong style="color:#fff;">${customer.authorized || 'Bilinmiyor'}</strong></div>
-                    <div><span style="color:var(--text-muted);">Telefon:</span> <strong style="color:#38bdf8;">${customer.phone || 'YOK'}</strong></div>
+                <div class="detail-section-title"><i class="fa-solid fa-address-book"></i> Yetkili, Şoför, Araç ve İletişim Detayları</div>
+                <div style="display:flex; flex-direction:column; gap:0.42rem; font-size:0.81rem;">
+                    <div><span style="color:var(--text-muted);">Cari Kodu:</span> <strong style="color:#38bdf8; font-family:monospace;">${hl(customer.code)}</strong></div>
+                    <div><span style="color:var(--text-muted);">Yetkili Kişi:</span> <strong style="color:#fff;">${hl(customer.authorized || 'Bilinmiyor')}</strong></div>
+                    <div><span style="color:var(--text-muted);">Kayıtlı Şoförler (Faturalardan):</span> <strong style="color:#34d399;">${hl(allDriversText)}</strong></div>
+                    <div><span style="color:var(--text-muted);">Telefon:</span> <strong style="color:#38bdf8;">${hl(customer.phone || 'YOK')}</strong></div>
+                    <div><span style="color:var(--text-muted);">Kayıtlı Araç Plakaları:</span> <strong style="color:#fde68a; font-family:monospace;">${hl(allPlatesText)}</strong></div>
+                    <div><span style="color:var(--text-muted);">Kayıp / Churn Süresi:</span> <strong style="color:#cbd5e1;">${customer.churnDuration || '-'}</strong></div>
                     ${customer.loyaltyLevel ? `<div><span style="color:var(--text-muted);">Sadakat Seviyesi:</span> <span class="badge badge-success">${customer.loyaltyLevel}</span></div>` : ''}
                 </div>
                 <div style="display:flex; gap:0.5rem; margin-top:0.75rem; flex-wrap:wrap;">
-                    ${customer.phone && customer.phone !== 'YOK' ? `
-                        <a href="tel:${customer.phone}" class="btn btn-primary btn-sm"><i class="fa-solid fa-phone"></i> Hemen Ara</a>
-                        <a href="https://wa.me/${cleanPhone}" target="_blank" class="btn btn-success btn-sm"><i class="fa-brands fa-whatsapp"></i> WhatsApp</a>
+                    ${phInfo.valid ? `
+                        <a href="tel:${phInfo.tel}" class="btn btn-primary btn-sm"><i class="fa-solid fa-phone"></i> Hemen Ara (${phInfo.display})</a>
+                        <button type="button" class="btn btn-success btn-sm" onclick="openCustomerWhatsApp('${customer.code}')"><i class="fa-brands fa-whatsapp"></i> WhatsApp (${phInfo.display})</button>
+                        <button type="button" class="btn btn-secondary btn-sm" style="border-color:rgba(37,211,102,0.4); color:#25d366;" onclick="openCustomerWhatsApp('${customer.code}', 'EKSTRE')"><i class="fa-brands fa-whatsapp"></i> Ekstre Özeti Gönder</button>
                     ` : ''}
                 </div>
             </div>
 
             <div style="background:rgba(255,255,255,0.02); border:1px solid var(--border-color); border-radius:var(--radius-md); padding:0.85rem;">
-                <div class="detail-section-title"><i class="fa-solid fa-location-dot"></i> Resmi Logo CLCARD Adresi (D-Pro Cari)</div>
+                <div class="detail-section-title"><i class="fa-solid fa-location-dot"></i> Resmi Logo CLCARD Adresi &amp; Saha Geçmişi</div>
                 <div style="font-size:0.81rem; color:#e2e8f0; line-height:1.45; min-height:42px;">
-                    ${customer.address || 'Kayıtlı açık adres bulunmuyor.'}
+                    ${hl(customer.address || 'Kayıtlı açık adres bulunmuyor.')}
                 </div>
                 <div style="font-size:0.75rem; color:var(--text-muted); margin-top:0.4rem;">
-                    İlçe / İl: <strong style="color:#fff;">${customer.district || '-'} / ${customer.city || '-'}</strong> (${customer.rut || '-'})
+                    İlçe / İl: <strong style="color:#fff;">${hl(customer.district || '-')} / ${hl(customer.city || '-')}</strong> (${hl(customer.rut || '-')})
+                </div>
+                <div style="font-size:0.75rem; color:var(--text-muted); margin-top:0.35rem;">
+                    Saha Ziyaret / Arama Kaydı: <strong style="color:#38bdf8;">${customerVisits.length} Görüşme</strong> • Bekleyen Aksiyon: <strong style="color:#fbbf24;">${customerTasks.length} Görev</strong>
                 </div>
                 <div style="margin-top:0.65rem;">
                     <a href="${mapsUrl}" target="_blank" class="btn btn-secondary btn-sm" style="display:inline-flex; align-items:center; gap:0.35rem;">
@@ -2295,6 +3129,25 @@ function openCustomerDetailModal(code) {
                 </div>
             </div>
         </div>
+
+        ${customerVisits.length > 0 ? `
+        <div style="margin-bottom:1.15rem;">
+            <div class="detail-section-title">
+                <i class="fa-solid fa-comments" style="color:#34d399;"></i> Saha Ziyaret &amp; Telefon Görüşme Geçmişi (${customerVisits.length})
+            </div>
+            <div style="display:flex; flex-direction:column; gap:0.45rem; max-height:180px; overflow-y:auto;">
+                ${customerVisits.map(v => `
+                    <div style="background:rgba(15,23,42,0.55); border:1px solid var(--border-color); border-radius:8px; padding:0.55rem 0.75rem; font-size:0.78rem;">
+                        <div style="display:flex; justify-content:space-between; gap:0.5rem; flex-wrap:wrap;">
+                            <strong style="color:#38bdf8;">${v.type || 'Ziyaret'} • ${v.result || '-'}</strong>
+                            <span style="color:#94a3b8;">${v.date || '-'} | Personel: ${v.staff || '-'}</span>
+                        </div>
+                        <div style="color:#e2e8f0; margin-top:0.2rem;">${v.notes || '-'}</div>
+                    </div>
+                `).join('')}
+            </div>
+        </div>
+        ` : ''}
 
         <div>
             <div class="detail-section-title">
@@ -2459,7 +3312,8 @@ function openInvoiceDetailModal(customerCode, invoiceIdx) {
                 </button>
                 <span style="font-size:0.72rem; color:#94a3b8; margin-left:0.35rem;"><i class="fa-solid fa-shield-check" style="color:#34d399;"></i> Dizsan Otomotiv Logo ERP (Salt-Okunur)</span>
             </div>
-            <div style="display:flex; gap:0.5rem;">
+            <div style="display:flex; gap:0.5rem; flex-wrap:wrap;">
+                <button type="button" class="btn btn-success" onclick="openCustomerWhatsApp('${customer.code}', 'INVOICE', ${idxNum})"><i class="fa-brands fa-whatsapp"></i> WhatsApp ile Fatura Özeti</button>
                 <button type="button" class="btn btn-secondary" onclick="window.print()"><i class="fa-solid fa-print"></i> Yazdır / PDF</button>
                 <button type="button" class="btn btn-primary" onclick="closeInvoiceDetailModal()"><i class="fa-solid fa-arrow-left"></i> Ekstreye Dön / Kapat</button>
             </div>
@@ -3027,6 +3881,12 @@ function openVisitModal(prefill = null, editId = null) {
     if (taskInstrIn) taskInstrIn.value = '';
     if (dateIn) dateIn.value = tomorrow;
     if (timeIn) timeIn.value = '10:00';
+    const subDateIn = document.getElementById('visit-submenu-date');
+    const subTimeIn = document.getElementById('visit-submenu-time');
+    const subStatusSel = document.getElementById('visit-positive-substatus');
+    if (subDateIn) subDateIn.value = tomorrow;
+    if (subTimeIn) subTimeIn.value = '10:00';
+    if (subStatusSel) subStatusSel.value = 'Takip Edilecek (Tekrar Aranacak)';
     if (cb) cb.checked = false;
     if (fields) fields.style.display = 'none';
 
@@ -3042,7 +3902,15 @@ function openVisitModal(prefill = null, editId = null) {
             if (locIn) locIn.value = v.location || '';
             if (plateIn) plateIn.value = v.plate || '';
             if (persSelect && v.personnel) persSelect.value = v.personnel;
-            if (resSelect && v.result) resSelect.value = v.result;
+            if (resSelect && v.result) {
+                if (v.result === 'Takip Edilecek') {
+                    resSelect.value = 'Olumlu';
+                    if (subStatusSel) subStatusSel.value = 'Takip Edilecek (Tekrar Aranacak)';
+                } else {
+                    resSelect.value = v.result;
+                    if (subStatusSel && v.subResult) subStatusSel.value = v.subResult;
+                }
+            }
             const typeSelect = document.getElementById('visit-type-select');
             if (typeSelect && v.type) typeSelect.value = v.type;
             const notesIn = document.getElementById('visit-notes');
@@ -3053,6 +3921,8 @@ function openVisitModal(prefill = null, editId = null) {
             if (assignedByIn) assignedByIn.value = v.assignedBy || (currentUser ? currentUser.name : 'ÖMER EREN');
             if (dueDateIn && v.dueDate) dueDateIn.value = v.dueDate;
             if (dueTimeIn && v.dueTime) dueTimeIn.value = v.dueTime;
+            if (subDateIn && v.dueDate) subDateIn.value = v.dueDate;
+            if (subTimeIn && v.dueTime) subTimeIn.value = v.dueTime;
             if (prioritySelect && v.priority) prioritySelect.value = v.priority;
             if (taskInstrIn) taskInstrIn.value = v.taskInstructions || v.taskNote || '';
 
@@ -3156,13 +4026,28 @@ function handleVisitResultChange() {
     const fields = document.getElementById('visit-task-fields');
     const container = document.getElementById('visit-task-container');
     const cbLabel = document.getElementById('visit-task-cb-label');
+    const posSubmenu = document.getElementById('visit-positive-submenu');
+    const subStatusSel = document.getElementById('visit-positive-substatus');
     if (!resSelect) return;
 
     const val = String(resSelect.value || '').trim();
     const selText = (resSelect.options && resSelect.selectedIndex >= 0) ? String(resSelect.options[resSelect.selectedIndex].text || '') : '';
-    
-    // Hem value hem görünen metin üzerinden esnek eşleşme kontrolü
-    const isFollowUp = val.includes('Takip') || val.includes('Randevu') || selText.includes('Takip') || selText.includes('Randevu');
+
+    // "Olumlu" seçilince alt menü ("Takip Edilecek / Tekrar Aranacak") açılır
+    const isPositive = val === 'Olumlu' || selText.includes('Olumlu');
+    if (posSubmenu) {
+        posSubmenu.style.display = isPositive ? 'block' : 'none';
+    }
+
+    const subVal = (isPositive && subStatusSel) ? String(subStatusSel.value || '') : '';
+    const isSubFollowUp = isPositive && !subVal.includes('Ek Arama Yok');
+
+    // Hem value hem görünen metin hem de Olumlu alt menüsü üzerinden esnek eşleşme kontrolü
+    const isFollowUp = isSubFollowUp || val.includes('Takip') || val.includes('Randevu') || selText.includes('Takip') || selText.includes('Randevu');
+
+    if (isPositive) {
+        handlePositiveSubstatusChange(true);
+    }
 
     if (isFollowUp) {
         if (cb) cb.checked = true;
@@ -3177,7 +4062,7 @@ function handleVisitResultChange() {
             container.style.boxShadow = '0 0 20px rgba(245, 158, 11, 0.35)';
         }
         if (cbLabel) {
-            cbLabel.innerHTML = `<i class="fa-solid fa-bell fa-shake" style="color:#fbbf24;"></i> <span style="color:#fde68a; font-weight:700;">⏳ TAKİP / RANDEVU PLANI AKTİF</span>`;
+            cbLabel.innerHTML = `<i class="fa-solid fa-bell fa-shake" style="color:#fbbf24;"></i> <span style="color:#fde68a; font-weight:700;">⏳ TAKİP / TEKRAR ARAMA PLANI AKTİF</span>`;
         }
         const dateIn = document.getElementById('visit-task-date');
         if (dateIn && !dateIn.value) {
@@ -3187,7 +4072,7 @@ function handleVisitResultChange() {
 
         const currentFollowup = document.getElementById('visit-followup-type')?.value;
         const parentVisitType = document.getElementById('visit-type-select')?.value || 'TELEFON';
-        const targetType = currentFollowup || (parentVisitType === 'ZİYARET' ? 'ZİYARET' : 'TELEFON');
+        const targetType = subVal.includes('Ziyaret') ? 'ZİYARET' : (subVal.includes('Tekrar Aranacak') ? 'TELEFON' : (currentFollowup || (parentVisitType === 'ZİYARET' ? 'ZİYARET' : 'TELEFON')));
         setFollowupActionType(targetType);
     } else {
         if (cbLabel) {
@@ -3198,9 +4083,52 @@ function handleVisitResultChange() {
             container.style.background = 'rgba(245, 158, 11, 0.08)';
             container.style.boxShadow = 'none';
         }
-        if (cb && !cb.checked && fields) {
+        if (cb) cb.checked = false;
+        if (fields) {
             fields.style.display = 'none';
         }
+    }
+}
+
+function handlePositiveSubstatusChange(skipParentTrigger = false) {
+    const subStatusSel = document.getElementById('visit-positive-substatus');
+    const dtWrap = document.getElementById('visit-submenu-datetime-wrap');
+    if (!subStatusSel) return;
+    const subVal = String(subStatusSel.value || '');
+    const needsFollowup = !subVal.includes('Ek Arama Yok');
+    if (dtWrap) {
+        dtWrap.style.display = needsFollowup ? 'grid' : 'none';
+    }
+    if (needsFollowup) {
+        if (subVal.includes('Ziyaret')) {
+            setFollowupActionType('ZİYARET');
+        } else if (subVal.includes('Tekrar Aranacak')) {
+            setFollowupActionType('TELEFON');
+        }
+        syncSubmenuDateTimeToTask();
+    }
+    if (!skipParentTrigger) {
+        handleVisitResultChange();
+    }
+}
+
+function syncSubmenuDateTimeToTask() {
+    const subDate = document.getElementById('visit-submenu-date')?.value;
+    const subTime = document.getElementById('visit-submenu-time')?.value;
+    const dueDateIn = document.getElementById('visit-due-date');
+    const dueTimeIn = document.getElementById('visit-due-time');
+    const taskDateIn = document.getElementById('visit-task-date');
+    const taskTimeIn = document.getElementById('visit-task-time');
+    if (subDate) {
+        if (dueDateIn) dueDateIn.value = subDate;
+        if (taskDateIn) taskDateIn.value = subDate;
+    }
+    if (subTime) {
+        if (dueTimeIn) dueTimeIn.value = subTime;
+        if (taskTimeIn) taskTimeIn.value = subTime;
+    }
+    if (typeof handleVisitDateOrTimeChange === 'function') {
+        handleVisitDateOrTimeChange();
     }
 }
 
@@ -3305,6 +4233,7 @@ function saveVisitRecord(event) {
     event.preventDefault();
     const type = document.getElementById('visit-type-select').value;
     const result = document.getElementById('visit-result-select').value;
+    const subResult = (result === 'Olumlu') ? (document.getElementById('visit-positive-substatus')?.value || 'Takip Edilecek (Tekrar Aranacak)') : '';
     const customerTitle = document.getElementById('visit-customer-title').value.trim();
     const contactPerson = document.getElementById('visit-contact-person').value.trim();
     const phone = document.getElementById('visit-phone').value.trim();
@@ -3340,6 +4269,7 @@ function saveVisitRecord(event) {
                 ...appState.visits[idx],
                 type,
                 result,
+                subResult,
                 customerTitle,
                 contactPerson,
                 phone,
@@ -3395,6 +4325,7 @@ function saveVisitRecord(event) {
             proposedData: {
                 type,
                 result,
+                subResult,
                 customerTitle,
                 contactPerson,
                 phone,
@@ -3437,6 +4368,7 @@ function saveVisitRecord(event) {
         id: visitId,
         type,
         result,
+        subResult,
         customerTitle,
         contactPerson,
         phone,
@@ -3489,7 +4421,7 @@ function saveVisitRecord(event) {
         dueDate,
         dueTime,
         status: 'Bekliyor',
-        note: `Talimat: ${taskInstructions || notes}. Görüşme Sonucu: ${result}.`,
+        note: `Talimat: ${taskInstructions || notes}. Görüşme Sonucu: ${result}${subResult ? ' (' + subResult + ')' : ''}.`,
         distanceKm: type === 'ZİYARET' ? calc.km : null,
         driveMinutes: type === 'ZİYARET' ? calc.driveMins : null,
         marginMinutes: type === 'ZİYARET' ? calc.marginMins : null,
@@ -3588,6 +4520,11 @@ function renderActiveVisits() {
                                 ${isVisit ? '🚗 SAHA ZİYARETİ' : '📞 TELEFON GÖRÜŞMESİ'}
                             </span>
                             <span class="badge ${isSuccess ? 'badge-success' : 'badge-secondary'}">${v.result}</span>
+                            ${v.subResult ? `
+                                <span class="badge" style="background:rgba(245,158,11,0.2); border:1px solid rgba(245,158,11,0.5); color:#fde68a; font-weight:700;">
+                                    ↳ ${v.subResult}
+                                </span>
+                            ` : ''}
                             ${hasAssignment ? `
                                 <span class="badge" style="background:#2563eb; color:#fff; font-weight:700;">
                                     <i class="fa-solid fa-user-check"></i> Görevli: ${v.assignedTo}
@@ -3620,7 +4557,10 @@ function renderActiveVisits() {
 
                 <div class="visit-meta">
                     ${v.contactPerson ? `<span><i class="fa-solid fa-user-tie"></i> ${v.contactPerson}</span>` : ''}
-                    ${v.phone ? `<span><i class="fa-solid fa-phone"></i> <a href="tel:${v.phone}" style="color:#38bdf8; text-decoration:none;">${v.phone}</a></span>` : ''}
+                    ${v.phone ? (() => {
+                        const vPh = parseTurkishPhones(v.phone);
+                        return `<span><i class="fa-solid fa-phone"></i> <a href="tel:${vPh.tel || v.phone}" style="color:#38bdf8; text-decoration:none;">${vPh.display || v.phone}</a> <a href="javascript:void(0)" onclick="openWhatsAppChat('${(v.phone || '').replace(/'/g, "\\'")}', 'Sayın ${String(v.customerTitle || '').replace(/'/g, "\\'")}, Dizsan Otomotiv adına iyi çalışmalar dileriz.')" style="color:#25d366; margin-left:6px; text-decoration:none;" title="WhatsApp ile Yaz"><i class="fa-brands fa-whatsapp"></i> WhatsApp</a></span>`;
+                    })() : ''}
                     ${v.plate ? `<span><i class="fa-solid fa-truck"></i> ${v.plate}</span>` : ''}
                     ${v.assignedBy ? `<span><i class="fa-solid fa-user-gear"></i> Görevi Veren: <strong>${v.assignedBy}</strong></span>` : ''}
                 </div>
@@ -4616,177 +5556,871 @@ function syncCustomRoutesToCustomers() {
     });
 }
 
+// ==========================================================================
+// YENİ RUT PLANLA, PLANLANAN ZİYARETLER LİSTESİ, MANUEL ZİYARET VE RAPORLAR MOTORU
+// ==========================================================================
+let customRouteDraftManualPlaces = [];
+let customRoutePendingSelectedCodes = new Set();
+let pendingCheckedDistrictsForCity = new Set();
+let activeSelectedRouteId = null;
+let activeRouteExecutionStatusFilter = 'ALL';
+let draggedRouteItemIndex = null;
+
+const TR_PROVINCE_DISTRICTS = {
+    'Çorum': ['Merkez', 'Sungurlu', 'Osmancık', 'Alaca', 'İskilip', 'Bayat', 'Mecitözü', 'Kargı', 'Ortaköy', 'Uğurludağ', 'Dodurga', 'Oğuzlar', 'Laçin', 'Boğazkale'],
+    'Kırıkkale': ['Merkez', 'Delice', 'Yahşihan', 'Keskin', 'Bahşılı', 'Sulakyurt', 'Balışeyh', 'Karakeçili', 'Çelebi'],
+    'Ankara': ['Merkez', 'Hasanoğlan', 'Elmadağ', 'Yenimahalle', 'Çankaya', 'Sincan', 'Etimesgut', 'Kahramankazan', 'Akyurt', 'Çubuk', 'Altındağ', 'Mamak', 'Keçiören', 'Gölbaşı', 'Polatlı', 'Ostim', 'İvedik', 'Şaşmaz', 'Beypazarı', 'Şereflikoçhisar', 'Kızılcahamam', 'Haymana', 'Bala', 'Nallıhan', 'Kalecik', 'Ayaş', 'Güdül', 'Çamlıdere', 'Evren'],
+    'Amasya': ['Merkez', 'Merzifon', 'Suluova', 'Taşova', 'Göynücek', 'Gümüşhacıköy', 'Hamamözü'],
+    'Samsun': ['Merkez', 'İlkadım', 'Atakum', 'Canik', 'Tekkeköy', 'Bafra', 'Çarşamba', 'Terme', 'Vezirköprü', 'Havza', 'Kavak', 'Alaçam', '19 Mayıs', 'Ladik', 'Salıpazarı', 'Asarcık', 'Ayvacık', 'Yakakent'],
+    'Tokat': ['Merkez', 'Erbaa', 'Turhal', 'Niksar', 'Zile', 'Reşadiye', 'Almus', 'Pazar', 'Yeşilyurt', 'Artova', 'Sulusaray', 'Başçiftlik'],
+    'Yozgat': ['Merkez', 'Sorgun', 'Akdağmadeni', 'Yerköy', 'Boğazlıyan', 'Sarıkaya', 'Çekerek', 'Şefaatli', 'Çayıralan', 'Saraykent', 'Kadışehri', 'Aydıncık', 'Çandır', 'Yenifakılı'],
+    'Çankırı': ['Merkez', 'Çerkeş', 'Ilgaz', 'Orta', 'Şabanözü', 'Kurşunlu', 'Yapraklı', 'Kızılırmak', 'Atkaracalar', 'Eldivan', 'Korgun', 'Bayramören'],
+    'Sinop': ['Merkez', 'Boyabat', 'Gerze', 'Ayancık', 'Durağan', 'Türkeli', 'Erfelek', 'Dikmen', 'Saraydüzü'],
+    'Kastamonu': ['Merkez', 'Tosya', 'Taşköprü', 'Cide', 'İnebolu', 'Araç', 'Devrekani', 'Bozkurt', 'Daday', 'Azdavay'],
+    'Kayseri': ['Merkez', 'Melikgazi', 'Kocasinan', 'Talas', 'Develi', 'İncesu', 'Bünyan', 'Pınarbaşı', 'Yeşilhisar', 'Yahyalı'],
+    'Sivas': ['Merkez', 'Şarkışla', 'Yıldızeli', 'Suşehri', 'Gemerek', 'Zara', 'Kangal', 'Gürün', 'Divriği'],
+    'Ordu': ['Merkez', 'Altınordu', 'Ünye', 'Fatsa', 'Perşembe', 'Kumru', 'Korgan', 'Gölköy'],
+    'Konya': ['Merkez', 'Selçuklu', 'Karatay', 'Meram', 'Ereğli', 'Akşehir', 'Beyşehir', 'Çumra', 'Cihanbeyli', 'Kulu', 'Ilgın', 'Karapınar'],
+    'İstanbul': ['Merkez', 'Tuzla', 'Pendik', 'Kartal', 'Ümraniye', 'Ataşehir', 'Başakşehir', 'Esenyurt', 'Büyükçekmece', 'Arnavutköy', 'Çatalca', 'Silivri', 'Hadımköy', 'İkitelli'],
+    'Kırşehir': ['Merkez', 'Kaman', 'Mucur', 'Çiçekdağı', 'Akpınar', 'Boztepe', 'Akçakent'],
+    'Nevşehir': ['Merkez', 'Ürgüp', 'Avanos', 'Gülşehir', 'Derinkuyu', 'Kozaklı', 'Hacıbektaş', 'Acıgöl'],
+    'Aksaray': ['Merkez', 'Ortaköy', 'Eskil', 'Gülağaç', 'Güzelyurt', 'Sultanhanı', 'Ağaçören', 'Sarıyahşi'],
+    'Bolu': ['Merkez', 'Gerede', 'Mengen', 'Mudurnu', 'Göynük', 'Yeniçağa', 'Dörtdivan', 'Seben', 'Kıbrıscık'],
+    'Karabük': ['Merkez', 'Safranbolu', 'Yenice', 'Eskipazar', 'Eflani', 'Ovacık'],
+    'Zonguldak': ['Merkez', 'Ereğli', 'Çaycuma', 'Devrek', 'Kozlu', 'Kilimli', 'Alaplı', 'Gökçebey']
+};
+
+function resolveCustomerDistrictName(c) {
+    if (!c) return 'Merkez';
+    const rawCity = (c.city || '').trim();
+    const rawDist = (c.district || '').trim();
+    const normCity = normalizeTR(rawCity);
+    const normDist = normalizeTR(rawDist);
+    if (!rawDist || rawDist === '-' || normDist === 'merkez' || normDist === normCity || normDist === `${normCity} merkez`) {
+        return 'Merkez';
+    }
+    return rawDist;
+}
+
+function doesCustomerMatchCityDistrict(c, targetCity, targetDist) {
+    if (!c || !targetCity || !targetDist) return false;
+    const cCity = normalizeTR(c.city || '');
+    const sCity = normalizeTR(targetCity);
+    if (cCity !== sCity) return false;
+
+    const resolvedDist = normalizeTR(resolveCustomerDistrictName(c));
+    const rawDist = normalizeTR(c.district || '');
+    const rawAddr = normalizeTR(c.address || '');
+    const sDist = normalizeTR(targetDist);
+
+    if (sDist === 'merkez') {
+        return resolvedDist === 'merkez';
+    }
+    if (resolvedDist === sDist || rawDist === sDist) {
+        return true;
+    }
+    // Hasanoğlan, Ostim, İvedik, Şaşmaz gibi belde/sanayi bölgeleri adres veya ilçe alanında geçiyorsa eşleştir
+    if (sDist.length >= 4 && rawAddr.includes(sDist)) {
+        return true;
+    }
+    return false;
+}
+
+const UNVISITED_REASON_OPTIONS = [
+    'Müşteri yerinde bulunamadı.',
+    'Zaman yetersizliği',
+    'Müşteri görüşmeyi kabul etmedi.',
+    'Adres bulunamadı.',
+    'Personel kaynaklı erteleme',
+    'Diğer'
+];
+
+function getTodayTRStr() {
+    const now = new Date();
+    const pad = n => String(n).padStart(2, '0');
+    return `${pad(now.getDate())}.${pad(now.getMonth() + 1)}.${now.getFullYear()}`;
+}
+
+function getNowTimeTRStr() {
+    const now = new Date();
+    const pad = n => String(n).padStart(2, '0');
+    return `${pad(now.getHours())}:${pad(now.getMinutes())}`;
+}
+
+function ensureRouteItemsNormalized(rt) {
+    if (!rt) return [];
+    const customers = appState.customers || [];
+    const custMap = new Map(customers.map(c => [c.code, c]));
+    if (!Array.isArray(rt.items)) rt.items = [];
+
+    const existingItemMap = new Map();
+    rt.items.forEach(it => {
+        if (it && it.code) existingItemMap.set(it.code, it);
+    });
+
+    if (Array.isArray(rt.customerCodes)) {
+        rt.customerCodes.forEach(code => {
+            if (!code || existingItemMap.has(code)) return;
+            const c = custMap.get(code);
+            const itemObj = {
+                itemId: 'RITEM-' + code + '-' + Math.random().toString(36).slice(2, 7),
+                code: code,
+                title: c ? c.title : code,
+                city: c ? (c.city || '') : '',
+                district: c ? (c.district || '') : '',
+                address: c ? (c.address || '') : '',
+                authorized: c ? (c.authorized || '') : '',
+                contactRole: c ? (c.contactRole || 'Yetkili') : 'Yetkili',
+                phone: c ? (c.phone || '') : '',
+                plates: c ? (c.plates || '') : '',
+                isManual: Boolean(c && c.isManualIntro) || String(code).startsWith('MANUEL-') || String(code).startsWith('TANISMA-'),
+                status: 'PENDING',
+                visitDate: '',
+                visitTime: '',
+                visitNotes: '',
+                extraNotes: '',
+                visitResult: '',
+                nextVisitDate: '',
+                unvisitedReason: '',
+                unvisitedReasonCustom: '',
+                visitPurpose: '',
+                personnel: rt.assignee || (currentUser ? currentUser.name : 'ÖMER EREN'),
+                convertedCustomerCode: '',
+                updatedAt: rt.updatedAt || formatNowTR()
+            };
+            rt.items.push(itemObj);
+            existingItemMap.set(code, itemObj);
+        });
+    }
+
+    rt.items.forEach((it, idx) => {
+        const c = custMap.get(it.code);
+        if (c && !it.isManual) {
+            it.title = c.title || it.title;
+            it.city = c.city || it.city;
+            it.district = c.district || it.district;
+            it.address = c.address || it.address || '';
+            it.authorized = it.authorized || c.authorized || '';
+            it.phone = c.phone || it.phone || '';
+            it.plates = c.plates || it.plates || '';
+        }
+        if (!it.status) it.status = 'PENDING';
+        if (!it.personnel) it.personnel = rt.assignee || 'ÖMER EREN';
+        it.order = idx + 1;
+    });
+
+    // Plan durumunu otomatik kontrol et
+    if (!rt.planStatus) {
+        const total = rt.items.length;
+        const done = rt.items.filter(i => i.status === 'VISITED' || i.status === 'NOT_VISITED' || i.status === 'CANCELLED').length;
+        const visited = rt.items.filter(i => i.status === 'VISITED').length;
+        if (total > 0 && done === total) rt.planStatus = 'Tamamlandı';
+        else if (visited > 0 || done > 0) rt.planStatus = 'Devam Ediyor';
+        else rt.planStatus = 'Planlandı';
+    }
+
+    return rt.items;
+}
+
+function updateRouteAndReportsBadges() {
+    const routes = Array.isArray(appState.customRoutes) ? appState.customRoutes : [];
+    const routeBadge = document.getElementById('badge-route-plans');
+    if (routeBadge) {
+        routeBadge.textContent = routes.length > 0 ? `${routes.length} RUT` : 'PLANLA';
+    }
+    let totalItems = 0;
+    routes.forEach(rt => {
+        const items = ensureRouteItemsNormalized(rt);
+        totalItems += items.length;
+    });
+    const repBadge = document.getElementById('badge-reports-count');
+    if (repBadge) {
+        repBadge.textContent = String(totalItems || (appState.visits || []).length || 0);
+    }
+}
+
+function toggleManualVisitCollapse(scrollIntoView = false) {
+    const panel = document.getElementById('manual-visit-entry-panel');
+    if (!panel) return;
+    panel.style.display = 'block';
+    if (scrollIntoView) {
+        panel.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        const titleIn = document.getElementById('manual-rut-cust-title');
+        if (titleIn) setTimeout(() => titleIn.focus(), 200);
+    }
+}
+
+let customRouteDraftAssignees = [];
+
+const DEFAULT_VISIT_ASSISTANTS_ROLES = {
+    'ÖMER EREN': { roleType: 'Sorumlu', visitTitle: 'Ziyaret Sorumlusu (Yönetim Kurulu)' },
+    'RAFET CANBEK': { roleType: 'Sorumlu', visitTitle: 'Ziyaret Sorumlusu (Genel Müdür)' },
+    'HAKAN AYDIN': { roleType: 'Sorumlu', visitTitle: 'Ziyaret Sorumlusu (Servis Müdürü)' },
+    'ERTUĞRUL ERDEM': { roleType: 'Yardımcı', visitTitle: 'Ziyaret Sorumlusu Yrd. (Servis Danışmanı)' },
+    'NECATİ DEMİRCİ': { roleType: 'Yardımcı', visitTitle: 'Ziyaret Sorumlusu Yrd. (Servis Danışmanı)' },
+    'FATİH KIROĞLU': { roleType: 'Yardımcı', visitTitle: 'Ziyaret Sorumlusu Yrd. (Depo / Yedek Parça)' },
+    'GÖKHAN ÖZBULUT': { roleType: 'Yardımcı', visitTitle: 'Ziyaret Sorumlusu Yrd. (Muhasebe / Cari)' },
+    'MURAT KARAOĞLU': { roleType: 'Yardımcı', visitTitle: 'Ziyaret Sorumlusu Yrd. (Formen)' },
+    'MURAT SALMAN': { roleType: 'Yardımcı', visitTitle: 'Ziyaret Sorumlusu Yrd. (Mekaniker)' },
+    'YILDIRAY KARAGÖZ': { roleType: 'Yardımcı', visitTitle: 'Ziyaret Sorumlusu Yrd. (Elektrik Tekn.)' },
+    'MUSTAFA İLGEN': { roleType: 'Yardımcı', visitTitle: 'Ziyaret Sorumlusu Yrd. (Fren Tekn.)' },
+    'MİRAÇ ARDANUŞ': { roleType: 'Yardımcı', visitTitle: 'Ziyaret Sorumlusu Yardımcısı' },
+    'ALPEREN KAYACI': { roleType: 'Yardımcı', visitTitle: 'Ziyaret Sorumlusu Yardımcısı' },
+    'MUHAMMED ALİ EROL': { roleType: 'Yardımcı', visitTitle: 'Ziyaret Sorumlusu Yardımcısı' },
+    'HAKAN DEMİRAL': { roleType: 'Yardımcı', visitTitle: 'Ziyaret Sorumlusu Yardımcısı' }
+};
+
+function getRoutePersonnelPool() {
+    const baseUsers = (Array.isArray(appState.users) && appState.users.length > 0) ? appState.users : OFFICIAL_PERSONNEL_LIST;
+    if (!Array.isArray(appState.customRoutePersonnelPool)) {
+        appState.customRoutePersonnelPool = [];
+    }
+    const poolMap = new Map();
+    baseUsers.forEach(u => {
+        if (!u || !u.name) return;
+        const preset = DEFAULT_VISIT_ASSISTANTS_ROLES[u.name] || null;
+        poolMap.set(normalizeTR(u.name), {
+            name: u.name,
+            dept: preset ? preset.visitTitle : `Ziyaret Sorumlusu Yrd. (${u.dept || 'Saha'})`,
+            defaultRoleType: preset ? preset.roleType : (u.role === 'Yönetici' ? 'Sorumlu' : 'Yardımcı')
+        });
+    });
+    appState.customRoutePersonnelPool.forEach(p => {
+        if (!p || !p.name) return;
+        const key = normalizeTR(p.name);
+        if (!poolMap.has(key)) {
+            poolMap.set(key, {
+                name: p.name,
+                dept: p.dept || (p.defaultRoleType === 'Sorumlu' ? 'Ziyaret Sorumlusu' : 'Ziyaret Sorumlusu Yardımcısı'),
+                defaultRoleType: p.defaultRoleType || 'Yardımcı'
+            });
+        }
+    });
+    return Array.from(poolMap.values());
+}
+
+function ensureDefaultCustomRouteAssignees() {
+    if (customRouteDraftAssignees.length > 0) return;
+    const defaultUser = currentUser ? currentUser.name : 'ÖMER EREN';
+    customRouteDraftAssignees = [
+        { name: defaultUser, roleType: 'Sorumlu' }
+    ];
+}
+
+function formatCustomRouteAssigneesString(arr) {
+    const list = Array.isArray(arr) && arr.length > 0 ? arr : customRouteDraftAssignees;
+    if (!list || list.length === 0) {
+        return currentUser ? `${currentUser.name} (Sorumlu)` : 'ÖMER EREN (Sorumlu)';
+    }
+    const sorted = [...list].sort((a, b) => (a.roleType === 'Sorumlu' ? -1 : 1) - (b.roleType === 'Sorumlu' ? -1 : 1));
+    return sorted.map(p => `${p.name} (${p.roleType || 'Yardımcı'})`).join(', ');
+}
+
+function parseAssigneesStringToDraft(assigneeStr, assigneesArr) {
+    if (Array.isArray(assigneesArr) && assigneesArr.length > 0) {
+        customRouteDraftAssignees = assigneesArr.map(a => ({
+            name: a.name,
+            roleType: a.roleType === 'Sorumlu' ? 'Sorumlu' : 'Yardımcı'
+        }));
+        return;
+    }
+    const raw = String(assigneeStr || '').trim();
+    if (!raw) {
+        customRouteDraftAssignees = [];
+        ensureDefaultCustomRouteAssignees();
+        return;
+    }
+    const parts = raw.split(',').map(s => s.trim()).filter(Boolean);
+    customRouteDraftAssignees = parts.map((part, idx) => {
+        const isSor = /sorumlu/i.test(part) && !/yard/i.test(part) && !/yrd/i.test(part);
+        const isYrd = /yard|yrd/i.test(part);
+        const cleanName = part.replace(/\s*\([^)]*\)\s*/g, '').replace(/^[⭐🤝\s]+/, '').trim();
+        return {
+            name: cleanName || part,
+            roleType: isSor ? 'Sorumlu' : (isYrd ? 'Yardımcı' : (idx === 0 ? 'Sorumlu' : 'Yardımcı'))
+        };
+    });
+    if (!customRouteDraftAssignees.some(x => x.roleType === 'Sorumlu') && customRouteDraftAssignees.length > 0) {
+        customRouteDraftAssignees[0].roleType = 'Sorumlu';
+    }
+}
+
+function toggleCustomRoutePersonnelDropdown(e) {
+    if (e) e.stopPropagation();
+    const dd = document.getElementById('custom-rut-personnel-dropdown');
+    if (!dd) return;
+    const isOpen = dd.style.display === 'block';
+    dd.style.display = isOpen ? 'none' : 'block';
+    if (!isOpen) {
+        renderCustomRoutePersonnelSelector();
+    }
+}
+
+function closeCustomRoutePersonnelDropdown() {
+    const dd = document.getElementById('custom-rut-personnel-dropdown');
+    if (dd) dd.style.display = 'none';
+}
+
+document.addEventListener('click', (e) => {
+    const wrapper = document.getElementById('custom-rut-personnel-wrapper');
+    if (wrapper && !wrapper.contains(e.target)) {
+        closeCustomRoutePersonnelDropdown();
+    }
+});
+
+function togglePersonInCustomRouteDraft(personName, isChecked) {
+    if (!personName) return;
+    const norm = normalizeTR(personName);
+    if (isChecked) {
+        if (!customRouteDraftAssignees.some(p => normalizeTR(p.name) === norm)) {
+            const hasResponsible = customRouteDraftAssignees.some(p => p.roleType === 'Sorumlu');
+            customRouteDraftAssignees.push({
+                name: personName,
+                roleType: hasResponsible ? 'Yardımcı' : 'Sorumlu'
+            });
+        }
+    } else {
+        customRouteDraftAssignees = customRouteDraftAssignees.filter(p => normalizeTR(p.name) !== norm);
+        if (customRouteDraftAssignees.length > 0 && !customRouteDraftAssignees.some(p => p.roleType === 'Sorumlu')) {
+            customRouteDraftAssignees[0].roleType = 'Sorumlu';
+        }
+    }
+    renderCustomRoutePersonnelSelector();
+}
+
+function togglePersonResponsibleStatus(personName, ev) {
+    if (ev) ev.stopPropagation();
+    if (!personName) return;
+    const norm = normalizeTR(personName);
+    let existing = customRouteDraftAssignees.find(p => normalizeTR(p.name) === norm);
+    if (!existing) {
+        existing = { name: personName, roleType: 'Sorumlu' };
+        customRouteDraftAssignees.push(existing);
+    } else {
+        existing.roleType = existing.roleType === 'Sorumlu' ? 'Yardımcı' : 'Sorumlu';
+    }
+    renderCustomRoutePersonnelSelector();
+}
+
+function removePersonFromCustomRouteDraft(personName, ev) {
+    if (ev) ev.stopPropagation();
+    togglePersonInCustomRouteDraft(personName, false);
+}
+
+function addNewPersonnelToRoutePool() {
+    const nameInput = document.getElementById('custom-rut-new-person-name');
+    const roleSel = document.getElementById('custom-rut-new-person-role');
+    const rawName = (nameInput?.value || '').trim().toLocaleUpperCase('tr-TR');
+    const roleType = (roleSel?.value || 'Yardımcı') === 'Sorumlu' ? 'Sorumlu' : 'Yardımcı';
+
+    if (!rawName) {
+        showToast('Lütfen eklenecek görevli personel veya ziyaret sorumlusu yardımcısı adını yazın.', 'warning');
+        if (nameInput) nameInput.focus();
+        return;
+    }
+
+    if (!Array.isArray(appState.customRoutePersonnelPool)) {
+        appState.customRoutePersonnelPool = [];
+    }
+    if (!appState.customRoutePersonnelPool.some(p => normalizeTR(p.name) === normalizeTR(rawName))) {
+        appState.customRoutePersonnelPool.unshift({
+            name: rawName,
+            defaultRoleType: roleType,
+            dept: roleType === 'Sorumlu' ? 'Ziyaret Sorumlusu' : 'Ziyaret Sorumlusu Yardımcısı'
+        });
+    }
+
+    const existing = customRouteDraftAssignees.find(p => normalizeTR(p.name) === normalizeTR(rawName));
+    if (existing) {
+        existing.roleType = roleType;
+    } else {
+        customRouteDraftAssignees.push({ name: rawName, roleType });
+    }
+
+    if (nameInput) nameInput.value = '';
+    renderCustomRoutePersonnelSelector();
+    saveStateToLocal();
+    showToast(`"${rawName}" (${roleType === 'Sorumlu' ? 'Ziyaret Sorumlusu' : 'Ziyaret Sorumlusu Yardımcısı'}) listeye ve plana eklendi!`, 'success');
+}
+
+function renderCustomRoutePersonnelSelector() {
+    ensureDefaultCustomRouteAssignees();
+    const hiddenInput = document.getElementById('custom-rut-assignee');
+    const displayBox = document.getElementById('custom-rut-assignee-display');
+    const listBox = document.getElementById('custom-rut-personnel-list-box');
+    const manPersSel = document.getElementById('manual-rut-cust-personnel');
+
+    const formattedStr = formatCustomRouteAssigneesString(customRouteDraftAssignees);
+    if (hiddenInput) hiddenInput.value = formattedStr;
+
+    const pool = getRoutePersonnelPool();
+    if (manPersSel) {
+        const curMan = manPersSel.value;
+        manPersSel.innerHTML = pool.map(u => `<option value="${escapeHtml(u.name)}">${escapeHtml(u.name)} (${escapeHtml(u.dept)})</option>`).join('');
+        if (curMan) manPersSel.value = curMan;
+    }
+
+    if (displayBox) {
+        if (customRouteDraftAssignees.length === 0) {
+            displayBox.innerHTML = `<span style="color:var(--text-muted);">Görevli Personel Seçin...</span>`;
+        } else {
+            const sorted = [...customRouteDraftAssignees].sort((a, b) => (a.roleType === 'Sorumlu' ? -1 : 1) - (b.roleType === 'Sorumlu' ? -1 : 1));
+            displayBox.innerHTML = sorted.map(p => {
+                const isSor = p.roleType === 'Sorumlu';
+                const safeName = escapeHtml(p.name).replace(/'/g, "\\'");
+                return `
+                    <span style="display:inline-flex; align-items:center; gap:0.28rem; padding:0.18rem 0.48rem; border-radius:6px; font-size:0.71rem; font-weight:800; background:${isSor ? 'rgba(245,158,11,0.2)' : 'rgba(56,189,248,0.16)'}; border:1px solid ${isSor ? '#f59e0b' : 'rgba(56,189,248,0.4)'}; color:${isSor ? '#fde68a' : '#bae6fd'};">
+                        <span onclick="togglePersonResponsibleStatus('${safeName}', event)" title="Tıklayarak Sorumlu / Yardımcı rolünü değiştirin" style="cursor:pointer; padding:0 3px; border-radius:4px; background:rgba(0,0,0,0.25);">
+                            ${isSor ? '⭐ Sorumlu:' : '🤝 Yardımcı:'}
+                        </span>
+                        <span>${escapeHtml(p.name)}</span>
+                        <i class="fa-solid fa-xmark" onclick="removePersonFromCustomRouteDraft('${safeName}', event)" title="Personeli Çıkar" style="cursor:pointer; color:#f87171; margin-left:2px;"></i>
+                    </span>
+                `;
+            }).join('');
+        }
+    }
+
+    if (listBox) {
+        listBox.innerHTML = pool.map(u => {
+            const selectedEntry = customRouteDraftAssignees.find(p => normalizeTR(p.name) === normalizeTR(u.name));
+            const isChecked = Boolean(selectedEntry);
+            const activeRole = selectedEntry ? selectedEntry.roleType : u.defaultRoleType;
+            const isSor = activeRole === 'Sorumlu';
+            const safeName = escapeHtml(u.name).replace(/'/g, "\\'");
+            return `
+                <div style="display:flex; justify-content:space-between; align-items:center; gap:0.4rem; padding:0.32rem 0.5rem; border-radius:7px; background:${isChecked ? (isSor ? 'rgba(245,158,11,0.15)' : 'rgba(16,185,129,0.14)') : 'rgba(2,6,23,0.5)'}; border:1px solid ${isChecked ? (isSor ? 'rgba(245,158,11,0.45)' : 'rgba(16,185,129,0.4)') : 'rgba(148,163,184,0.16)'};">
+                    <label style="display:flex; align-items:center; gap:0.45rem; cursor:pointer; flex:1; min-width:0;">
+                        <input type="checkbox" ${isChecked ? 'checked' : ''} onchange="togglePersonInCustomRouteDraft('${safeName}', this.checked)" style="accent-color:#10b981; width:15px; height:15px; margin:0; cursor:pointer; flex-shrink:0;">
+                        <div style="min-width:0; flex:1;">
+                            <div style="font-size:0.74rem; font-weight:800; color:${isChecked ? '#fff' : '#cbd5e1'}; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">
+                                ${escapeHtml(u.name)}
+                            </div>
+                            <div style="font-size:0.65rem; color:var(--text-sec); white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">
+                                ${escapeHtml(u.dept)}
+                            </div>
+                        </div>
+                    </label>
+                    <button type="button" onclick="togglePersonResponsibleStatus('${safeName}', event)" title="Ziyaret Sorumlusu veya Yardımcısı olarak işaretle" style="padding:0.2rem 0.5rem; border-radius:6px; font-size:0.67rem; font-weight:800; cursor:pointer; border:1px solid ${isSor && isChecked ? '#f59e0b' : 'rgba(148,163,184,0.3)'}; background:${isSor && isChecked ? 'rgba(245,158,11,0.28)' : 'rgba(15,23,42,0.85)'}; color:${isSor && isChecked ? '#fde68a' : '#94a3b8'}; white-space:nowrap;">
+                        ${isSor ? '⭐ Sorumlu' : '🤝 Yardımcı'}
+                    </button>
+                </div>
+            `;
+        }).join('');
+    }
+}
+
 function initCustomRoutePlannerUI() {
     const citySel = document.getElementById('custom-rut-city-select');
     const dateInput = document.getElementById('custom-rut-date');
+    const manDateInput = document.getElementById('manual-rut-cust-date');
     const customers = appState.customers || [];
 
-    if (dateInput && !dateInput.value) {
-        const now = new Date();
-        const pad = n => String(n).padStart(2, '0');
-        dateInput.value = `${pad(now.getDate())}.${pad(now.getMonth() + 1)}.${now.getFullYear()}`;
+    const todayStr = getTodayTRStr();
+    if (dateInput && !dateInput.value) dateInput.value = todayStr;
+    if (manDateInput && !manDateInput.value) manDateInput.value = todayStr;
+
+    ensureDefaultCustomRouteAssignees();
+    renderCustomRoutePersonnelSelector();
+
+    if (citySel) {
+        const cityCounts = {};
+        Object.keys(TR_PROVINCE_DISTRICTS).forEach(ct => { cityCounts[ct] = 0; });
+        customers.forEach(c => {
+            if (c.city && c.city.trim()) {
+                const ct = c.city.trim();
+                cityCounts[ct] = (cityCounts[ct] || 0) + 1;
+            }
+        });
+        const sortedCities = Object.keys(cityCounts).sort((a, b) => {
+            const diff = (cityCounts[b] || 0) - (cityCounts[a] || 0);
+            return diff !== 0 ? diff : a.localeCompare(b, 'tr');
+        });
+        const prevVal = citySel.value;
+        citySel.innerHTML = `<option value="">📍 İl Seçin (${sortedCities.length} İl)</option>` +
+            sortedCities.map(ct => `<option value="${ct}">${ct} (${cityCounts[ct] || 0} Kayıtlı Müşteri)</option>`).join('');
+        if (prevVal) citySel.value = prevVal;
     }
 
-    if (citySel && citySel.options.length <= 1 && customers.length > 0) {
-        const cityCounts = {};
-        customers.forEach(c => {
-            if (c.city) cityCounts[c.city] = (cityCounts[c.city] || 0) + 1;
-        });
-        const sortedCities = Object.keys(cityCounts).sort((a, b) => a.localeCompare(b, 'tr'));
-        citySel.innerHTML = `<option value="">📍 İl Seçin (${sortedCities.length} İl)</option>` +
-            sortedCities.map(ct => `<option value="${ct}">${ct} (${cityCounts[ct]} Cari)</option>`).join('');
+    if (!activeSelectedRouteId && Array.isArray(appState.customRoutes) && appState.customRoutes.length > 0) {
+        activeSelectedRouteId = appState.customRoutes[0].id;
     }
 
     renderCustomRouteDistrictBadges();
     renderCustomRouteCustomerPicker();
     renderCustomRouteSelectedChips();
     renderSavedCustomRoutesList();
+    renderActiveRouteExecutionPanel();
+    updateRouteAndReportsBadges();
+    if (window.AutoDateHelper && typeof window.AutoDateHelper.upgradeAll === 'function') {
+        window.AutoDateHelper.upgradeAll(document.getElementById('route-plan-tab'));
+    }
 }
 
-function handleCustomRouteCityChange() {
+function handleCustomRouteCityChange(preserveDistrictSelection = false) {
     const citySel = document.getElementById('custom-rut-city-select');
     const distSel = document.getElementById('custom-rut-district-select');
-    const cityVal = citySel ? citySel.value : '';
+    const multiBox = document.getElementById('custom-rut-multi-districts-box');
+    const cityVal = citySel ? citySel.value.trim() : '';
+    const prevDistVal = (preserveDistrictSelection && distSel) ? distSel.value.trim() : '';
     const customers = appState.customers || [];
 
+    if (!preserveDistrictSelection) {
+        pendingCheckedDistrictsForCity.clear();
+        customRoutePendingSelectedCodes.clear();
+    }
+
+    const manCity = document.getElementById('manual-rut-cust-city');
+    if (manCity && cityVal) manCity.value = cityVal;
+
+    const distCounts = {};
+    if (cityVal) {
+        distCounts['Merkez'] = 0;
+        const matchingPresetKey = Object.keys(TR_PROVINCE_DISTRICTS).find(k => normalizeTR(k) === normalizeTR(cityVal));
+        if (matchingPresetKey) {
+            TR_PROVINCE_DISTRICTS[matchingPresetKey].forEach(d => { distCounts[d] = 0; });
+        }
+        const cityCustomers = customers.filter(c => normalizeTR(c.city) === normalizeTR(cityVal));
+        cityCustomers.forEach(c => {
+            const d = resolveCustomerDistrictName(c);
+            const existingKey = Object.keys(distCounts).find(k => normalizeTR(k) === normalizeTR(d)) || d;
+            distCounts[existingKey] = (distCounts[existingKey] || 0) + 1;
+        });
+        Object.keys(distCounts).forEach(dKey => {
+            if (normalizeTR(dKey) !== 'merkez' && distCounts[dKey] === 0) {
+                distCounts[dKey] = cityCustomers.filter(c => doesCustomerMatchCityDistrict(c, cityVal, dKey)).length;
+            }
+        });
+    }
+
+    const sortedDists = Object.keys(distCounts).sort((a, b) => {
+        if (normalizeTR(a) === 'merkez') return -1;
+        if (normalizeTR(b) === 'merkez') return 1;
+        const diff = (distCounts[b] || 0) - (distCounts[a] || 0);
+        return diff !== 0 ? diff : a.localeCompare(b, 'tr');
+    });
+
     if (distSel) {
-        distSel.innerHTML = '<option value="">🏘️ Tüm İlçeler</option>';
-        if (cityVal) {
-            const distCounts = {};
-            customers.filter(c => normalizeTR(c.city) === normalizeTR(cityVal)).forEach(c => {
-                if (c.district) distCounts[c.district] = (distCounts[c.district] || 0) + 1;
-            });
-            Object.keys(distCounts).sort((a, b) => a.localeCompare(b, 'tr')).forEach(d => {
-                const opt = document.createElement('option');
-                opt.value = d;
-                opt.textContent = `${d} (${distCounts[d]} Cari)`;
-                distSel.appendChild(opt);
-            });
+        distSel.innerHTML = `<option value="">🏘️ İlçe Seçin (${sortedDists.length} İlçe - Sadece Seçilen Gelir)</option>` +
+            sortedDists.map(d => {
+                const displayLabel = normalizeTR(d) === 'merkez' ? `${d} (İl Merkezi)` : d;
+                return `<option value="${escapeHtml(d)}">${escapeHtml(displayLabel)} (${distCounts[d] || 0} Müşteri)</option>`;
+            }).join('');
+        if (prevDistVal && sortedDists.some(d => normalizeTR(d) === normalizeTR(prevDistVal))) {
+            distSel.value = prevDistVal;
+        } else {
+            distSel.value = '';
         }
     }
+
+    if (multiBox) {
+        if (!cityVal || sortedDists.length === 0) {
+            multiBox.innerHTML = `<div style="font-size:0.7rem; color:var(--text-muted);"><i class="fa-solid fa-circle-info" style="color:#38bdf8;"></i> Yukarıdan bir <strong>İl</strong> seçtiğinizde o ile bağlı ilçeler (<strong>Merkez</strong>, <strong>Sungurlu</strong>, <strong>Delice</strong>, <strong>Hasanoğlan</strong> vb.) burada açılır. İlçeyi seçtiğinizde sağda <strong>yalnızca o ilçenin müşterileri</strong> listelenir.</div>`;
+        } else {
+            const safeCity = escapeHtml(cityVal).replace(/'/g, "\\'");
+            multiBox.innerHTML = `
+                <div style="font-size:0.72rem; font-weight:800; color:#bae6fd; margin-bottom:0.4rem; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:0.35rem;">
+                    <span><i class="fa-solid fa-check-double" style="color:#34d399;"></i> ${escapeHtml(cityVal)} İlçeleri (Ziyaret Edeceğiniz İlçeyi Tikleyin):</span>
+                    <span style="font-size:0.65rem; color:#fbbf24; font-weight:700;">Sadece seçtiğiniz ilçenin müşterileri sağda açılır</span>
+                </div>
+                <div style="display:flex; flex-wrap:wrap; gap:0.35rem; max-height:135px; overflow-y:auto; margin-bottom:0.45rem; padding-right:2px;">
+                    ${sortedDists.map(d => {
+                        const isCurrentlyChecked = pendingCheckedDistrictsForCity.has(d);
+                        const isAlreadyInBottomList = customRouteDraftDistricts.some(x => normalizeTR(x) === normalizeTR(`${cityVal} / ${d}`));
+                        const safeDist = escapeHtml(d).replace(/'/g, "\\'");
+                        const isMerkez = normalizeTR(d) === 'merkez';
+                        const badgeText = isMerkez ? `${d} (İl Merkezi)` : d;
+                        return `
+                            <label style="display:inline-flex; align-items:center; gap:0.32rem; padding:0.24rem 0.55rem; border-radius:6px; font-size:0.71rem; font-weight:700; cursor:pointer; background:${isCurrentlyChecked ? 'rgba(16,185,129,0.26)' : (isAlreadyInBottomList ? 'rgba(56,189,248,0.16)' : 'rgba(15,23,42,0.88)')}; border:1px solid ${isCurrentlyChecked ? '#10b981' : (isAlreadyInBottomList ? 'rgba(56,189,248,0.45)' : 'rgba(148,163,184,0.28)')}; color:${isCurrentlyChecked ? '#34d399' : (isAlreadyInBottomList ? '#7dd3fc' : '#e2e8f0')};">
+                                <input type="checkbox" ${isCurrentlyChecked ? 'checked' : ''} onchange="toggleMultiDistrictCheckbox('${safeCity}', '${safeDist}', this.checked)" style="accent-color:#10b981; margin:0; cursor:pointer;">
+                                <span>${escapeHtml(badgeText)} (${distCounts[d] || 0})${isAlreadyInBottomList ? ' ✓' : ''}</span>
+                            </label>
+                        `;
+                    }).join('')}
+                </div>
+                <div style="display:flex; gap:0.35rem; align-items:center; padding-top:0.35rem; border-top:1px dashed rgba(148,163,184,0.2);">
+                    <input type="text" id="custom-rut-custom-district-input" class="filter-input" style="flex:1; font-size:0.71rem; padding:0.28rem 0.5rem; height:28px;" placeholder="${escapeHtml(cityVal)} içinde farklı ilçe / belde yazın (Örn: Hasanoğlan, Delice)..." onkeydown="if(event.key==='Enter'){event.preventDefault();addCustomSubDistrictToCity();}">
+                    <button type="button" class="btn btn-secondary btn-sm" style="padding:0.24rem 0.55rem; font-size:0.69rem; border-color:rgba(16,185,129,0.45); color:#34d399; white-space:nowrap;" onclick="addCustomSubDistrictToCity()">
+                        <i class="fa-solid fa-plus"></i> İlçeyi Seç
+                    </button>
+                </div>
+            `;
+        }
+    }
+
+    renderCustomRouteCustomerPicker();
+}
+
+function addCustomSubDistrictToCity() {
+    const citySel = document.getElementById('custom-rut-city-select');
+    const customIn = document.getElementById('custom-rut-custom-district-input');
+    const city = citySel ? citySel.value.trim() : '';
+    const customDist = customIn ? customIn.value.trim() : '';
+    if (!city) {
+        showToast('Lütfen önce bir İl seçin.', 'warning');
+        return;
+    }
+    if (!customDist) {
+        showToast('Lütfen eklenecek ilçe veya belde adını yazın (Örn: Hasanoğlan).', 'warning');
+        if (customIn) customIn.focus();
+        return;
+    }
+    const matchingPresetKey = Object.keys(TR_PROVINCE_DISTRICTS).find(k => normalizeTR(k) === normalizeTR(city)) || city;
+    if (!TR_PROVINCE_DISTRICTS[matchingPresetKey]) TR_PROVINCE_DISTRICTS[matchingPresetKey] = ['Merkez'];
+    if (!TR_PROVINCE_DISTRICTS[matchingPresetKey].some(d => normalizeTR(d) === normalizeTR(customDist))) {
+        TR_PROVINCE_DISTRICTS[matchingPresetKey].push(customDist);
+    }
+    if (customIn) customIn.value = '';
+    toggleMultiDistrictCheckbox(city, customDist, true);
+}
+
+function toggleMultiDistrictCheckbox(city, dist, isChecked) {
+    if (!city || !dist) return;
+    if (isChecked) {
+        pendingCheckedDistrictsForCity.add(dist);
+    } else {
+        pendingCheckedDistrictsForCity.delete(dist);
+    }
+    const distSel = document.getElementById('custom-rut-district-select');
+    if (distSel && pendingCheckedDistrictsForCity.size === 1) {
+        distSel.value = Array.from(pendingCheckedDistrictsForCity)[0];
+    } else if (distSel && pendingCheckedDistrictsForCity.size === 0) {
+        distSel.value = '';
+    }
+    handleCustomRouteCityChange(true);
+    renderCustomRouteCustomerPicker();
+}
+
+function syncRouteSummaryAndPlanNameFromStops() {
+    const routeInput = document.getElementById('custom-rut-route-text');
+    if (routeInput) routeInput.value = customRouteDraftDistricts.join(' -> ');
+    const nameInput = document.getElementById('custom-rut-name');
+    if (nameInput && (!nameInput.value.trim() || nameInput.dataset.autoGenerated === '1')) {
+        if (customRouteDraftDistricts.length > 0) {
+            nameInput.value = `${customRouteDraftDistricts.join(' - ')} Rut Planı`;
+            nameInput.dataset.autoGenerated = '1';
+        } else {
+            nameInput.value = '';
+        }
+    }
+}
+
+function handleCustomRouteDistrictChange() {
+    const citySel = document.getElementById('custom-rut-city-select');
+    const distSel = document.getElementById('custom-rut-district-select');
+    const cityVal = citySel ? citySel.value.trim() : '';
+    const distVal = distSel ? distSel.value.trim() : '';
+
+    pendingCheckedDistrictsForCity.clear();
+    if (distVal) {
+        pendingCheckedDistrictsForCity.add(distVal);
+    }
+
+    const manCity = document.getElementById('manual-rut-cust-city');
+    const manDist = document.getElementById('manual-rut-cust-district');
+    if (manCity && cityVal) manCity.value = cityVal;
+    if (manDist && distVal) manDist.value = distVal;
+
+    handleCustomRouteCityChange(true);
     renderCustomRouteCustomerPicker();
 }
 
 function addDistrictToCustomRouteDraft() {
+    commitCurrentRegionCustomersToBottomList();
+}
+
+function addAllCityDistrictsToRouteDraft() {
     const citySel = document.getElementById('custom-rut-city-select');
     const distSel = document.getElementById('custom-rut-district-select');
-    const routeInput = document.getElementById('custom-rut-route-text');
-    const nameInput = document.getElementById('custom-rut-name');
-
     const city = citySel ? citySel.value.trim() : '';
-    const dist = distSel ? distSel.value.trim() : '';
-
     if (!city) {
-        showToast('Lütfen güzergaha eklemek için önce bir İl seçin.', 'warning');
+        showToast('Lütfen önce bir İl seçin.', 'warning');
         return;
     }
-
-    const label = dist ? `${city} / ${dist}` : city;
-    if (!customRouteDraftDistricts.includes(label)) {
-        customRouteDraftDistricts.push(label);
-    }
-
-    if (routeInput) {
-        const curText = routeInput.value.trim();
-        if (!curText) {
-            routeInput.value = label;
-        } else if (!curText.includes(label)) {
-            routeInput.value = `${curText} -> ${label}`;
-        }
-    }
-
-    if (nameInput && !nameInput.value.trim()) {
-        nameInput.value = `${label} Rutu`;
-    }
-
-    renderCustomRouteDistrictBadges();
+    const distOptions = distSel ? Array.from(distSel.options).map(o => o.value).filter(Boolean) : [];
+    distOptions.forEach(d => pendingCheckedDistrictsForCity.add(d));
+    handleCustomRouteCityChange(true);
     renderCustomRouteCustomerPicker();
-    showToast(`${label} güzergaha eklendi. Aşağıdan müşterileri seçebilirsiniz.`, 'success');
 }
 
 function removeDistrictFromCustomRouteDraft(idx) {
+    const removed = customRouteDraftDistricts[idx] || '';
     customRouteDraftDistricts.splice(idx, 1);
-    const routeInput = document.getElementById('custom-rut-route-text');
-    if (routeInput) {
-        routeInput.value = customRouteDraftDistricts.join(' -> ');
+    const parts = removed.split('/').map(s => s.trim());
+    const rCity = parts[0] || '';
+    const rDist = parts[1] || '';
+    if (rCity && rDist) {
+        const customers = appState.customers || [];
+        customers.forEach(c => {
+            if (customRouteDraftSelectedCodes.has(c.code) && doesCustomerMatchCityDistrict(c, rCity, rDist)) {
+                customRouteDraftSelectedCodes.delete(c.code);
+            }
+        });
     }
+    syncRouteSummaryAndPlanNameFromStops();
+    handleCustomRouteCityChange(true);
     renderCustomRouteDistrictBadges();
     renderCustomRouteCustomerPicker();
+    renderCustomRouteSelectedChips();
 }
 
 function renderCustomRouteDistrictBadges() {
     const box = document.getElementById('custom-rut-districts-badges');
+    const countEl = document.getElementById('custom-rut-stops-count');
+    if (countEl) countEl.textContent = `${customRouteDraftDistricts.length} Durak`;
     if (!box) return;
     if (customRouteDraftDistricts.length === 0) {
-        box.innerHTML = `<span style="font-size:0.7rem; color:var(--text-muted);">Güzergah kutusuna doğrudan yazabilir veya İl/İlçe seçip <strong>"+ Güzergaha Ekle"</strong> diyebilirsiniz.</span>`;
+        box.innerHTML = `<span style="font-size:0.7rem; color:var(--text-muted);">Henüz durak eklenmedi. İl ve İlçe seçip sağdan müşterileri tikleyerek <strong>"➕ Seçilen Müşterileri Alttaki Rut Listesine Ekle"</strong> tuşuna basın.</span>`;
         return;
     }
     box.innerHTML = customRouteDraftDistricts.map((d, idx) => `
-        <span class="badge" style="background:rgba(56,189,248,0.16); color:#38bdf8; border:1px solid rgba(56,189,248,0.35); font-size:0.71rem; display:inline-flex; align-items:center; gap:0.35rem; padding:0.22rem 0.55rem;">
-            <i class="fa-solid fa-location-dot"></i> ${d}
-            <i class="fa-solid fa-xmark" style="cursor:pointer; color:#f87171;" title="Çıkar" onclick="removeDistrictFromCustomRouteDraft(${idx})"></i>
+        <span class="badge" style="background:rgba(16,185,129,0.16); color:#34d399; border:1px solid rgba(16,185,129,0.4); font-size:0.72rem; display:inline-flex; align-items:center; gap:0.35rem; padding:0.25rem 0.6rem; font-weight:800;">
+            <span style="color:#fbbf24;">${idx + 1}.</span> <i class="fa-solid fa-location-dot" style="color:#38bdf8;"></i> ${escapeHtml(d)}
+            <i class="fa-solid fa-xmark" style="cursor:pointer; color:#f87171; margin-left:2px;" title="Durağı ve Müşterilerini Çıkar" onclick="removeDistrictFromCustomRouteDraft(${idx})"></i>
         </span>
-    `).join('');
+    `).join('<span style="color:#64748b; font-size:0.75rem; align-self:center;"><i class="fa-solid fa-arrow-right"></i></span>');
+}
+
+// SADECE O AN SOLDA SEÇİLİ OLAN İL / İLÇE(LER)İ DÖNDÜRÜR (Önceki illerle karıştırmaz!)
+function getActiveEffectiveRouteStops() {
+    const cityVal = (document.getElementById('custom-rut-city-select')?.value || '').trim();
+    const distVal = (document.getElementById('custom-rut-district-select')?.value || '').trim();
+    if (!cityVal) return [];
+
+    const activeStops = [];
+    pendingCheckedDistrictsForCity.forEach(d => {
+        const pair = `${cityVal} / ${d}`;
+        if (!activeStops.some(x => normalizeTR(x) === normalizeTR(pair))) {
+            activeStops.push(pair);
+        }
+    });
+    if (distVal) {
+        const pair = `${cityVal} / ${distVal}`;
+        if (!activeStops.some(x => normalizeTR(x) === normalizeTR(pair))) {
+            activeStops.push(pair);
+        }
+    }
+    return activeStops;
 }
 
 function getFilteredCustomersForCustomRoutePicker() {
     const customers = appState.customers || [];
     const searchVal = normalizeTR(document.getElementById('custom-rut-cust-search')?.value || '');
-    const cityVal = document.getElementById('custom-rut-city-select')?.value || '';
-    const distVal = document.getElementById('custom-rut-district-select')?.value || '';
+    const effectiveStops = getActiveEffectiveRouteStops();
+
+    if (effectiveStops.length === 0 && !searchVal) {
+        return [];
+    }
 
     return customers.filter(c => {
-        if (cityVal && normalizeTR(c.city) !== normalizeTR(cityVal)) return false;
-        if (distVal && normalizeTR(c.district) !== normalizeTR(distVal)) return false;
         if (searchVal) {
-            const hay = normalizeTR(`${c.code} ${c.title} ${c.city} ${c.district} ${c.authorized} ${c.plates} ${c.phone}`);
+            const hay = normalizeTR(`${c.code} ${c.title} ${c.city} ${c.district} ${c.authorized} ${c.plates} ${c.phone} ${c.address}`);
             if (!hay.includes(searchVal)) return false;
+            if (effectiveStops.length === 0) return true;
         }
-        return true;
+
+        return effectiveStops.some(stop => {
+            const parts = stop.split('/').map(s => s.trim());
+            const sCity = parts[0] || '';
+            const sDist = parts[1] || '';
+            if (sCity && sDist) {
+                return doesCustomerMatchCityDistrict(c, sCity, sDist);
+            }
+            return false;
+        });
     });
 }
 
 function renderCustomRouteCustomerPicker() {
     const box = document.getElementById('custom-rut-cust-results');
+    const subEl = document.getElementById('custom-rut-picker-subtitle');
+    const commitBtn = document.getElementById('custom-rut-commit-region-btn');
     if (!box) return;
 
+    const cityVal = (document.getElementById('custom-rut-city-select')?.value || '').trim();
+    const searchVal = normalizeTR(document.getElementById('custom-rut-cust-search')?.value || '');
+    const effectiveStops = getActiveEffectiveRouteStops();
     const matched = getFilteredCustomersForCustomRoutePicker();
-    const displayList = matched.slice(0, 60);
+    const displayList = matched.slice(0, 120);
+
+    const tickedInCurrentView = matched.filter(c => customRoutePendingSelectedCodes.has(c.code) || customRouteDraftSelectedCodes.has(c.code)).length;
+
+    if (subEl) {
+        const stopsSummary = effectiveStops.length > 0 ? effectiveStops.join(', ') : 'Henüz İlçe Seçilmedi';
+        subEl.innerHTML = `Şu An İncelenen İlçe: <strong style="color:#38bdf8;">${escapeHtml(stopsSummary)}</strong> &bull; İlçe Müşterisi: <strong style="color:#fff;">${matched.length}</strong> &bull; Tiklenen: <strong style="color:#34d399;">${tickedInCurrentView}</strong>`;
+    }
+
+    if (commitBtn) {
+        if (effectiveStops.length > 0) {
+            commitBtn.innerHTML = `<i class="fa-solid fa-arrow-down-short-wide"></i> ➕ Seçilen ${tickedInCurrentView > 0 ? `(${tickedInCurrentView}) ` : ''}Müşteriyi (${escapeHtml(effectiveStops.join(', '))}) Alttaki Rut Listesine Ekle`;
+        } else {
+            commitBtn.innerHTML = `<i class="fa-solid fa-arrow-down-short-wide"></i> ➕ Seçilen Müşterileri Alttaki Rut Listesine Ekle`;
+        }
+    }
+
+    if (effectiveStops.length === 0 && !searchVal) {
+        if (cityVal) {
+            box.innerHTML = `<div style="padding:1.15rem; text-align:center; font-size:0.77rem; color:#bae6fd; background:rgba(56,189,248,0.08); border:1px dashed rgba(56,189,248,0.35); border-radius:8px;">
+                <i class="fa-solid fa-location-crosshairs" style="color:#38bdf8; font-size:1rem; margin-bottom:0.35rem; display:block;"></i>
+                <strong>${escapeHtml(cityVal)}</strong> ili seçildi. Şimdi soldaki <strong>${escapeHtml(cityVal)} İlçeleri</strong> listesinden ziyaret edeceğiniz ilçeyi (Örn: <strong>Merkez</strong>, <strong>Sungurlu</strong>, <strong>Delice</strong> vb.) seçin; yalnızca o ilçenin müşterileri burada açılacaktır.
+            </div>`;
+        } else {
+            box.innerHTML = `<div style="padding:1.15rem; text-align:center; font-size:0.76rem; color:var(--text-muted);">
+                <i class="fa-solid fa-map-location-dot" style="color:#38bdf8; font-size:1rem; margin-bottom:0.35rem; display:block;"></i>
+                <strong>Adım 1:</strong> Soldan <strong>İl</strong> ve <strong>İlçe</strong> seçin (Örn: <em>Çorum / Sungurlu</em>).<br>
+                <strong>Adım 2:</strong> Gelen müşterileri tikleyip <strong>"➕ Seçilen Müşterileri Alttaki Rut Listesine Ekle"</strong> tuşuna basın.<br>
+                <strong>Adım 3:</strong> Ardından sıradaki İl/İlçeyi (Örn: <em>Kırıkkale / Delice</em>) seçip aynı şekilde alttaki listeye ekleyin.
+            </div>`;
+        }
+        return;
+    }
 
     if (displayList.length === 0) {
-        box.innerHTML = `<div style="padding:0.75rem; text-align:center; font-size:0.75rem; color:var(--text-muted);">Eşleşen müşteri bulunamadı.</div>`;
+        box.innerHTML = `<div style="padding:1rem; text-align:center; font-size:0.76rem; color:var(--text-muted);">Seçilen <strong>${escapeHtml(effectiveStops.join(', '))}</strong> ilçesinde kayıtlı müşteri bulunamadı. Bu ilçeyi yine de durağa eklemek için aşağıdaki <strong>"➕ Alttaki Rut Listesine Ekle"</strong> tuşuna basabilir veya <strong>"+ MANUEL ZİYARET EKLE"</strong> alanından yeni işletme girebilirsiniz.</div>`;
         return;
     }
 
     box.innerHTML = displayList.map(c => {
-        const isChecked = customRouteDraftSelectedCodes.has(c.code);
+        const isAlreadyInBottom = customRouteDraftSelectedCodes.has(c.code);
+        const isPendingTicked = customRoutePendingSelectedCodes.has(c.code);
+        const isChecked = isAlreadyInBottom || isPendingTicked;
+        const safeCode = escapeHtml(c.code || '').replace(/'/g, "\\'");
+        const phoneStr = c.phone && c.phone !== '-' ? c.phone : 'Tel Yok';
+        const resolvedDist = resolveCustomerDistrictName(c);
+        const addrStr = c.address && c.address !== '-' ? c.address : `${c.city || '-'} / ${resolvedDist}`;
         return `
-            <div onclick="toggleCustomerInCustomRouteDraft('${c.code}')" style="display:flex; justify-content:space-between; align-items:center; gap:0.5rem; padding:0.35rem 0.55rem; border-bottom:1px solid rgba(148,163,184,0.08); cursor:pointer; border-radius:6px; background:${isChecked ? 'rgba(16,185,129,0.14)' : 'transparent'};">
-                <div style="display:flex; align-items:center; gap:0.45rem; min-width:0;">
-                    <input type="checkbox" ${isChecked ? 'checked' : ''} style="pointer-events:none; accent-color:#10b981;">
-                    <div style="min-width:0;">
-                        <div style="font-size:0.75rem; font-weight:700; color:${isChecked ? '#34d399' : '#f8fafc'}; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">
-                            ${c.title}
+            <div onclick="toggleCustomerInCustomRouteDraft('${safeCode}')" style="display:flex; justify-content:space-between; align-items:center; gap:0.55rem; padding:0.42rem 0.6rem; border-bottom:1px solid rgba(148,163,184,0.1); cursor:pointer; border-radius:6px; background:${isChecked ? 'rgba(16,185,129,0.18)' : 'transparent'};">
+                <div style="display:flex; align-items:flex-start; gap:0.5rem; min-width:0; flex:1;">
+                    <input type="checkbox" ${isChecked ? 'checked' : ''} style="pointer-events:none; accent-color:#10b981; width:16px; height:16px; margin-top:2px; flex-shrink:0;">
+                    <div style="min-width:0; flex:1;">
+                        <div style="font-size:0.77rem; font-weight:800; color:${isChecked ? '#34d399' : '#f8fafc'}; display:flex; align-items:center; gap:0.35rem; flex-wrap:wrap;">
+                            <span>${escapeHtml(c.title || '-')}</span>
+                            <span style="font-family:monospace; font-size:0.66rem; color:#38bdf8; background:rgba(56,189,248,0.12); padding:1px 5px; border-radius:4px;">${escapeHtml(c.code || '')}</span>
                         </div>
-                        <div style="font-size:0.67rem; color:var(--text-sec);">
-                            <span style="font-family:monospace; color:#38bdf8;">${c.code}</span> &bull; ${c.city} / ${c.district} ${c.plates && c.plates !== 'Plakasız' ? `&bull; <span style="color:#fde68a;">${c.plates}</span>` : ''}
+                        <div style="font-size:0.68rem; color:var(--text-sec); margin-top:2px;">
+                            <i class="fa-solid fa-location-dot" style="color:#f59e0b;"></i> <strong>${escapeHtml(c.city || '-')} / ${escapeHtml(resolvedDist)}</strong>
+                            &bull; <i class="fa-solid fa-phone" style="color:#34d399;"></i> ${escapeHtml(phoneStr)}
+                            &bull; <span style="color:#94a3b8;">${escapeHtml(addrStr.slice(0, 55))}</span>
                         </div>
                     </div>
                 </div>
-                <span class="badge ${isChecked ? 'badge-success' : 'badge-secondary'}" style="font-size:0.65rem; white-space:nowrap;">
-                    ${isChecked ? '✓ Eklendi' : '+ Seç'}
+                <span class="badge ${isAlreadyInBottom ? 'badge-info' : (isPendingTicked ? 'badge-success' : 'badge-secondary')}" style="font-size:0.66rem; white-space:nowrap;">
+                    ${isAlreadyInBottom ? '✓ Listede' : (isPendingTicked ? '✓ Tiklendi' : '+ Seç')}
                 </span>
             </div>
         `;
-    }).join('') + (matched.length > 60 ? `<div style="padding:0.4rem; text-align:center; font-size:0.69rem; color:#93c5fd;">+${matched.length - 60} cari daha var (Arama kutusundan daraltabilir veya "Listelenenleri Seç" diyebilirsiniz)</div>` : '');
+    }).join('') + (matched.length > 120 ? `<div style="padding:0.45rem; text-align:center; font-size:0.7rem; color:#93c5fd;">+${matched.length - 120} müşteri daha var (Arama kutusundan filtreleyebilir veya "Tümünü Tikle" diyebilirsiniz)</div>` : '');
 }
 
 function toggleCustomerInCustomRouteDraft(code) {
     if (!code) return;
     if (customRouteDraftSelectedCodes.has(code)) {
         customRouteDraftSelectedCodes.delete(code);
+        customRoutePendingSelectedCodes.delete(code);
+    } else if (customRoutePendingSelectedCodes.has(code)) {
+        customRoutePendingSelectedCodes.delete(code);
     } else {
-        customRouteDraftSelectedCodes.add(code);
+        customRoutePendingSelectedCodes.add(code);
     }
     renderCustomRouteCustomerPicker();
     renderCustomRouteSelectedChips();
@@ -4796,52 +6430,317 @@ function toggleCustomerInCustomRouteDraft(code) {
 function selectAllFilteredForCustomRoute() {
     const matched = getFilteredCustomersForCustomRoutePicker();
     if (matched.length === 0) {
-        showToast('Seçilecek müşteri bulunamadı.', 'warning');
+        showToast('Önce soldan İl ve İlçe seçin.', 'warning');
         return;
     }
-    matched.forEach(c => customRouteDraftSelectedCodes.add(c.code));
+    matched.forEach(c => customRoutePendingSelectedCodes.add(c.code));
+    renderCustomRouteCustomerPicker();
+    showToast(`${matched.length} müşteri tiklendi. Şimdi "➕ Seçilen Müşterileri Alttaki Rut Listesine Ekle" butonuna basın.`, 'info');
+}
+
+function clearCurrentViewingSelection() {
+    const matched = getFilteredCustomersForCustomRoutePicker();
+    matched.forEach(c => {
+        customRoutePendingSelectedCodes.delete(c.code);
+        customRouteDraftSelectedCodes.delete(c.code);
+    });
+    renderCustomRouteCustomerPicker();
+    renderCustomRouteSelectedChips();
+}
+
+// 2. ADIMDAN 3. ADIMA (ALTTAKİ LİSTEYE) AKTARMA FONKSİYONU
+function commitCurrentRegionCustomersToBottomList() {
+    const citySel = document.getElementById('custom-rut-city-select');
+    const customIn = document.getElementById('custom-rut-custom-district-input');
+    const cityVal = citySel ? citySel.value.trim() : '';
+    const customDistVal = customIn ? customIn.value.trim() : '';
+
+    if (cityVal && customDistVal) {
+        addCustomSubDistrictToCity();
+    }
+
+    const effectiveStops = getActiveEffectiveRouteStops();
+    const matched = getFilteredCustomersForCustomRoutePicker();
+    const newlyTickedCodes = matched.filter(c => customRoutePendingSelectedCodes.has(c.code) || customRouteDraftSelectedCodes.has(c.code)).map(c => c.code);
+
+    if (effectiveStops.length === 0 && newlyTickedCodes.length === 0 && customRoutePendingSelectedCodes.size === 0) {
+        if (cityVal) {
+            showToast(`Lütfen "${cityVal}" ili için ziyaret edeceğiniz ilçeyi (Örn: Merkez, Sungurlu, Delice) seçin veya tikleyin!`, 'warning');
+        } else {
+            showToast('Lütfen önce soldan İl ve İlçe seçin.', 'warning');
+        }
+        return;
+    }
+
+    // Aktif İl / İlçe duraklarını alttaki durak listesine ekle
+    const addedStopNames = [];
+    effectiveStops.forEach(stop => {
+        if (!customRouteDraftDistricts.some(x => normalizeTR(x) === normalizeTR(stop))) {
+            customRouteDraftDistricts.push(stop);
+            addedStopNames.push(stop);
+        }
+    });
+
+    // Eğer kullanıcı henüz sağdaki müşterileri tiklemeden soldaki "+ Ekle" tuşuna bastıysa:
+    // Durağı ekle ve sağdaki müşteri kutusunu vurgula ki müşterileri seçebilsin (veya müşteri yoksa doğrudan sıradaki ile geçsin)
+    if (newlyTickedCodes.length === 0 && customRoutePendingSelectedCodes.size === 0 && matched.length > 0) {
+        syncRouteSummaryAndPlanNameFromStops();
+        renderCustomRouteDistrictBadges();
+        renderCustomRouteCustomerPicker();
+        renderCustomRouteSelectedChips();
+        const rightBox = document.getElementById('custom-rut-cust-results');
+        if (rightBox) {
+            rightBox.style.boxShadow = '0 0 0 2px #10b981';
+            setTimeout(() => { rightBox.style.boxShadow = ''; }, 1500);
+        }
+        showToast(`📍 ${effectiveStops.join(', ')} durağı eklendi! Şimdi sağdaki listeden ziyaret edilecek müşterileri tikleyip tekrar Ekle tuşuna basın.`, 'info');
+        return;
+    }
+
+    // Tiklenen müşterileri alttaki ana rut listesine aktar
+    let addedCustomerCount = 0;
+    customRoutePendingSelectedCodes.forEach(code => {
+        if (!customRouteDraftSelectedCodes.has(code)) {
+            customRouteDraftSelectedCodes.add(code);
+            addedCustomerCount++;
+        }
+    });
+    customRoutePendingSelectedCodes.clear();
+
+    // Seçilen müşterilerin il/ilçelerini de durak listesinde garantiye al
+    const customers = appState.customers || [];
+    newlyTickedCodes.forEach(code => {
+        const c = customers.find(x => x.code === code);
+        if (c && c.city) {
+            const stopPair = `${c.city.trim()} / ${resolveCustomerDistrictName(c)}`;
+            if (!customRouteDraftDistricts.some(x => normalizeTR(x) === normalizeTR(stopPair))) {
+                customRouteDraftDistricts.push(stopPair);
+            }
+        }
+    });
+
+    // Sıradaki İl / İlçe seçimi için üstteki İl ve İlçe seçimini sıfırla ki sıradaki İl/İlçe (Örn: Kırıkkale / Delice) temiz açılsın!
+    pendingCheckedDistrictsForCity.clear();
+    if (citySel) citySel.value = '';
+    const distSel = document.getElementById('custom-rut-district-select');
+    if (distSel) distSel.value = '';
+    const searchEl = document.getElementById('custom-rut-cust-search');
+    if (searchEl) searchEl.value = '';
+
+    syncRouteSummaryAndPlanNameFromStops();
+    handleCustomRouteCityChange(false);
+    renderCustomRouteDistrictBadges();
     renderCustomRouteCustomerPicker();
     renderCustomRouteSelectedChips();
     renderLegacyCustomers();
-    showToast(`${matched.length} müşteri rut taslağına eklendi.`, 'success');
+
+    const bottomChipsBox = document.getElementById('custom-rut-selected-chips');
+    if (bottomChipsBox) {
+        bottomChipsBox.style.boxShadow = '0 0 0 2px #10b981';
+        setTimeout(() => { bottomChipsBox.style.boxShadow = ''; }, 1400);
+    }
+
+    const stopLabelStr = effectiveStops.join(', ') || addedStopNames.join(', ') || 'Seçili bölge';
+    showToast(`✓ ${stopLabelStr} (${newlyTickedCodes.length || addedCustomerCount} müşteri) alttaki rut listesine eklendi! Şimdi sıradaki İl ve İlçeyi seçebilirsiniz.`, 'success');
+}
+
+function removeSingleCustomerFromBottomRouteList(code) {
+    if (!code) return;
+    customRouteDraftSelectedCodes.delete(code);
+    customRoutePendingSelectedCodes.delete(code);
+    renderCustomRouteCustomerPicker();
+    renderCustomRouteSelectedChips();
+    renderLegacyCustomers();
 }
 
 function clearCustomRouteSelectedCustomers() {
     customRouteDraftSelectedCodes.clear();
+    customRoutePendingSelectedCodes.clear();
+    customRouteDraftManualPlaces = [];
+    customRouteDraftDistricts = [];
+    pendingCheckedDistrictsForCity.clear();
+    syncRouteSummaryAndPlanNameFromStops();
+    handleCustomRouteCityChange(true);
+    renderCustomRouteDistrictBadges();
     renderCustomRouteCustomerPicker();
     renderCustomRouteSelectedChips();
     renderLegacyCustomers();
+}
+
+function addManualPlaceToRouteDraft() {
+    const titleEl = document.getElementById('manual-rut-cust-title');
+    const cityEl = document.getElementById('manual-rut-cust-city');
+    const distEl = document.getElementById('manual-rut-cust-district');
+    const addrEl = document.getElementById('manual-rut-cust-address');
+    const authEl = document.getElementById('manual-rut-cust-auth');
+    const phoneEl = document.getElementById('manual-rut-cust-phone');
+    const dateEl = document.getElementById('manual-rut-cust-date');
+    const persEl = document.getElementById('manual-rut-cust-personnel');
+    const purpEl = document.getElementById('manual-rut-cust-purpose');
+    const notesEl = document.getElementById('manual-rut-cust-notes');
+
+    const title = (titleEl?.value || '').trim();
+    if (!title) {
+        showToast('Lütfen manuel ziyaret edilecek Firma / İşletme Adını girin.', 'warning');
+        if (titleEl) titleEl.focus();
+        return;
+    }
+
+    const plannerCity = (document.getElementById('custom-rut-city-select')?.value || '').trim();
+    const plannerDist = (document.getElementById('custom-rut-district-select')?.value || '').trim();
+
+    const city = (cityEl?.value || '').trim() || plannerCity || 'Çorum';
+    const district = (distEl?.value || '').trim() || plannerDist || 'Merkez';
+    const address = (addrEl?.value || '').trim();
+    const authorized = (authEl?.value || '').trim() || 'İşletme Yetkilisi';
+    const phone = (phoneEl?.value || '').trim() || '-';
+    const visitDate = (dateEl?.value || '').trim() || (document.getElementById('custom-rut-date')?.value || '').trim() || getTodayTRStr();
+    const personnel = (persEl?.value || '').trim() || (document.getElementById('custom-rut-assignee')?.value || '').trim() || (currentUser ? currentUser.name : 'ÖMER EREN');
+    const visitPurpose = (purpEl?.value || '').trim() || 'Tanışma Ziyareti';
+    const notes = (notesEl?.value || '').trim() || `${visitPurpose} (Sistem dışı manuel işletme)`;
+    const code = 'MANUEL-' + String(Date.now()).slice(-6);
+
+    const manualRecord = {
+        itemId: 'RITEM-' + code,
+        code,
+        title,
+        city,
+        district,
+        address: address || `${city} / ${district}`,
+        authorized,
+        contactRole: 'İşletme Yetkilisi',
+        phone,
+        plates: '',
+        isManual: true,
+        status: 'PENDING',
+        visitDate,
+        visitTime: getNowTimeTRStr(),
+        visitNotes: notes,
+        extraNotes: '',
+        visitResult: '2 - Tanışma / İlk Temas',
+        nextVisitDate: '',
+        unvisitedReason: '',
+        unvisitedReasonCustom: '',
+        visitPurpose,
+        personnel,
+        convertedCustomerCode: '',
+        updatedAt: formatNowTR()
+    };
+
+    customRouteDraftManualPlaces.push(manualRecord);
+
+    const stopLabel = `${city} / ${district}`;
+    if (!customRouteDraftDistricts.some(x => normalizeTR(x) === normalizeTR(stopLabel))) {
+        customRouteDraftDistricts.push(stopLabel);
+        syncRouteSummaryAndPlanNameFromStops();
+    }
+
+    if (titleEl) titleEl.value = '';
+    if (addrEl) addrEl.value = '';
+    if (authEl) authEl.value = '';
+    if (phoneEl) phoneEl.value = '';
+    if (notesEl) notesEl.value = '';
+
+    renderCustomRouteDistrictBadges();
+    renderCustomRouteCustomerPicker();
+    renderCustomRouteSelectedChips();
+    showToast(`"${title}" (${city}/${district}) manuel ziyaret olarak alttaki rut listesine eklendi!`, 'success');
+}
+
+function removeManualPlaceFromDraft(code) {
+    customRouteDraftManualPlaces = customRouteDraftManualPlaces.filter(m => m.code !== code);
+    renderCustomRouteSelectedChips();
+    renderCustomRouteCustomerPicker();
 }
 
 function renderCustomRouteSelectedChips() {
     const counterEl = document.getElementById('custom-rut-selected-counter');
     const chipsBox = document.getElementById('custom-rut-selected-chips');
-    const count = customRouteDraftSelectedCodes.size;
+    const count = customRouteDraftSelectedCodes.size + customRouteDraftManualPlaces.length;
 
     if (counterEl) {
-        counterEl.textContent = `Seçilen Müşteri: ${count} Cari`;
+        const stopsInfo = customRouteDraftDistricts.length > 0 ? `Güzergâh: ${customRouteDraftDistricts.join(' -> ')} • ` : '';
+        counterEl.textContent = `${stopsInfo}Alttaki Listeye Eklenen: ${count} Ziyaret Noktası (${customRouteDraftSelectedCodes.size} Kayıtlı Müşteri + ${customRouteDraftManualPlaces.length} Manuel İşletme)`;
     }
     if (!chipsBox) return;
 
     if (count === 0) {
-        chipsBox.innerHTML = `<span style="font-size:0.74rem; color:var(--text-muted);"><i class="fa-solid fa-circle-info" style="color:#38bdf8;"></i> Yukarıdaki müşteri listesinden veya aşağıdaki tablodaki <strong>"+ Ruta Ekle"</strong> butonuna basarak müşterileri seçip <strong>"Rut Kaydet"</strong> tuşuna basın.</span>`;
+        chipsBox.innerHTML = `<div style="padding:0.75rem; text-align:center; font-size:0.75rem; color:var(--text-muted); background:rgba(15,23,42,0.55); border:1px dashed rgba(148,163,184,0.25); border-radius:8px;">
+            <i class="fa-solid fa-circle-info" style="color:#38bdf8;"></i> Henüz alttaki rut listesine müşteri eklenmedi. Yukarıdan <strong>1. İl ve İlçe seçin</strong> (Örn: <em>Çorum / Sungurlu</em>) &rarr; <strong>2. Müşterileri tikleyip "➕ Seçilen Müşterileri Alttaki Rut Listesine Ekle"</strong> tuşuna basın &rarr; Peşine diğer İl/İlçeleri (Örn: <em>Kırıkkale / Delice</em>) ekleyin.
+        </div>`;
         return;
     }
 
     const customers = appState.customers || [];
     const selectedCodesArr = Array.from(customRouteDraftSelectedCodes);
-    const previewCodes = selectedCodesArr.slice(0, 25);
 
-    chipsBox.innerHTML = previewCodes.map(code => {
-        const c = customers.find(x => x.code === code);
-        const label = c ? `${c.title.slice(0, 26)} (${c.district || c.city})` : code;
-        return `
-            <span class="badge" style="background:rgba(16,185,129,0.15); color:#34d399; border:1px solid rgba(16,185,129,0.35); font-size:0.7rem; display:inline-flex; align-items:center; gap:0.3rem; padding:0.2rem 0.5rem;">
-                ${label}
-                <i class="fa-solid fa-xmark" style="cursor:pointer; color:#f87171;" title="Ruttan Çıkar" onclick="toggleCustomerInCustomRouteDraft('${code}')"></i>
-            </span>
-        `;
-    }).join('') + (count > 25 ? `<span class="badge badge-secondary" style="font-size:0.7rem;">+${count - 25} Cari Daha Seçildi</span>` : '');
+    const rowsHtml = [
+        ...selectedCodesArr.map((code, idx) => {
+            const c = customers.find(x => x.code === code);
+            const title = c ? c.title : code;
+            const region = c ? `${c.city || '-'} / ${resolveCustomerDistrictName(c)}` : '-';
+            const phone = c && c.phone && c.phone !== '-' ? c.phone : '-';
+            const addr = c && c.address && c.address !== '-' ? c.address : region;
+            const safeCode = escapeHtml(code).replace(/'/g, "\\'");
+            return `
+                <tr style="border-bottom:1px solid rgba(148,163,184,0.12); font-size:0.74rem;">
+                    <td style="padding:0.38rem 0.5rem; font-weight:800; color:#fbbf24; width:36px;">${idx + 1}</td>
+                    <td style="padding:0.38rem 0.5rem; white-space:nowrap;">
+                        <span class="badge" style="background:rgba(56,189,248,0.15); color:#38bdf8; border:1px solid rgba(56,189,248,0.35); font-size:0.68rem;">
+                            📍 ${escapeHtml(region)}
+                        </span>
+                    </td>
+                    <td style="padding:0.38rem 0.5rem; font-weight:800; color:#f8fafc;">
+                        ${escapeHtml(title)}
+                        <span style="font-family:monospace; font-size:0.65rem; color:#93c5fd; margin-left:4px;">(${escapeHtml(code)})</span>
+                    </td>
+                    <td style="padding:0.38rem 0.5rem; color:#cbd5e1; font-size:0.7rem;">${escapeHtml(phone)} &bull; ${escapeHtml(addr.slice(0, 48))}</td>
+                    <td style="padding:0.38rem 0.5rem; text-align:right; width:70px;">
+                        <button type="button" class="btn btn-secondary btn-sm" style="padding:0.15rem 0.45rem; font-size:0.66rem; color:#f87171; border-color:rgba(248,113,113,0.3);" onclick="removeSingleCustomerFromBottomRouteList('${safeCode}')">
+                            <i class="fa-solid fa-xmark"></i> Çıkar
+                        </button>
+                    </td>
+                </tr>
+            `;
+        }),
+        ...customRouteDraftManualPlaces.map((m, mIdx) => {
+            const safeCode = escapeHtml(m.code).replace(/'/g, "\\'");
+            return `
+                <tr style="border-bottom:1px solid rgba(148,163,184,0.12); font-size:0.74rem; background:rgba(139,92,246,0.08);">
+                    <td style="padding:0.38rem 0.5rem; font-weight:800; color:#c084fc; width:36px;">${selectedCodesArr.length + mIdx + 1}</td>
+                    <td style="padding:0.38rem 0.5rem; white-space:nowrap;">
+                        <span class="badge" style="background:rgba(139,92,246,0.22); color:#e9d5ff; border:1px solid rgba(167,139,250,0.45); font-size:0.68rem;">
+                            🤝 ${escapeHtml(m.city || '-')} / ${escapeHtml(m.district || '-')}
+                        </span>
+                    </td>
+                    <td style="padding:0.38rem 0.5rem; font-weight:800; color:#e9d5ff;">
+                        ${escapeHtml(m.title)} <span class="badge badge-secondary" style="font-size:0.62rem;">Manuel Ziyaret</span>
+                    </td>
+                    <td style="padding:0.38rem 0.5rem; color:#cbd5e1; font-size:0.7rem;">${escapeHtml(m.phone || '-')} &bull; ${escapeHtml((m.address || '').slice(0, 48))}</td>
+                    <td style="padding:0.38rem 0.5rem; text-align:right; width:70px;">
+                        <button type="button" class="btn btn-secondary btn-sm" style="padding:0.15rem 0.45rem; font-size:0.66rem; color:#f87171; border-color:rgba(248,113,113,0.3);" onclick="removeManualPlaceFromDraft('${safeCode}')">
+                            <i class="fa-solid fa-xmark"></i> Çıkar
+                        </button>
+                    </td>
+                </tr>
+            `;
+        })
+    ].join('');
+
+    chipsBox.innerHTML = `
+        <table style="width:100%; border-collapse:collapse;">
+            <thead>
+                <tr style="background:rgba(15,23,42,0.9); color:#94a3b8; font-size:0.68rem; text-align:left; border-bottom:1px solid rgba(148,163,184,0.2);">
+                    <th style="padding:0.35rem 0.5rem;">#</th>
+                    <th style="padding:0.35rem 0.5rem;">İl / İlçe Durağı</th>
+                    <th style="padding:0.35rem 0.5rem;">Seçilen Müşteri / İşletme</th>
+                    <th style="padding:0.35rem 0.5rem;">Telefon &amp; Adres</th>
+                    <th style="padding:0.35rem 0.5rem; text-align:right;">İşlem</th>
+                </tr>
+            </thead>
+            <tbody>${rowsHtml}</tbody>
+        </table>
+    `;
 }
 
 function resetCustomRouteForm() {
@@ -4849,6 +6748,8 @@ function resetCustomRouteForm() {
     const nameEl = document.getElementById('custom-rut-name');
     const routeEl = document.getElementById('custom-rut-route-text');
     const notesEl = document.getElementById('custom-rut-notes');
+    const endDateEl = document.getElementById('custom-rut-end-date');
+    const statusEl = document.getElementById('custom-rut-plan-status');
     const citySel = document.getElementById('custom-rut-city-select');
     const distSel = document.getElementById('custom-rut-district-select');
     const searchEl = document.getElementById('custom-rut-cust-search');
@@ -4856,17 +6757,26 @@ function resetCustomRouteForm() {
     const saveBtn = document.getElementById('custom-rut-save-btn');
 
     if (editIdEl) editIdEl.value = '';
-    if (nameEl) nameEl.value = '';
+    if (nameEl) { nameEl.value = ''; delete nameEl.dataset.autoGenerated; }
     if (routeEl) routeEl.value = '';
     if (notesEl) notesEl.value = '';
+    if (endDateEl) endDateEl.value = '';
+    if (statusEl) statusEl.value = 'Planlandı';
     if (citySel) citySel.value = '';
-    if (distSel) distSel.innerHTML = '<option value="">🏘️ Tüm İlçeler</option>';
+    if (distSel) distSel.innerHTML = '<option value="">🏘️ İlçe Seçin (Sadece Seçilen İlçe Gelir)</option>';
     if (searchEl) searchEl.value = '';
-    if (titleEl) titleEl.textContent = 'Yeni Rut Planla & Kaydet';
-    if (saveBtn) saveBtn.innerHTML = '<i class="fa-solid fa-floppy-disk"></i> Rut Kaydet';
+    if (titleEl) titleEl.textContent = 'RUT PLANLA — Yeni Güzergâh & Ziyaret Planı Oluştur';
+    if (saveBtn) saveBtn.innerHTML = '<i class="fa-solid fa-floppy-disk"></i> KAYDET &amp; Planlanan Ziyaretler Listesini Oluştur';
 
     customRouteDraftSelectedCodes.clear();
+    customRoutePendingSelectedCodes.clear();
     customRouteDraftDistricts = [];
+    customRouteDraftManualPlaces = [];
+    customRouteDraftAssignees = [];
+    ensureDefaultCustomRouteAssignees();
+    renderCustomRoutePersonnelSelector();
+    pendingCheckedDistrictsForCity.clear();
+    handleCustomRouteCityChange();
     renderCustomRouteDistrictBadges();
     renderCustomRouteCustomerPicker();
     renderCustomRouteSelectedChips();
@@ -4874,28 +6784,42 @@ function resetCustomRouteForm() {
 }
 
 async function saveCustomRoutePlan() {
+    // Eğer kullanıcı sağ kutuda müşteri tikleyip henüz "Alttaki Listeye Ekle"ye basmadan doğrudan KAYDET'e bastıysa onları da otomatik dahil et
+    if (customRoutePendingSelectedCodes.size > 0) {
+        customRoutePendingSelectedCodes.forEach(code => customRouteDraftSelectedCodes.add(code));
+        getActiveEffectiveRouteStops().forEach(stop => {
+            if (!customRouteDraftDistricts.some(x => normalizeTR(x) === normalizeTR(stop))) {
+                customRouteDraftDistricts.push(stop);
+            }
+        });
+        customRoutePendingSelectedCodes.clear();
+        syncRouteSummaryAndPlanNameFromStops();
+    }
+
     const editId = (document.getElementById('custom-rut-edit-id')?.value || '').trim();
     const nameInput = document.getElementById('custom-rut-name');
     const routeInput = document.getElementById('custom-rut-route-text');
     const dateInput = document.getElementById('custom-rut-date');
+    const endDateInput = document.getElementById('custom-rut-end-date');
+    const statusInput = document.getElementById('custom-rut-plan-status');
     const assigneeInput = document.getElementById('custom-rut-assignee');
     const notesInput = document.getElementById('custom-rut-notes');
     const citySel = document.getElementById('custom-rut-city-select');
     const distSel = document.getElementById('custom-rut-district-select');
 
-    const name = (nameInput?.value || '').trim();
+    ensureDefaultCustomRouteAssignees();
+    const assigneesList = customRouteDraftAssignees.map(p => ({ ...p }));
+    const formattedAssigneeStr = formatCustomRouteAssigneesString(assigneesList);
+    if (assigneeInput) assigneeInput.value = formattedAssigneeStr;
+
+    let name = (nameInput?.value || '').trim();
     let routeText = (routeInput?.value || '').trim();
-    const plannedDate = (dateInput?.value || '').trim() || formatNowTR().slice(0, 10);
-    const assignee = (assigneeInput?.value || '').trim() || (currentUser ? currentUser.name : 'ÖMER EREN');
+    const plannedDate = (dateInput?.value || '').trim() || getTodayTRStr();
+    const endDate = (endDateInput?.value || '').trim();
+    const planStatus = (statusInput?.value || '').trim() || 'Planlandı';
+    const assignee = formattedAssigneeStr || (assigneeInput?.value || '').trim() || (currentUser ? currentUser.name : 'ÖMER EREN');
     const notes = (notesInput?.value || '').trim();
 
-    if (!name) {
-        showToast('Lütfen kaydedilecek Rut Adını / Kodunu yazın (Örn: Çorum - Sungurlu Rutu).', 'danger');
-        if (nameInput) nameInput.focus();
-        return;
-    }
-
-    // Eğer güzergah boş bırakıldıysa seçili il/ilçe veya seçili müşterilerin ilçelerinden otomatik oluştur
     if (!routeText) {
         if (customRouteDraftDistricts.length > 0) {
             routeText = customRouteDraftDistricts.join(' -> ');
@@ -4904,79 +6828,174 @@ async function saveCustomRoutePlan() {
         }
     }
 
-    let customerCodes = Array.from(customRouteDraftSelectedCodes);
-
-    // Kullanıcı müşteri seçmeden doğrudan İl/İlçe seçip kaydet'e bastıysa o il/ilçedeki müşterileri otomatik dahil et
-    if (customerCodes.length === 0 && ((citySel && citySel.value) || customRouteDraftDistricts.length > 0)) {
-        const autoMatched = getFilteredCustomersForCustomRoutePicker();
-        if (autoMatched.length > 0 && autoMatched.length <= 500) {
-            customerCodes = autoMatched.map(c => c.code);
+    if (!name) {
+        if (routeText) {
+            name = `${routeText.split('->')[0].trim()} Rutu (${plannedDate})`;
+            if (nameInput) nameInput.value = name;
+        } else {
+            showToast('Lütfen Plan Adı / Güzergâh Adı girin veya İl/İlçe seçin.', 'danger');
+            if (nameInput) nameInput.focus();
+            return;
         }
     }
 
-    // Seçilen müşterilerin il/ilçelerini güzergah listesine de ekle
+    let customerCodes = Array.from(customRouteDraftSelectedCodes);
+
+    if (customerCodes.length === 0 && customRouteDraftManualPlaces.length === 0) {
+        showToast('Lütfen sağdaki listeden ziyaret edilecek müşterileri tikleyin veya + Manuel Ziyaret Ekle ile işletme ekleyin.', 'warning');
+        return;
+    }
+
     const customers = appState.customers || [];
+    const custMap = new Map(customers.map(c => [c.code, c]));
     const selectedCustObjs = customers.filter(c => customerCodes.includes(c.code));
     const derivedDistricts = Array.from(new Set([
         ...customRouteDraftDistricts,
-        ...selectedCustObjs.map(c => `${c.city || ''} / ${c.district || ''}`).filter(s => s !== ' / ')
+        ...selectedCustObjs.map(c => `${c.city || ''} / ${c.district || ''}`).filter(s => s !== ' / '),
+        ...customRouteDraftManualPlaces.map(m => `${m.city || ''} / ${m.district || ''}`).filter(s => s !== ' / ')
     ]));
 
     if (!routeText && derivedDistricts.length > 0) {
         routeText = derivedDistricts.slice(0, 6).join(' -> ');
     }
-    if (!routeText) {
-        routeText = name;
+    if (!routeText) routeText = name;
+
+    if (!Array.isArray(appState.customRoutes)) appState.customRoutes = [];
+
+    const existingRoute = appState.customRoutes.find(r => r.id === editId || normalizeTR(r.name) === normalizeTR(name));
+    const prevItemsMap = new Map();
+    if (existingRoute && Array.isArray(existingRoute.items)) {
+        existingRoute.items.forEach(it => {
+            if (it && it.code) prevItemsMap.set(it.code, it);
+        });
     }
 
-    if (!Array.isArray(appState.customRoutes)) {
-        appState.customRoutes = [];
+    const items = [];
+    customerCodes.forEach(code => {
+        const c = custMap.get(code);
+        const prev = prevItemsMap.get(code);
+        items.push({
+            itemId: (prev && prev.itemId) || ('RITEM-' + code + '-' + Date.now().toString(36)),
+            code,
+            title: c ? c.title : (prev ? prev.title : code),
+            city: c ? (c.city || '') : (prev ? prev.city : ''),
+            district: c ? (c.district || '') : (prev ? prev.district : ''),
+            address: c ? (c.address || '') : (prev ? prev.address : ''),
+            authorized: (prev && prev.authorized) || (c ? (c.authorized || '') : ''),
+            contactRole: (prev && prev.contactRole) || (c ? (c.contactRole || 'Yetkili') : 'Yetkili'),
+            phone: c ? (c.phone || '') : (prev ? prev.phone : ''),
+            plates: c ? (c.plates || '') : (prev ? prev.plates : ''),
+            isManual: false,
+            status: prev ? (prev.status || 'PENDING') : 'PENDING',
+            visitDate: prev ? (prev.visitDate || '') : '',
+            visitTime: prev ? (prev.visitTime || '') : '',
+            visitNotes: prev ? (prev.visitNotes || '') : '',
+            extraNotes: prev ? (prev.extraNotes || '') : '',
+            visitResult: prev ? (prev.visitResult || '') : '',
+            nextVisitDate: prev ? (prev.nextVisitDate || '') : '',
+            unvisitedReason: prev ? (prev.unvisitedReason || '') : '',
+            unvisitedReasonCustom: prev ? (prev.unvisitedReasonCustom || '') : '',
+            visitPurpose: prev ? (prev.visitPurpose || '') : '',
+            personnel: (prev && prev.personnel) || assignee,
+            convertedCustomerCode: prev ? (prev.convertedCustomerCode || '') : '',
+            updatedAt: (prev && prev.updatedAt) || formatNowTR()
+        });
+    });
+
+    // Mevcut plandaki manuel ziyaretleri ve yeni eklenen manuel ziyaretleri birleştir
+    if (existingRoute && Array.isArray(existingRoute.items)) {
+        existingRoute.items.filter(it => it && it.isManual).forEach(m => {
+            if (!items.some(x => x.code === m.code)) items.push(m);
+        });
     }
+    customRouteDraftManualPlaces.forEach(m => {
+        if (!items.some(x => x.code === m.code)) {
+            items.push({ ...m, personnel: m.personnel || assignee });
+        }
+    });
 
     const record = {
-        id: editId || ('RUTPLAN-' + Date.now()),
+        id: (existingRoute && existingRoute.id) || editId || ('RUTPLAN-' + Date.now()),
         name,
         routeText,
         plannedDate,
+        endDate,
+        planStatus,
         assignee,
+        assignees: assigneesList,
         notes,
         districts: derivedDistricts,
         customerCodes,
+        items,
         updatedAt: formatNowTR(),
         createdBy: currentUser ? currentUser.name : 'ÖMER EREN'
     };
 
-    const existingIdx = appState.customRoutes.findIndex(r => r.id === editId || normalizeTR(r.name) === normalizeTR(name));
+    const existingIdx = appState.customRoutes.findIndex(r => r.id === record.id);
     if (existingIdx !== -1) {
         appState.customRoutes[existingIdx] = record;
     } else {
         appState.customRoutes.unshift(record);
     }
 
+    activeSelectedRouteId = record.id;
+    activeRouteExecutionStatusFilter = 'ALL';
+
+    // Yeni plan kaydedildiğinde kayıtlı planlar filtresini sıfırla ki yeni plan asla gizlenmesin
+    ['saved-rut-filter-date', 'saved-rut-filter-personnel', 'saved-rut-filter-city', 'saved-rut-filter-status'].forEach(fId => {
+        const el = document.getElementById(fId);
+        if (el) el.value = '';
+    });
+
     syncCustomRoutesToCustomers();
     populateFilterOptions();
     populateStrategyFilters(true);
     renderSavedCustomRoutesList();
+    renderActiveRouteExecutionPanel();
     renderLegacyCustomers();
     renderDistrictStrategies();
+    renderReportsTab();
+    updateRouteAndReportsBadges();
 
-    addAuditLog('RUT PLANLAMA', `"${name}" rut planı (${routeText} • ${customerCodes.length} Müşteri) kaydedildi.`);
+    addAuditLog('RUT PLANLAMA', `"${name}" rut planı (${routeText} • ${items.length} Ziyaret Noktası • Görevli: ${assignee}) kaydedildi.`);
+
+    // Tüm personelin telefonlarına bildirim gönder ve görev özeti kartını aç
+    await broadcastRoutePlanNotificationToAllPersonnel(record, true);
     await syncToServer();
 
     resetCustomRouteForm();
-    showToast(`"${name}" rut planı (${customerCodes.length} cari ile) başarıyla kaydedildi!`, 'success');
+    showToast(`"${name}" rut planı kaydedildi ve tüm personele bildirim gönderildi!`, 'success');
+
+    const execBox = document.getElementById('active-route-execution-container');
+    if (execBox) {
+        setTimeout(() => execBox.scrollIntoView({ behavior: 'smooth', block: 'start' }), 120);
+    }
+}
+
+function selectActiveRouteForExecution(routeId) {
+    activeSelectedRouteId = routeId;
+    activeRouteExecutionStatusFilter = 'ALL';
+    renderSavedCustomRoutesList();
+    renderActiveRouteExecutionPanel();
+    const execBox = document.getElementById('active-route-execution-container');
+    if (execBox) {
+        execBox.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
 }
 
 function editCustomRoutePlan(routeId) {
     const rt = (appState.customRoutes || []).find(r => r.id === routeId);
     if (!rt) return;
 
-    switchTab('legacy-tab');
+    switchTab('route-plan-tab');
+    ensureRouteItemsNormalized(rt);
 
     const editIdEl = document.getElementById('custom-rut-edit-id');
     const nameEl = document.getElementById('custom-rut-name');
     const routeEl = document.getElementById('custom-rut-route-text');
     const dateEl = document.getElementById('custom-rut-date');
+    const endDateEl = document.getElementById('custom-rut-end-date');
+    const statusEl = document.getElementById('custom-rut-plan-status');
     const assigneeEl = document.getElementById('custom-rut-assignee');
     const notesEl = document.getElementById('custom-rut-notes');
     const titleEl = document.getElementById('custom-rut-form-title');
@@ -4986,21 +7005,31 @@ function editCustomRoutePlan(routeId) {
     if (nameEl) nameEl.value = rt.name || '';
     if (routeEl) routeEl.value = rt.routeText || '';
     if (dateEl) dateEl.value = rt.plannedDate || '';
+    if (endDateEl) endDateEl.value = rt.endDate || '';
+    if (statusEl) statusEl.value = rt.planStatus || 'Planlandı';
+    parseAssigneesStringToDraft(rt.assignee, rt.assignees);
+    renderCustomRoutePersonnelSelector();
     if (assigneeEl && rt.assignee) assigneeEl.value = rt.assignee;
     if (notesEl) notesEl.value = rt.notes || '';
     if (titleEl) titleEl.textContent = `Rut Planını Düzenle: ${rt.name}`;
     if (saveBtn) saveBtn.innerHTML = '<i class="fa-solid fa-floppy-disk"></i> Rut Planını Güncelle';
 
-    customRouteDraftSelectedCodes = new Set(Array.isArray(rt.customerCodes) ? rt.customerCodes : []);
+    customRouteDraftSelectedCodes = new Set(
+        (rt.items || []).filter(i => !i.isManual).map(i => i.code)
+    );
+    customRouteDraftManualPlaces = (rt.items || []).filter(i => i.isManual).map(i => ({ ...i }));
     customRouteDraftDistricts = Array.isArray(rt.districts) ? [...rt.districts] : [];
+    activeSelectedRouteId = rt.id;
 
+    handleCustomRouteCityChange();
     renderCustomRouteDistrictBadges();
     renderCustomRouteCustomerPicker();
     renderCustomRouteSelectedChips();
-    renderLegacyCustomers();
+    renderSavedCustomRoutesList();
+    renderActiveRouteExecutionPanel();
 
     window.scrollTo({ top: 0, behavior: 'smooth' });
-    showToast(`"${rt.name}" düzenleme modunda açıldı. Güzergah ve müşterileri güncelleyip kaydedebilirsiniz.`, 'info');
+    showToast(`"${rt.name}" düzenleme modunda açıldı.`, 'info');
 }
 
 async function deleteCustomRoutePlan(routeId) {
@@ -5009,18 +7038,19 @@ async function deleteCustomRoutePlan(routeId) {
     if (!confirm(`"${rt.name}" rut planını silmek istediğinize emin misiniz?`)) return;
 
     appState.customRoutes = (appState.customRoutes || []).filter(r => r.id !== routeId);
-
-    const rutSel = document.getElementById('legacy-filter-rut');
-    if (rutSel && rutSel.value === rt.name) rutSel.value = '';
-    const stratRutSel = document.getElementById('strategy-filter-rut');
-    if (stratRutSel && stratRutSel.value === rt.name) stratRutSel.value = '';
+    if (activeSelectedRouteId === routeId) {
+        activeSelectedRouteId = appState.customRoutes[0]?.id || null;
+    }
 
     syncCustomRoutesToCustomers();
     populateFilterOptions();
     populateStrategyFilters(true);
     renderSavedCustomRoutesList();
+    renderActiveRouteExecutionPanel();
     renderLegacyCustomers();
     renderDistrictStrategies();
+    renderReportsTab();
+    updateRouteAndReportsBadges();
 
     addAuditLog('RUT SİLME', `"${rt.name}" rut planı silindi.`);
     await syncToServer();
@@ -5028,76 +7058,75 @@ async function deleteCustomRoutePlan(routeId) {
 }
 
 function filterLegacyByCustomRoute(routeName) {
-    switchTab('legacy-tab');
-    const sInput = document.getElementById('legacy-search');
-    if (sInput) sInput.value = '';
-    const citySel = document.getElementById('legacy-filter-city');
-    if (citySel) citySel.value = '';
-    const distSel = document.getElementById('legacy-filter-district');
-    if (distSel) distSel.value = '';
-    const prioSel = document.getElementById('legacy-filter-priority');
-    if (prioSel) prioSel.value = '';
-    const balSel = document.getElementById('legacy-filter-balance');
-    if (balSel) balSel.value = '';
-
-    populateFilterOptions();
-    const rutSel = document.getElementById('legacy-filter-rut');
-    if (rutSel) {
-        rutSel.value = routeName || '';
+    const matched = (appState.customRoutes || []).find(r => r.name === routeName);
+    if (matched) {
+        selectActiveRouteForExecution(matched.id);
+        return;
     }
-    legacyPage = 1;
-    renderLegacyCustomers();
+    switchTab('legacy-tab');
+}
+
+async function updateSavedRoutePlanStatus(routeId, newStatus) {
+    const rt = (appState.customRoutes || []).find(r => r.id === routeId);
+    if (!rt) return;
+    rt.planStatus = newStatus;
+    rt.updatedAt = formatNowTR();
+    addAuditLog('RUT PLAN DURUMU', `"${rt.name}" plan durumu "${newStatus}" olarak güncellendi.`);
     renderSavedCustomRoutesList();
+    renderActiveRouteExecutionPanel();
+    renderReportsTab();
+    await syncToServer();
+    showToast(`"${rt.name}" durumu "${newStatus}" olarak güncellendi.`, 'success');
 }
 
 function printCustomRouteSheet(routeId) {
     const rt = (appState.customRoutes || []).find(r => r.id === routeId);
     if (!rt) return;
-    const customers = (appState.customers || []).filter(c =>
-        (Array.isArray(rt.customerCodes) && rt.customerCodes.includes(c.code)) || c.rut === rt.name
-    );
+    const items = ensureRouteItemsNormalized(rt);
     const area = document.getElementById('print-report-area');
     if (!area) return;
+
+    const visitedCount = items.filter(i => i.status === 'VISITED').length;
+    const unvisitedCount = items.filter(i => i.status === 'NOT_VISITED').length;
+    const manualCount = items.filter(i => i.isManual).length;
 
     area.innerHTML = `
         <div style="font-family:Arial, sans-serif; color:#000; padding:20px;">
             <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:2px solid #0284c7; padding-bottom:12px; margin-bottom:16px;">
                 <div>
-                    <h2 style="margin:0; color:#0284c7;">DİZSAN OTOMOTİV &amp; SERVİS — SAHA RUT PLANI</h2>
-                    <h3 style="margin:4px 0 0; color:#0f172a;">${rt.name}</h3>
-                    <div style="font-size:12px; color:#334155; margin-top:4px;"><strong>Güzergah:</strong> ${rt.routeText || '-'}</div>
-                    ${rt.notes ? `<div style="font-size:11px; color:#475569; margin-top:2px;"><strong>Plan Notu:</strong> ${rt.notes}</div>` : ''}
+                    <h2 style="margin:0; color:#0284c7;">DİZSAN OTOMOTİV &amp; SERVİS — PLANLANAN ZİYARETLER VE RUT FORMU</h2>
+                    <h3 style="margin:4px 0 0; color:#0f172a;">${escapeHtml(rt.name)} (${escapeHtml(rt.planStatus || 'Planlandı')})</h3>
+                    <div style="font-size:12px; color:#334155; margin-top:4px;"><strong>Güzergah:</strong> ${escapeHtml(rt.routeText || '-')}</div>
+                    ${rt.notes ? `<div style="font-size:11px; color:#475569; margin-top:2px;"><strong>Plan Açıklaması:</strong> ${escapeHtml(rt.notes)}</div>` : ''}
                 </div>
                 <div style="text-align:right; font-size:11px;">
-                    <div><strong>Plan Tarihi:</strong> ${rt.plannedDate || '-'}</div>
-                    <div><strong>Sorumlu:</strong> ${rt.assignee || '-'}</div>
-                    <div><strong>Toplam Müşteri:</strong> ${customers.length} Cari</div>
+                    <div><strong>Planlanan Tarih:</strong> ${escapeHtml(rt.plannedDate || '-')} ${rt.endDate ? ` - ${escapeHtml(rt.endDate)}` : ''}</div>
+                    <div><strong>Görevli Personel:</strong> ${escapeHtml(rt.assignee || '-')}</div>
+                    <div><strong>Toplam Hedef:</strong> ${items.length} (${visitedCount} Edildi • ${unvisitedCount} Edilemedi • ${manualCount} Manuel)</div>
                 </div>
             </div>
             <table style="width:100%; border-collapse:collapse; font-size:11px;">
                 <thead>
                     <tr style="background:#e2e8f0;">
-                        <th style="border:1px solid #94a3b8; padding:6px;">#</th>
-                        <th style="border:1px solid #94a3b8; padding:6px;">Cari Kodu</th>
-                        <th style="border:1px solid #94a3b8; padding:6px;">Müşteri / Ünvan</th>
+                        <th style="border:1px solid #94a3b8; padding:6px;">Sıra</th>
+                        <th style="border:1px solid #94a3b8; padding:6px;">Müşteri / İşletme</th>
                         <th style="border:1px solid #94a3b8; padding:6px;">İl / İlçe</th>
-                        <th style="border:1px solid #94a3b8; padding:6px;">Yetkili &amp; Telefon</th>
-                        <th style="border:1px solid #94a3b8; padding:6px;">Plaka</th>
-                        <th style="border:1px solid #94a3b8; padding:6px; text-align:right;">Bakiye</th>
-                        <th style="border:1px solid #94a3b8; padding:6px;">Saha Ziyaret Notu</th>
+                        <th style="border:1px solid #94a3b8; padding:6px;">Görüşülen Kişi &amp; Tel</th>
+                        <th style="border:1px solid #94a3b8; padding:6px;">Ziyaret Durumu</th>
+                        <th style="border:1px solid #94a3b8; padding:6px;">Gerçekleşen Tarih</th>
+                        <th style="border:1px solid #94a3b8; padding:6px;">Ziyaret Açıklaması / Edilememe Sebebi</th>
                     </tr>
                 </thead>
                 <tbody>
-                    ${customers.map((c, i) => `
+                    ${items.map((it, i) => `
                         <tr>
-                            <td style="border:1px solid #94a3b8; padding:6px;">${i + 1}</td>
-                            <td style="border:1px solid #94a3b8; padding:6px; font-family:monospace;">${c.code}</td>
-                            <td style="border:1px solid #94a3b8; padding:6px; font-weight:bold;">${c.title}</td>
-                            <td style="border:1px solid #94a3b8; padding:6px;">${c.city} / ${c.district}</td>
-                            <td style="border:1px solid #94a3b8; padding:6px;">${c.authorized || '-'} (${c.phone || '-'})</td>
-                            <td style="border:1px solid #94a3b8; padding:6px;">${c.plates || '-'}</td>
-                            <td style="border:1px solid #94a3b8; padding:6px; text-align:right;">${formatMoney(c.balance)}</td>
-                            <td style="border:1px solid #94a3b8; padding:6px; min-width:140px;"></td>
+                            <td style="border:1px solid #94a3b8; padding:6px; text-align:center;">${i + 1}</td>
+                            <td style="border:1px solid #94a3b8; padding:6px; font-weight:bold;">${escapeHtml(it.title)} ${it.isManual ? '(Manuel)' : `(${escapeHtml(it.code)})`}</td>
+                            <td style="border:1px solid #94a3b8; padding:6px;">${escapeHtml(it.city || '-')} / ${escapeHtml(it.district || '-')}</td>
+                            <td style="border:1px solid #94a3b8; padding:6px;">${escapeHtml(it.authorized || '-')} (${escapeHtml(it.phone || '-')})</td>
+                            <td style="border:1px solid #94a3b8; padding:6px; font-weight:bold;">${it.status === 'VISITED' ? '✓ Ziyaret Edildi' : (it.status === 'NOT_VISITED' ? '✗ Ziyaret Edilemedi' : (it.status === 'CANCELLED' ? 'İptal Edildi' : 'Bekliyor'))}</td>
+                            <td style="border:1px solid #94a3b8; padding:6px;">${escapeHtml(it.visitDate || '-')} ${escapeHtml(it.visitTime || '')}</td>
+                            <td style="border:1px solid #94a3b8; padding:6px; min-width:160px;">${escapeHtml(it.status === 'NOT_VISITED' ? (it.unvisitedReason || '-') : (it.visitNotes || '-'))}</td>
                         </tr>
                     `).join('')}
                 </tbody>
@@ -5107,66 +7136,2154 @@ function printCustomRouteSheet(routeId) {
     window.print();
 }
 
+function clearSavedCustomRoutesFilters() {
+    ['saved-rut-filter-date', 'saved-rut-filter-personnel', 'saved-rut-filter-city', 'saved-rut-filter-status'].forEach(fId => {
+        const el = document.getElementById(fId);
+        if (el) el.value = '';
+    });
+    renderSavedCustomRoutesList();
+}
+
+function toTitleCaseTR(str) {
+    if (!str) return '';
+    return String(str)
+        .toLocaleLowerCase('tr-TR')
+        .split(/\s+/)
+        .filter(Boolean)
+        .map(w => w.charAt(0).toLocaleUpperCase('tr-TR') + w.slice(1))
+        .join(' ');
+}
+
+function formatRouteTaskBriefData(rtOrId) {
+    const rt = (typeof rtOrId === 'string')
+        ? (appState.customRoutes || []).find(r => r.id === rtOrId)
+        : rtOrId;
+    if (!rt) return null;
+
+    let sorumluNames = [];
+    let eslikciNames = [];
+
+    if (Array.isArray(rt.assignees) && rt.assignees.length > 0) {
+        rt.assignees.forEach((a, idx) => {
+            if (!a || !a.name) return;
+            const cleanName = toTitleCaseTR(a.name);
+            if (a.role === 'Sorumlu' || (idx === 0 && !rt.assignees.some(x => x && x.role === 'Sorumlu'))) {
+                sorumluNames.push(cleanName);
+            } else {
+                eslikciNames.push(cleanName);
+            }
+        });
+    } else if (rt.assignee) {
+        const rawParts = String(rt.assignee).split(',').map(s => s.trim()).filter(Boolean);
+        rawParts.forEach((part, idx) => {
+            const isYardimci = /yard[ıi]mc[ıi]|e[şs]lik[çc]i/i.test(part);
+            const isSorumlu = /sorumlu/i.test(part);
+            const cleanName = toTitleCaseTR(part.replace(/\(.*?\)/g, '').replace(/e[şs]lik[çc]i/ig, '').trim());
+            if (!cleanName) return;
+            if (isSorumlu || (idx === 0 && !isYardimci)) {
+                sorumluNames.push(cleanName);
+            } else {
+                eslikciNames.push(cleanName);
+            }
+        });
+    }
+
+    if (sorumluNames.length === 0) {
+        sorumluNames.push(toTitleCaseTR(currentUser ? currentUser.name : 'Belirtilmedi'));
+    }
+
+    const sorumluLine = `Görevli Personel : ${sorumluNames.join(', ')} ( Ziyaret Sorumlusu )`;
+    const eslikciLines = eslikciNames.map(n => `${n} Eşlikçi`);
+
+    const routeInfo = rt.routeText
+        || (Array.isArray(rt.districts) && rt.districts.length > 0 ? rt.districts.join(' -> ') : (rt.name || '-'));
+    const items = ensureRouteItemsNormalized(rt);
+    const custCount = items.length;
+    const customerCountText = `${custCount} Müşteri`;
+
+    const startDate = rt.plannedDate || getTodayTRStr();
+    const endDate = rt.endDate || startDate;
+    const dateRangeText = `${startDate} / ${endDate}`;
+
+    const shareUrl = `https://dizsan.github.io/ziyaret/?routeId=${encodeURIComponent(rt.id)}`;
+
+    const personnelBlock = [sorumluLine, ...eslikciLines].join('\n');
+    const plainSummaryText = [
+        `Ziyaret Planı Görevi`,
+        personnelBlock,
+        `Güzergah İl-İlçe bilgisi : ${routeInfo}`,
+        `Ziyaret Edilecek Müşteri Sayısı : ${customerCountText}`,
+        `Planlanan Başlangıç - Bitiş Tarihi : ${dateRangeText}`
+    ].join('\n');
+
+    const pushBodyText = [
+        personnelBlock,
+        `Güzergah: ${routeInfo}`,
+        `Müşteri: ${customerCountText} • Tarih: ${dateRangeText}`
+    ].join('\n');
+
+    return {
+        routeId: rt.id,
+        routeName: rt.name || routeInfo,
+        sorumluLine,
+        eslikciLines,
+        routeInfo,
+        custCount,
+        customerCountText,
+        startDate,
+        endDate,
+        dateRangeText,
+        shareUrl,
+        plainSummaryText,
+        pushBodyText
+    };
+}
+
+function buildRouteWhatsAppShareText(rtOrId) {
+    const brief = formatRouteTaskBriefData(rtOrId);
+    if (!brief) return '';
+    const personnelLines = [brief.sorumluLine, ...brief.eslikciLines].join('\n');
+    return [
+        `*Ziyaret Planı Görevi*`,
+        personnelLines,
+        `Güzergah İl-İlçe bilgisi : ${brief.routeInfo}`,
+        `Ziyaret Edilecek Müşteri Sayısı : ${brief.customerCountText}`,
+        `Planlanan Başlangıç - Bitiş Tarihi : ${brief.dateRangeText}`,
+        ``,
+        `🔗 *Rut Planı Uygulama Linki:*`,
+        brief.shareUrl
+    ].join('\n');
+}
+
+function shareCustomRouteOnWhatsApp(routeId) {
+    const rt = (appState.customRoutes || []).find(r => r.id === routeId);
+    if (!rt) {
+        showToast('Paylaşılacak rut planı bulunamadı.', 'warning');
+        return;
+    }
+    const text = buildRouteWhatsAppShareText(rt);
+    openWhatsAppChat('', text);
+}
+
+function copyCustomRouteShareLink(routeId) {
+    const brief = formatRouteTaskBriefData(routeId);
+    if (!brief) return;
+    const fullText = buildRouteWhatsAppShareText(routeId);
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(fullText).then(() => {
+            showToast('Ziyaret Planı Görevi metni ve paylaşım linki panoya kopyalandı!', 'success');
+        }).catch(() => {
+            showToast('Link: ' + brief.shareUrl, 'info');
+        });
+    } else {
+        showToast('Link: ' + brief.shareUrl, 'info');
+    }
+}
+
+function getSeenRouteNotifIds() {
+    try {
+        const raw = localStorage.getItem('dizsan_seen_route_notifs_v1');
+        return raw ? JSON.parse(raw) : [];
+    } catch (e) {
+        return [];
+    }
+}
+
+function markRouteNotifSeen(notifId) {
+    if (!notifId) return;
+    try {
+        const list = getSeenRouteNotifIds();
+        if (!list.includes(notifId)) {
+            list.unshift(notifId);
+            localStorage.setItem('dizsan_seen_route_notifs_v1', JSON.stringify(list.slice(0, 100)));
+        }
+    } catch (e) {}
+}
+
+function closeRouteTaskBriefModal() {
+    const m = document.getElementById('route-task-brief-modal');
+    if (m) m.style.display = 'none';
+}
+
+function openRouteFromBriefModal(routeId) {
+    closeRouteTaskBriefModal();
+    if (typeof switchTab === 'function') {
+        switchTab('route-plan-tab');
+    }
+    if (routeId && (appState.customRoutes || []).some(r => r.id === routeId)) {
+        selectActiveRouteForExecution(routeId);
+    }
+}
+
+function openRouteTaskBriefModal(routeId, notifObj = null) {
+    const rt = (appState.customRoutes || []).find(r => r.id === routeId);
+    const brief = rt ? formatRouteTaskBriefData(rt) : (notifObj ? {
+        routeId: notifObj.routeId || routeId,
+        routeName: notifObj.routeName || 'Ziyaret Planı',
+        sorumluLine: notifObj.sorumluLine || 'Görevli Personel : -',
+        eslikciLines: Array.isArray(notifObj.eslikciLines) ? notifObj.eslikciLines : [],
+        routeInfo: notifObj.routeInfo || '-',
+        customerCountText: notifObj.customerCountText || '0 Müşteri',
+        dateRangeText: notifObj.dateRangeText || '-',
+        shareUrl: notifObj.shareUrl || `https://dizsan.github.io/ziyaret/?routeId=${encodeURIComponent(routeId || '')}`
+    } : null);
+
+    if (!brief) return;
+    if (notifObj && notifObj.id) markRouteNotifSeen(notifObj.id);
+
+    let modal = document.getElementById('route-task-brief-modal');
+    if (!modal) {
+        modal = document.createElement('div');
+        modal.id = 'route-task-brief-modal';
+        modal.className = 'modal-overlay';
+        modal.style.cssText = 'display:none; position:fixed; inset:0; background:rgba(2,6,23,0.78); backdrop-filter:blur(6px); z-index:10050; align-items:center; justify-content:center; padding:1rem;';
+        modal.addEventListener('click', (e) => {
+            if (e.target === modal) closeRouteTaskBriefModal();
+        });
+        document.body.appendChild(modal);
+    }
+
+    const isLight = document.body.getAttribute('data-theme') === 'light';
+    const cardBg = isLight ? '#ffffff' : '#0f172a';
+    const cardBorder = isLight ? '#cbd5e1' : 'rgba(56,189,248,0.4)';
+    const titleColor = isLight ? '#0f172a' : '#f8fafc';
+    const boxBg = isLight ? '#f8fafc' : 'rgba(15,23,42,0.85)';
+    const boxBorder = isLight ? '#e2e8f0' : 'rgba(148,163,184,0.22)';
+    const labelColor = isLight ? '#334155' : '#94a3b8';
+    const valueColor = isLight ? '#0f172a' : '#f8fafc';
+    const accentColor = isLight ? '#0284c7' : '#38bdf8';
+    const greenColor = isLight ? '#059669' : '#34d399';
+
+    const eslikciHtml = (brief.eslikciLines && brief.eslikciLines.length > 0)
+        ? brief.eslikciLines.map(line => `<div style="font-size:0.9rem; font-weight:700; color:${accentColor}; margin-top:3px; padding-left:0.1rem;">${escapeHtml(line)}</div>`).join('')
+        : '';
+
+    modal.innerHTML = `
+        <div style="background:${cardBg}; border:2px solid ${cardBorder}; border-radius:16px; max-width:520px; width:100%; padding:1.25rem 1.35rem; box-shadow:0 20px 50px rgba(0,0,0,0.45); color:${valueColor};">
+            <div style="display:flex; justify-content:space-between; align-items:center; gap:0.75rem; padding-bottom:0.85rem; border-bottom:1px solid ${boxBorder};">
+                <div style="display:flex; align-items:center; gap:0.6rem;">
+                    <span style="width:38px; height:38px; border-radius:10px; background:rgba(16,185,129,0.15); border:1px solid rgba(16,185,129,0.4); display:inline-flex; align-items:center; justify-content:center; color:${greenColor}; font-size:1.1rem;">
+                        <i class="fa-solid fa-bell"></i>
+                    </span>
+                    <div>
+                        <div style="font-size:0.7rem; font-weight:800; text-transform:uppercase; letter-spacing:0.06em; color:${greenColor};">Saha Ziyaret Görev Bildirimi</div>
+                        <h3 style="margin:0; font-size:1.12rem; font-weight:800; color:${titleColor};">Ziyaret Planı Görevi</h3>
+                    </div>
+                </div>
+                <button type="button" onclick="closeRouteTaskBriefModal()" style="background:transparent; border:1px solid ${boxBorder}; color:${labelColor}; width:32px; height:32px; border-radius:8px; cursor:pointer; font-size:0.95rem;">✕</button>
+            </div>
+
+            <div style="margin-top:0.95rem; background:${boxBg}; border:1px solid ${boxBorder}; border-radius:12px; padding:1rem 1.1rem; display:flex; flex-direction:column; gap:0.7rem; line-height:1.5;">
+                <div>
+                    <div style="font-size:0.93rem; font-weight:800; color:${valueColor};">
+                        ${escapeHtml(brief.sorumluLine)}
+                    </div>
+                    ${eslikciHtml}
+                </div>
+
+                <div style="padding-top:0.55rem; border-top:1px dashed ${boxBorder};">
+                    <span style="font-size:0.82rem; font-weight:700; color:${labelColor};">Güzergah İl-İlçe bilgisi :</span>
+                    <div style="font-size:0.92rem; font-weight:800; color:${accentColor}; margin-top:2px;">
+                        ${escapeHtml(brief.routeInfo)}
+                    </div>
+                </div>
+
+                <div style="padding-top:0.55rem; border-top:1px dashed ${boxBorder}; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:0.5rem;">
+                    <span style="font-size:0.84rem; font-weight:700; color:${labelColor};">Ziyaret Edilecek Müşteri Sayısı :</span>
+                    <span style="font-size:0.95rem; font-weight:800; color:${greenColor};">${escapeHtml(brief.customerCountText)}</span>
+                </div>
+
+                <div style="padding-top:0.55rem; border-top:1px dashed ${boxBorder}; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:0.5rem;">
+                    <span style="font-size:0.84rem; font-weight:700; color:${labelColor};">Planlanan Başlangıç - Bitiş Tarihi :</span>
+                    <span style="font-size:0.92rem; font-weight:800; color:${valueColor};">${escapeHtml(brief.dateRangeText)}</span>
+                </div>
+            </div>
+
+            <div style="margin-top:1rem; display:flex; flex-wrap:wrap; gap:0.5rem; justify-content:space-between; align-items:center;">
+                <button type="button" class="btn btn-success btn-sm" style="padding:0.5rem 0.85rem; font-size:0.8rem; font-weight:800; flex:1; min-width:185px;" onclick="shareCustomRouteOnWhatsApp('${escapeHtml(brief.routeId)}')">
+                    <i class="fa-brands fa-whatsapp"></i> WhatsApp'ta Paylaş (Linkli)
+                </button>
+                <button type="button" class="btn btn-secondary btn-sm" style="padding:0.5rem 0.75rem; font-size:0.78rem; font-weight:700;" onclick="copyCustomRouteShareLink('${escapeHtml(brief.routeId)}')" title="Metni ve Linki Kopyala">
+                    <i class="fa-regular fa-copy"></i> Linki Kopyala
+                </button>
+            </div>
+
+            <div style="margin-top:0.55rem; display:flex; flex-wrap:wrap; gap:0.5rem; justify-content:flex-end;">
+                <button type="button" class="btn btn-secondary btn-sm" style="padding:0.48rem 0.8rem; font-size:0.78rem; font-weight:700;" onclick="broadcastRoutePlanNotificationToAllPersonnel('${escapeHtml(brief.routeId)}', false)">
+                    <i class="fa-solid fa-tower-broadcast" style="color:#f59e0b;"></i> Tüm Personele Tekrar Bildirim Gönder
+                </button>
+                <button type="button" class="btn btn-primary btn-sm" style="padding:0.48rem 0.95rem; font-size:0.8rem; font-weight:800;" onclick="openRouteFromBriefModal('${escapeHtml(brief.routeId)}')">
+                    <i class="fa-solid fa-list-check"></i> Ziyaret Planını Aç
+                </button>
+            </div>
+        </div>
+    `;
+
+    modal.style.display = 'flex';
+}
+
+async function broadcastRoutePlanNotificationToAllPersonnel(rtOrId, openModalNow = true) {
+    const rt = (typeof rtOrId === 'string')
+        ? (appState.customRoutes || []).find(r => r.id === rtOrId)
+        : rtOrId;
+    if (!rt) {
+        showToast('Bildirim gönderilecek rut planı bulunamadı.', 'warning');
+        return;
+    }
+
+    const brief = formatRouteTaskBriefData(rt);
+    if (!brief) return;
+
+    const notif = {
+        id: 'RNOTIF-' + rt.id + '-' + Date.now(),
+        routeId: rt.id,
+        routeName: rt.name,
+        title: 'Ziyaret Planı Görevi',
+        sorumluLine: brief.sorumluLine,
+        eslikciLines: brief.eslikciLines,
+        routeInfo: brief.routeInfo,
+        customerCountText: brief.customerCountText,
+        dateRangeText: brief.dateRangeText,
+        shareUrl: brief.shareUrl,
+        bodyText: brief.plainSummaryText,
+        createdAt: formatNowTR(),
+        timestamp: Date.now(),
+        createdBy: currentUser ? currentUser.name : 'Yönetici'
+    };
+
+    if (!Array.isArray(appState.routeNotifications)) appState.routeNotifications = [];
+    appState.routeNotifications.unshift(notif);
+    appState.routeNotifications = appState.routeNotifications.slice(0, 50);
+
+    // Gönderen cihazda mükerrer açılmaması için işaretleyelim
+    markRouteNotifSeen(notif.id);
+    saveStateLocally();
+
+    // 1. Bu cihazda ve açık tarayıcıda anında yerel / Service Worker bildirimi göster
+    try {
+        if (typeof sendLocalOrServiceWorkerPush === 'function') {
+            await sendLocalOrServiceWorkerPush({
+                title: '📋 Ziyaret Planı Görevi',
+                body: brief.pushBodyText,
+                tag: 'dizsan-route-task-' + rt.id,
+                url: './?routeId=' + encodeURIComponent(rt.id),
+                id: notif.id
+            });
+        }
+    } catch (e) {}
+
+    // 2. Kayıtlı tüm personel telefon aboneliklerine (pushSubscriptions) Web Push gönder
+    try {
+        const subs = Array.isArray(appState.pushSubscriptions) ? appState.pushSubscriptions : [];
+        subs.forEach(subItem => {
+            if (subItem && subItem.subscription) {
+                fetch('http://localhost:8787/api/push/test', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        subscription: subItem.subscription,
+                        title: '📋 Ziyaret Planı Görevi',
+                        body: brief.pushBodyText,
+                        url: './?routeId=' + encodeURIComponent(rt.id)
+                    })
+                }).catch(() => {});
+            }
+        });
+    } catch (e) {}
+
+    try {
+        if (typeof playNotificationTone === 'function') {
+            playNotificationTone('INVITE');
+        }
+    } catch (e) {}
+
+    if (openModalNow) {
+        openRouteTaskBriefModal(rt.id, notif);
+    } else {
+        await syncToServer();
+        showToast('Tüm personelin telefonlarındaki yüklü uygulamaya "Ziyaret Planı Görevi" bildirimi gönderildi!', 'success');
+    }
+}
+
+function checkIncomingRouteNotifications() {
+    // 1. URL'de ?routeId=... varsa önce sessionStorage'a kaydet (giriş yapılana ve bulut verisi çekilene kadar kaybolmasın)
+    try {
+        const params = new URLSearchParams(window.location.search);
+        const urlRouteId = params.get('routeId');
+        if (urlRouteId) {
+            sessionStorage.setItem('dizsan_pending_route_id', urlRouteId);
+            const cleanUrl = window.location.pathname + window.location.hash;
+            window.history.replaceState({}, document.title, cleanUrl);
+        }
+    } catch (e) {}
+
+    // Kullanıcı henüz giriş yapmadıysa şifre ekranının arkasında modal açma; giriş yapınca anında açılacak
+    if (!currentUser) return;
+
+    const pendingRouteId = sessionStorage.getItem('dizsan_pending_route_id');
+    if (pendingRouteId) {
+        const hasRoute = (appState.customRoutes || []).some(r => r && r.id === pendingRouteId);
+        const matchedNotif = (appState.routeNotifications || []).find(n => n && n.routeId === pendingRouteId) || null;
+        if (hasRoute || matchedNotif) {
+            sessionStorage.removeItem('dizsan_pending_route_id');
+            if (typeof switchTab === 'function') {
+                switchTab('route-plan-tab');
+            }
+            if (hasRoute) {
+                selectActiveRouteForExecution(pendingRouteId);
+            }
+            setTimeout(() => openRouteTaskBriefModal(pendingRouteId, matchedNotif), 150);
+            return;
+        }
+    }
+
+    // 2. Buluttan yeni gelen bir routeNotification varsa personel telefonunda bildirim + görev özeti kartı aç
+    const notifs = Array.isArray(appState.routeNotifications) ? appState.routeNotifications : [];
+    if (notifs.length === 0) return;
+
+    const seenIds = getSeenRouteNotifIds();
+    const now = Date.now();
+    const unseen = notifs.find(n => n && n.id && !seenIds.includes(n.id) && (!n.timestamp || (now - n.timestamp) < 48 * 3600 * 1000));
+    if (!unseen) return;
+
+    markRouteNotifSeen(unseen.id);
+
+    try {
+        if (typeof playNotificationTone === 'function') {
+            playNotificationTone('INVITE');
+        }
+    } catch (e) {}
+
+    try {
+        if (typeof sendLocalOrServiceWorkerPush === 'function') {
+            sendLocalOrServiceWorkerPush({
+                title: '📋 Ziyaret Planı Görevi',
+                body: unseen.bodyText || `${unseen.sorumluLine}\nGüzergah: ${unseen.routeInfo}`,
+                tag: 'dizsan-route-task-' + (unseen.routeId || unseen.id),
+                url: './?routeId=' + encodeURIComponent(unseen.routeId || ''),
+                id: unseen.id
+            });
+        }
+    } catch (e) {}
+
+    openRouteTaskBriefModal(unseen.routeId, unseen);
+}
+
 function renderSavedCustomRoutesList() {
     const listEl = document.getElementById('saved-custom-routes-list');
     const countEl = document.getElementById('saved-custom-routes-count');
-    const routes = Array.isArray(appState.customRoutes) ? appState.customRoutes : [];
-    const activeRutFilter = document.getElementById('legacy-filter-rut')?.value || '';
+    const allRoutes = Array.isArray(appState.customRoutes) ? appState.customRoutes : [];
+
+    // Kayıtlı plan filtre seçeneklerini doldur
+    const persSel = document.getElementById('saved-rut-filter-personnel');
+    const citySel = document.getElementById('saved-rut-filter-city');
+    if (persSel) {
+        const currentPersVal = persSel.value;
+        const pSet = new Set();
+        (appState.users || []).forEach(u => { if (u.name) pSet.add(u.name); });
+        allRoutes.forEach(r => {
+            if (Array.isArray(r.assignees)) {
+                r.assignees.forEach(a => { if (a && a.name) pSet.add(a.name); });
+            } else if (r.assignee) {
+                pSet.add(r.assignee);
+            }
+        });
+        persSel.innerHTML = '<option value="">👤 Tüm Personeller</option>' + Array.from(pSet).map(p => `<option value="${escapeHtml(p)}">${escapeHtml(p)}</option>`).join('');
+        if (currentPersVal && Array.from(pSet).includes(currentPersVal)) {
+            persSel.value = currentPersVal;
+        }
+    }
+    if (citySel && citySel.options.length <= 1 && allRoutes.length > 0) {
+        const cSet = new Set();
+        allRoutes.forEach(r => {
+            (r.districts || []).forEach(d => cSet.add(d));
+        });
+        citySel.innerHTML = '<option value="">📍 Tüm İl / İlçeler</option>' + Array.from(cSet).map(c => `<option value="${escapeHtml(c)}">${escapeHtml(c)}</option>`).join('');
+    }
+
+    const fDate = (document.getElementById('saved-rut-filter-date')?.value || '').trim();
+    const fPers = (document.getElementById('saved-rut-filter-personnel')?.value || '').trim();
+    const fCity = (document.getElementById('saved-rut-filter-city')?.value || '').trim();
+    const fStat = (document.getElementById('saved-rut-filter-status')?.value || '').trim();
+
+    const routes = allRoutes.filter(rt => {
+        ensureRouteItemsNormalized(rt);
+        if (fDate && !(rt.plannedDate || '').includes(fDate) && !(rt.endDate || '').includes(fDate)) return false;
+        if (fPers && !normalizeTR(rt.assignee || '').includes(normalizeTR(fPers))) return false;
+        if (fStat && (rt.planStatus || 'Planlandı') !== fStat) return false;
+        if (fCity) {
+            const hay = normalizeTR(`${rt.routeText} ${(rt.districts || []).join(' ')}`);
+            if (!hay.includes(normalizeTR(fCity))) return false;
+        }
+        return true;
+    });
 
     if (countEl) countEl.textContent = String(routes.length);
     if (!listEl) return;
 
     if (routes.length === 0) {
+        const hasActiveFilter = Boolean(fDate || fPers || fCity || fStat);
         listEl.innerHTML = `
-            <div style="grid-column:1 / -1; padding:0.9rem 1rem; border:1px dashed rgba(148,163,184,0.25); border-radius:10px; color:var(--text-sec); font-size:0.78rem; display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:0.5rem;">
-                <span><i class="fa-solid fa-route" style="color:#38bdf8; margin-right:6px;"></i> Henüz kayıtlı bir rut planı yok. Yukarıdan <strong>Rut Adı</strong>, <strong>Güzergah</strong> ve <strong>Müşterileri</strong> girip <strong>"Rut Kaydet"</strong> tuşuna basarak ilk rutunuzu oluşturabilirsiniz.</span>
+            <div style="grid-column:1 / -1; padding:0.9rem 1rem; border:1px dashed rgba(148,163,184,0.25); border-radius:10px; color:var(--text-sec); font-size:0.78rem; display:flex; justify-content:space-between; align-items:center; gap:0.75rem; flex-wrap:wrap;">
+                <span><i class="fa-solid fa-route" style="color:#fbbf24; margin-right:6px;"></i> ${hasActiveFilter && allRoutes.length > 0 ? `Seçili filtreye uygun rut planı bulunamadı (Toplam ${allRoutes.length} kayıtlı plan var).` : 'Kayıtlı bir rut planı bulunamadı. Yukarıdan İl/İlçe ve Müşterileri seçip "RUT PLANINI KAYDET" tuşuna basın.'}</span>
+                ${hasActiveFilter ? `<button type="button" class="btn btn-secondary btn-sm" onclick="clearSavedCustomRoutesFilters()"><i class="fa-solid fa-filter-circle-xmark"></i> Filtreyi Temizle (${allRoutes.length} Planı Göster)</button>` : ''}
             </div>
         `;
         return;
     }
 
-    const customers = appState.customers || [];
     listEl.innerHTML = routes.map(rt => {
-        const custCount = customers.filter(c =>
-            (Array.isArray(rt.customerCodes) && rt.customerCodes.includes(c.code)) || c.rut === rt.name
-        ).length;
-        const isActive = activeRutFilter === rt.name;
-        const safeName = String(rt.name || '').replace(/'/g, "\\'");
+        const items = ensureRouteItemsNormalized(rt);
+        const total = items.length;
+        const visited = items.filter(i => i.status === 'VISITED').length;
+        const notVisited = items.filter(i => i.status === 'NOT_VISITED').length;
+        const pending = items.filter(i => i.status === 'PENDING').length;
+        const isActive = activeSelectedRouteId === rt.id;
+        const pStatus = rt.planStatus || 'Planlandı';
+        const statusColor = pStatus === 'Tamamlandı' ? '#10b981' : (pStatus === 'Devam Ediyor' ? '#38bdf8' : (pStatus === 'İptal Edildi' ? '#ef4444' : '#f59e0b'));
+        const dateLabel = rt.endDate && rt.endDate !== rt.plannedDate ? `${rt.plannedDate || '-'} / ${rt.endDate}` : (rt.plannedDate || '-');
 
         return `
-            <div style="background:${isActive ? 'rgba(16,185,129,0.12)' : 'rgba(15,23,42,0.75)'}; border:1px solid ${isActive ? '#10b981' : 'rgba(56,189,248,0.28)'}; border-radius:10px; padding:0.75rem 0.9rem; display:flex; flex-direction:column; justify-content:space-between; gap:0.55rem;">
+            <div onclick="selectActiveRouteForExecution('${rt.id}')" style="cursor:pointer; background:${isActive ? 'linear-gradient(145deg, rgba(16,185,129,0.16), rgba(15,23,42,0.92))' : 'rgba(15,23,42,0.75)'}; border:2px solid ${isActive ? '#10b981' : 'rgba(56,189,248,0.28)'}; border-radius:10px; padding:0.8rem 0.95rem; display:flex; flex-direction:column; justify-content:space-between; gap:0.55rem;">
                 <div>
                     <div style="display:flex; justify-content:space-between; align-items:flex-start; gap:0.4rem;">
-                        <strong style="color:#fff; font-size:0.85rem; cursor:pointer;" onclick="filterLegacyByCustomRoute('${safeName}')">
-                            <i class="fa-solid fa-route" style="color:#38bdf8;"></i> ${rt.name}
+                        <strong style="color:#fff; font-size:0.86rem;">
+                            <i class="fa-solid fa-route" style="color:${isActive ? '#34d399' : '#fbbf24'};"></i> ${escapeHtml(rt.name)}
                         </strong>
-                        <span class="badge badge-success" style="font-size:0.68rem; white-space:nowrap;">${custCount} Müşteri</span>
+                        <span class="badge" style="background:${statusColor}22; color:${statusColor}; border:1px solid ${statusColor}66; font-size:0.66rem;">${escapeHtml(pStatus)}</span>
                     </div>
-                    <div style="font-size:0.74rem; color:#34d399; font-weight:600; margin-top:4px;">
-                        <i class="fa-solid fa-road"></i> Güzergah: ${rt.routeText || '-'}
+                    <div style="font-size:0.73rem; color:#38bdf8; font-weight:700; margin-top:4px;">
+                        <i class="fa-solid fa-road"></i> İl/İlçe: ${escapeHtml(rt.routeText || '-')}
                     </div>
-                    <div style="font-size:0.69rem; color:var(--text-sec); margin-top:3px;">
-                        <i class="fa-regular fa-calendar"></i> ${rt.plannedDate || '-'} &bull; <i class="fa-solid fa-user"></i> ${rt.assignee || '-'}
+                    <div style="font-size:0.71rem; color:#fde68a; margin-top:3px; font-weight:600;">
+                        <i class="fa-regular fa-calendar"></i> Plan Tarihi: ${escapeHtml(dateLabel)} &bull; <i class="fa-solid fa-user-tie"></i> ${escapeHtml(rt.assignee || '-')}
                     </div>
-                    ${rt.notes ? `<div style="font-size:0.7rem; color:#cbd5e1; margin-top:3px; background:rgba(255,255,255,0.03); padding:3px 6px; border-radius:5px;">${rt.notes}</div>` : ''}
+                    <div style="display:flex; gap:0.3rem; flex-wrap:wrap; margin-top:6px;">
+                        <span class="badge badge-secondary" style="font-size:0.65rem;">Toplam: ${total}</span>
+                        <span class="badge" style="background:rgba(16,185,129,0.2); color:#34d399; font-size:0.65rem;">✓ Edilen: ${visited}</span>
+                        <span class="badge" style="background:rgba(239,68,68,0.2); color:#f87171; font-size:0.65rem;">✗ Edilemeyen: ${notVisited}</span>
+                        <span class="badge" style="background:rgba(245,158,11,0.18); color:#fbbf24; font-size:0.65rem;">⏳ Bekleyen: ${pending}</span>
+                    </div>
                 </div>
-                <div style="display:flex; gap:0.35rem; flex-wrap:wrap; padding-top:0.4rem; border-top:1px solid rgba(148,163,184,0.12);">
-                    <button type="button" class="btn ${isActive ? 'btn-success' : 'btn-primary'} btn-sm" style="padding:0.24rem 0.55rem; font-size:0.7rem;" onclick="filterLegacyByCustomRoute('${isActive ? '' : safeName}')">
-                        <i class="fa-solid fa-filter"></i> ${isActive ? 'Filtreyi Kaldır' : 'Müşterileri Gör'}
+                <div style="display:flex; gap:0.32rem; flex-wrap:wrap; padding-top:0.4rem; border-top:1px solid rgba(148,163,184,0.12);" onclick="event.stopPropagation()">
+                    <button type="button" class="btn ${isActive ? 'btn-success' : 'btn-primary'} btn-sm" style="padding:0.24rem 0.5rem; font-size:0.69rem;" onclick="selectActiveRouteForExecution('${rt.id}')">
+                        <i class="fa-solid fa-list-check"></i> ${isActive ? 'Açık' : 'Listeyi Aç'}
                     </button>
-                    <button type="button" class="btn btn-secondary btn-sm" style="padding:0.24rem 0.55rem; font-size:0.7rem;" onclick="editCustomRoutePlan('${rt.id}')">
+                    <button type="button" class="btn btn-success btn-sm" style="padding:0.24rem 0.5rem; font-size:0.69rem;" onclick="shareCustomRouteOnWhatsApp('${rt.id}')" title="WhatsApp üzerinden linkli paylaş">
+                        <i class="fa-brands fa-whatsapp"></i> WhatsApp Paylaş
+                    </button>
+                    <button type="button" class="btn btn-secondary btn-sm" style="padding:0.24rem 0.5rem; font-size:0.69rem;" onclick="broadcastRoutePlanNotificationToAllPersonnel('${rt.id}', true)" title="Tüm personelin telefonuna bildirim gönder ve görev özetini aç">
+                        <i class="fa-solid fa-bell" style="color:#fbbf24;"></i> Bildirim &amp; Özet
+                    </button>
+                    <button type="button" class="btn btn-secondary btn-sm" style="padding:0.24rem 0.48rem; font-size:0.69rem;" onclick="editCustomRoutePlan('${rt.id}')">
                         <i class="fa-solid fa-pen-to-square" style="color:#38bdf8;"></i> Düzenle
                     </button>
-                    <button type="button" class="btn btn-secondary btn-sm" style="padding:0.24rem 0.55rem; font-size:0.7rem;" onclick="printCustomRouteSheet('${rt.id}')">
-                        <i class="fa-solid fa-print" style="color:#fbbf24;"></i> Yazdır
+                    <button type="button" class="btn btn-secondary btn-sm" style="padding:0.24rem 0.48rem; font-size:0.69rem;" onclick="printCustomRouteSheet('${rt.id}')">
+                        <i class="fa-solid fa-print" style="color:#fbbf24;"></i>
                     </button>
-                    <button type="button" class="btn btn-danger btn-sm" style="padding:0.24rem 0.5rem; font-size:0.7rem; margin-left:auto;" onclick="deleteCustomRoutePlan('${rt.id}')" title="Rutu Sil">
+                    <button type="button" class="btn btn-danger btn-sm" style="padding:0.24rem 0.45rem; font-size:0.69rem; margin-left:auto;" onclick="deleteCustomRoutePlan('${rt.id}')" title="Rutu Sil">
                         <i class="fa-solid fa-trash"></i>
                     </button>
                 </div>
             </div>
         `;
     }).join('');
+}
+
+// ==========================================================================
+// PLANLANAN ZİYARETLER LİSTESİ, SÜRÜKLE-BIRAK, ZİYARET DURUMLARI VE MÜŞTERİ GEÇMİŞİ
+// ==========================================================================
+let activeExpandedRouteItemIdx = null;
+
+function toggleManualVisitEntryForm() {
+    const panel = document.getElementById('manual-visit-entry-panel');
+    if (!panel) return;
+    const isHidden = panel.style.display === 'none' || !panel.style.display;
+    panel.style.display = isHidden ? 'block' : 'none';
+    if (isHidden) {
+        const titleInput = document.getElementById('manual-rut-cust-title');
+        if (titleInput) setTimeout(() => titleInput.focus(), 50);
+    }
+}
+
+function toggleRouteItemInlineDetail(idx) {
+    activeExpandedRouteItemIdx = (activeExpandedRouteItemIdx === idx) ? null : idx;
+    renderActiveRouteExecutionPanel();
+}
+
+function setActiveRouteExecutionStatusFilter(status) {
+    activeRouteExecutionStatusFilter = status || 'ALL';
+    activeExpandedRouteItemIdx = null;
+    renderActiveRouteExecutionPanel();
+}
+
+function handleRouteItemDragStart(event, itemIdx) {
+    draggedRouteItemIndex = itemIdx;
+    if (event.dataTransfer) {
+        event.dataTransfer.effectAllowed = 'move';
+        event.dataTransfer.setData('text/plain', String(itemIdx));
+    }
+}
+
+function handleRouteItemDragOver(event) {
+    event.preventDefault();
+    if (event.dataTransfer) event.dataTransfer.dropEffect = 'move';
+}
+
+async function handleRouteItemDrop(event, routeId, targetIdx) {
+    event.preventDefault();
+    const fromIdx = draggedRouteItemIndex !== null ? draggedRouteItemIndex : parseInt(event.dataTransfer?.getData('text/plain') || '-1', 10);
+    draggedRouteItemIndex = null;
+    if (fromIdx < 0 || fromIdx === targetIdx) return;
+    await moveRouteItemOrder(routeId, fromIdx, targetIdx);
+}
+
+async function moveRouteItemOrder(routeId, fromIdx, toIdx) {
+    const rt = (appState.customRoutes || []).find(r => r.id === routeId);
+    if (!rt) return;
+    const items = ensureRouteItemsNormalized(rt);
+    if (fromIdx < 0 || fromIdx >= items.length || toIdx < 0 || toIdx >= items.length) return;
+    const [moved] = items.splice(fromIdx, 1);
+    items.splice(toIdx, 0, moved);
+    rt.customerCodes = items.filter(i => !i.isManual).map(i => i.code);
+    rt.updatedAt = formatNowTR();
+    activeExpandedRouteItemIdx = null;
+    renderActiveRouteExecutionPanel();
+    syncToServer();
+    showToast(`Ziyaret sırası güncellendi (#${toIdx + 1}: ${moved.title}).`, 'info');
+}
+
+function renderActiveRouteExecutionPanel() {
+    const box = document.getElementById('active-route-execution-container');
+    if (!box) return;
+
+    const routes = Array.isArray(appState.customRoutes) ? appState.customRoutes : [];
+    if (routes.length === 0) {
+        box.innerHTML = `
+            <div style="padding:1.25rem; text-align:center; color:var(--text-sec); font-size:0.82rem;">
+                Henüz kaydedilmiş bir rut planı yok. Yukarıdan İl/İlçe ve müşterileri seçip <strong>"RUT PLANINI KAYDET"</strong> tuşuna bastığınızda planlanan ziyaretler listesi burada açılır.
+            </div>
+        `;
+        return;
+    }
+
+    let rt = routes.find(r => r.id === activeSelectedRouteId) || routes[0];
+    activeSelectedRouteId = rt.id;
+    const items = ensureRouteItemsNormalized(rt);
+
+    const total = items.length;
+    const visitedCount = items.filter(i => i.status === 'VISITED').length;
+    const notVisitedCount = items.filter(i => i.status === 'NOT_VISITED').length;
+    const cancelledCount = items.filter(i => i.status === 'CANCELLED').length;
+    const pendingCount = items.filter(i => i.status === 'PENDING').length;
+    const manualCount = items.filter(i => i.isManual).length;
+    const denom = visitedCount + notVisitedCount + cancelledCount;
+    const pct = denom > 0 ? Math.round((visitedCount / denom) * 100) : 0;
+
+    const filteredItems = items.map((it, idx) => ({ it, idx })).filter(({ it }) => {
+        if (activeRouteExecutionStatusFilter === 'VISITED') return it.status === 'VISITED';
+        if (activeRouteExecutionStatusFilter === 'NOT_VISITED') return it.status === 'NOT_VISITED';
+        if (activeRouteExecutionStatusFilter === 'PENDING') return it.status === 'PENDING';
+        if (activeRouteExecutionStatusFilter === 'CANCELLED') return it.status === 'CANCELLED';
+        if (activeRouteExecutionStatusFilter === 'MANUAL') return Boolean(it.isManual);
+        return true;
+    });
+
+    const todayStr = getTodayTRStr();
+    const nowTimeStr = getNowTimeTRStr();
+    const users = (Array.isArray(appState.users) && appState.users.length > 0) ? appState.users : DEFAULT_USERS;
+
+    box.innerHTML = `
+        <div class="table-header-row" style="padding:0.8rem 1.15rem; flex-wrap:wrap; gap:0.65rem;">
+            <div>
+                <div style="font-size:0.92rem; font-weight:800; color:#f8fafc; display:flex; align-items:center; gap:0.5rem; flex-wrap:wrap;">
+                    <i class="fa-solid fa-list-check" style="color:#10b981;"></i>
+                    <span>Planlanan Ziyaretler: <span style="color:#38bdf8;">${escapeHtml(rt.name)}</span></span>
+                    <span class="badge badge-secondary" style="font-size:0.7rem;">
+                        Plan: ${escapeHtml(rt.plannedDate || '-')}
+                    </span>
+                    <span class="badge badge-secondary" style="font-size:0.7rem;">
+                        Görevli: ${escapeHtml(rt.assignee || '-')}
+                    </span>
+                    <select onchange="updateSavedRoutePlanStatus('${rt.id}', this.value)" class="filter-input" style="padding:0.18rem 0.45rem; font-size:0.72rem; font-weight:700; width:auto;">
+                        <option value="Planlandı" ${(rt.planStatus || 'Planlandı') === 'Planlandı' ? 'selected' : ''}>Durum: Planlandı</option>
+                        <option value="Devam Ediyor" ${rt.planStatus === 'Devam Ediyor' ? 'selected' : ''}>Durum: Devam Ediyor</option>
+                        <option value="Tamamlandı" ${rt.planStatus === 'Tamamlandı' ? 'selected' : ''}>Durum: Tamamlandı</option>
+                        <option value="İptal Edildi" ${rt.planStatus === 'İptal Edildi' ? 'selected' : ''}>Durum: İptal Edildi</option>
+                    </select>
+                </div>
+                <div style="font-size:0.73rem; color:var(--text-sec); margin-top:3px;">
+                    <strong>Güzergâh:</strong> ${escapeHtml(rt.routeText || '-')}
+                </div>
+            </div>
+
+            <div style="display:flex; gap:0.35rem; flex-wrap:wrap; align-items:center;">
+                <button type="button" class="btn btn-success btn-sm" style="padding:0.24rem 0.6rem; font-size:0.72rem; font-weight:800;" onclick="shareCustomRouteOnWhatsApp('${rt.id}')">
+                    <i class="fa-brands fa-whatsapp"></i> WhatsApp'ta Paylaş (Linkli)
+                </button>
+                <button type="button" class="btn btn-secondary btn-sm" style="padding:0.24rem 0.6rem; font-size:0.72rem; font-weight:700;" onclick="broadcastRoutePlanNotificationToAllPersonnel('${rt.id}', true)">
+                    <i class="fa-solid fa-bell" style="color:#fbbf24;"></i> Personele Bildirim Gönder &amp; Görev Özeti
+                </button>
+                <button type="button" class="btn ${activeRouteExecutionStatusFilter === 'ALL' ? 'btn-primary' : 'btn-secondary'} btn-sm" style="padding:0.24rem 0.55rem; font-size:0.71rem;" onclick="setActiveRouteExecutionStatusFilter('ALL')">
+                    Tümü (${total})
+                </button>
+                <button type="button" class="btn ${activeRouteExecutionStatusFilter === 'PENDING' ? 'btn-primary' : 'btn-secondary'} btn-sm" style="padding:0.24rem 0.55rem; font-size:0.71rem;" onclick="setActiveRouteExecutionStatusFilter('PENDING')">
+                    Bekliyor (${pendingCount})
+                </button>
+                <button type="button" class="btn ${activeRouteExecutionStatusFilter === 'VISITED' ? 'btn-success' : 'btn-secondary'} btn-sm" style="padding:0.24rem 0.55rem; font-size:0.71rem;" onclick="setActiveRouteExecutionStatusFilter('VISITED')">
+                    Ziyaret Edildi (${visitedCount})
+                </button>
+                <button type="button" class="btn ${activeRouteExecutionStatusFilter === 'NOT_VISITED' ? 'btn-danger' : 'btn-secondary'} btn-sm" style="padding:0.24rem 0.55rem; font-size:0.71rem;" onclick="setActiveRouteExecutionStatusFilter('NOT_VISITED')">
+                    Edilemedi (${notVisitedCount})
+                </button>
+                ${manualCount > 0 ? `
+                <button type="button" class="btn ${activeRouteExecutionStatusFilter === 'MANUAL' ? 'btn-primary' : 'btn-secondary'} btn-sm" style="padding:0.24rem 0.55rem; font-size:0.71rem;" onclick="setActiveRouteExecutionStatusFilter('MANUAL')">
+                    Manuel (${manualCount})
+                </button>
+                ` : ''}
+                <span class="badge badge-success" style="font-size:0.72rem; padding:0.28rem 0.55rem;">Gerçekleşme: %${pct}</span>
+            </div>
+        </div>
+
+        <!-- TEK VE SADE PLANLANAN ZİYARETLER TABLOSU (SATIR İÇİ AÇILIR/KAPANIR DETAY FORMU İLE) -->
+        <div class="table-responsive">
+            <table class="dizsan-table">
+                <thead>
+                    <tr>
+                        <th style="width:68px;">Sıra</th>
+                        <th>Müşteri / İşletme</th>
+                        <th>İl / İlçe</th>
+                        <th>Görevli &amp; Tarih</th>
+                        <th>Ziyaret Özeti / Not</th>
+                        <th>Ziyaret Durumu (Tik)</th>
+                        <th style="text-align:right;">İşlem</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    ${filteredItems.map(({ it, idx }) => {
+                        const isVisited = it.status === 'VISITED';
+                        const isNotVisited = it.status === 'NOT_VISITED';
+                        const isExpanded = activeExpandedRouteItemIdx === idx;
+                        const vDate = it.visitDate || todayStr;
+                        const vTime = it.visitTime || nowTimeStr;
+                        const safeCode = escapeHtml(it.code || '').replace(/'/g, "\\'");
+
+                        const presetMatch = UNVISITED_REASON_OPTIONS.includes(it.unvisitedReason) ? it.unvisitedReason : (it.unvisitedReason ? 'Diğer' : '');
+                        const customReasonVal = presetMatch === 'Diğer' ? (it.unvisitedReasonCustom || (UNVISITED_REASON_OPTIONS.includes(it.unvisitedReason) ? '' : it.unvisitedReason)) : (it.unvisitedReasonCustom || '');
+
+                        let summaryHtml = `<span style="color:var(--text-muted); font-size:0.72rem;">Henüz ziyaret sonucu girilmedi</span>`;
+                        if (isVisited) {
+                            const parts = [];
+                            if (it.visitDate) parts.push(`${escapeHtml(it.visitDate)} ${escapeHtml(it.visitTime || '')}`.trim());
+                            if (it.authorized) parts.push(`Görüşülen: ${escapeHtml(it.authorized)}`);
+                            if (it.visitResult) parts.push(escapeHtml(it.visitResult));
+                            if (it.visitNotes) parts.push(`Not: ${escapeHtml(it.visitNotes)}`);
+                            summaryHtml = `<div style="font-size:0.73rem; color:#34d399; font-weight:600;">✓ ${parts.join(' • ') || 'Ziyaret gerçekleştirildi'}</div>`;
+                        } else if (isNotVisited) {
+                            summaryHtml = `<div style="font-size:0.73rem; color:#f87171; font-weight:600;">✗ Sebep: ${escapeHtml(it.unvisitedReason || 'Belirtilmedi')}${it.visitNotes ? ` (${escapeHtml(it.visitNotes)})` : ''}</div>`;
+                        }
+
+                        return `
+                            <tr draggable="true" ondragstart="handleRouteItemDragStart(event, ${idx})" ondragover="handleRouteItemDragOver(event)" ondrop="handleRouteItemDrop(event, '${rt.id}', ${idx})" style="background:${isVisited ? 'rgba(16,185,129,0.06)' : (isNotVisited ? 'rgba(239,68,68,0.06)' : 'transparent')};">
+                                <td>
+                                    <div style="display:flex; align-items:center; gap:0.2rem;">
+                                        <strong style="min-width:18px;">${idx + 1}</strong>
+                                        <button type="button" class="btn btn-secondary btn-sm" style="padding:1px 4px; font-size:0.6rem;" onclick="moveRouteItemOrder('${rt.id}', ${idx}, ${idx - 1})" ${idx === 0 ? 'disabled' : ''} title="Yukarı Taşı">▲</button>
+                                        <button type="button" class="btn btn-secondary btn-sm" style="padding:1px 4px; font-size:0.6rem;" onclick="moveRouteItemOrder('${rt.id}', ${idx}, ${idx + 1})" ${idx === items.length - 1 ? 'disabled' : ''} title="Aşağı Taşı">▼</button>
+                                    </div>
+                                </td>
+                                <td>
+                                    <div style="font-weight:800; color:#f8fafc; cursor:pointer;" onclick="${it.isManual && !it.convertedCustomerCode ? `toggleRouteItemInlineDetail(${idx})` : `openCustomerDetailModal('${safeCode}')`}">${escapeHtml(it.title)}</div>
+                                    <div style="font-size:0.68rem; color:var(--text-sec);">
+                                        ${it.isManual ? `<span class="badge badge-secondary" style="font-size:0.62rem;">Manuel İşletme</span>` : `<span style="font-family:monospace; color:#38bdf8;">${escapeHtml(it.code)}</span>`}
+                                        ${it.convertedCustomerCode ? `<span class="badge badge-success" style="font-size:0.62rem;">Müşteri: ${escapeHtml(it.convertedCustomerCode)}</span>` : ''}
+                                    </div>
+                                </td>
+                                <td style="font-weight:600; font-size:0.76rem;">${escapeHtml(it.city || '-')} / ${escapeHtml(it.district || '-')}</td>
+                                <td style="font-size:0.74rem;">
+                                    <div style="font-weight:700; color:#f8fafc;">${escapeHtml(it.personnel || rt.assignee || '-')}</div>
+                                    <div style="font-size:0.68rem; color:var(--text-sec);">${escapeHtml(rt.plannedDate || '-')}</div>
+                                </td>
+                                <td style="max-width:290px;">
+                                    ${summaryHtml}
+                                </td>
+                                <td>
+                                    <div style="display:flex; align-items:center; gap:0.35rem; flex-wrap:wrap;">
+                                        <label style="display:inline-flex; align-items:center; gap:0.3rem; padding:0.26rem 0.55rem; border-radius:6px; cursor:pointer; font-size:0.72rem; font-weight:700; background:${isVisited ? 'rgba(16,185,129,0.22)' : 'rgba(15,23,42,0.75)'}; border:1px solid ${isVisited ? '#10b981' : 'rgba(148,163,184,0.32)'}; color:${isVisited ? '#34d399' : '#e2e8f0'};">
+                                            <input type="checkbox" ${isVisited ? 'checked' : ''} onchange="handleRouteItemTick('${rt.id}', ${idx}, 'VISITED', this.checked)" style="accent-color:#10b981; margin:0; cursor:pointer;">
+                                            <span>Ziyaret Edildi</span>
+                                        </label>
+                                        <label style="display:inline-flex; align-items:center; gap:0.3rem; padding:0.26rem 0.55rem; border-radius:6px; cursor:pointer; font-size:0.72rem; font-weight:700; background:${isNotVisited ? 'rgba(239,68,68,0.22)' : 'rgba(15,23,42,0.75)'}; border:1px solid ${isNotVisited ? '#ef4444' : 'rgba(148,163,184,0.32)'}; color:${isNotVisited ? '#f87171' : '#e2e8f0'};">
+                                            <input type="checkbox" ${isNotVisited ? 'checked' : ''} onchange="handleRouteItemTick('${rt.id}', ${idx}, 'NOT_VISITED', this.checked)" style="accent-color:#ef4444; margin:0; cursor:pointer;">
+                                            <span>Edilemedi</span>
+                                        </label>
+                                    </div>
+                                </td>
+                                <td style="text-align:right;">
+                                    <div style="display:flex; justify-content:flex-end; gap:0.3rem; flex-wrap:wrap;">
+                                        <button type="button" class="btn ${isExpanded ? 'btn-primary' : 'btn-secondary'} btn-sm" style="padding:0.24rem 0.55rem; font-size:0.7rem;" onclick="toggleRouteItemInlineDetail(${idx})">
+                                            <i class="fa-solid ${isExpanded ? 'fa-chevron-up' : 'fa-pen-to-square'}"></i> ${isExpanded ? 'Kapat' : 'Detay / Not'}
+                                        </button>
+                                        ${it.isManual && !it.convertedCustomerCode ? `
+                                            <button type="button" class="btn btn-success btn-sm" style="padding:0.24rem 0.5rem; font-size:0.7rem;" onclick="convertManualVisitToCustomer('${rt.id}', ${idx})" title="Müşteri Kaydına Dönüştür">
+                                                <i class="fa-solid fa-user-plus"></i>
+                                            </button>
+                                        ` : `
+                                            <button type="button" class="btn btn-secondary btn-sm" style="padding:0.24rem 0.5rem; font-size:0.7rem;" onclick="openCustomerDetailModal('${safeCode}')" title="Müşteri Kartı & Ziyaret Geçmişi">
+                                                <i class="fa-solid fa-id-card" style="color:#38bdf8;"></i>
+                                            </button>
+                                        `}
+                                    </div>
+                                </td>
+                            </tr>
+                            ${isExpanded ? `
+                            <tr id="route-item-card-${idx}">
+                                <td colspan="7" style="padding:0.75rem 1rem; background:rgba(15,23,42,0.88); border-bottom:2px solid ${isNotVisited ? '#ef4444' : '#0284c7'};">
+                                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.55rem; flex-wrap:wrap; gap:0.4rem;">
+                                        <strong style="font-size:0.8rem; color:#38bdf8;">
+                                            #${idx + 1} ${escapeHtml(it.title)} — ${isNotVisited ? 'Ziyaret Edilememe Bilgisi' : 'Ziyaret Detay ve Not Girişi'}
+                                        </strong>
+                                        <span style="font-size:0.7rem; color:var(--text-sec);">Bilgileri girip <strong>"Bilgileri Kaydet"</strong> tuşuna basın</span>
+                                    </div>
+
+                                    ${isNotVisited ? `
+                                        <div style="display:grid; grid-template-columns:minmax(220px, 1fr) minmax(220px, 1.2fr) minmax(200px, 1fr) auto; gap:0.55rem; align-items:end;">
+                                            <div>
+                                                <label style="display:block; font-size:0.69rem; font-weight:700; color:#f87171; margin-bottom:0.2rem;">Ziyaret Edilememe Sebebi *</label>
+                                                <select id="ritem-reason-sel-${idx}" class="filter-input" style="width:100%;" onchange="handleUnvisitedReasonSelectChange(${idx})">
+                                                    <option value="">-- Sebep Seçin --</option>
+                                                    ${UNVISITED_REASON_OPTIONS.map(opt => `<option value="${escapeHtml(opt)}" ${presetMatch === opt ? 'selected' : ''}>${escapeHtml(opt)}</option>`).join('')}
+                                                </select>
+                                            </div>
+                                            <div id="ritem-reason-custom-wrap-${idx}" style="display:${presetMatch === 'Diğer' || customReasonVal ? 'block' : 'none'};">
+                                                <label style="display:block; font-size:0.69rem; font-weight:700; color:var(--text-sec); margin-bottom:0.2rem;">Diğer Sebep Açıklaması</label>
+                                                <input type="text" id="ritem-reason-custom-${idx}" class="filter-input" style="width:100%;" value="${escapeHtml(customReasonVal)}" placeholder="Sebebi yazın...">
+                                            </div>
+                                            <div>
+                                                <label style="display:block; font-size:0.69rem; font-weight:700; color:var(--text-sec); margin-bottom:0.2rem;">Ek Not (Opsiyonel)</label>
+                                                <input type="text" id="ritem-notes-${idx}" class="filter-input" style="width:100%;" value="${escapeHtml(it.visitNotes || '')}" placeholder="Not...">
+                                            </div>
+                                            <div style="display:flex; gap:0.4rem;">
+                                                <button type="button" id="ritem-save-btn-${idx}" class="btn btn-primary btn-sm" style="padding:0.42rem 0.9rem; font-size:0.75rem; font-weight:800;" onclick="saveRouteItemDetails('${rt.id}', ${idx})">
+                                                    <i class="fa-solid fa-floppy-disk"></i> Bilgileri Kaydet
+                                                </button>
+                                            </div>
+                                        </div>
+                                    ` : `
+                                        <div style="display:grid; grid-template-columns:145px 95px minmax(150px, 1fr) minmax(150px, 1fr) minmax(130px, 0.9fr) minmax(180px, 1.2fr) 145px; gap:0.5rem; margin-bottom:0.5rem; align-items:end;">
+                                            <div>
+                                                <label style="display:block; font-size:0.68rem; font-weight:600; color:var(--text-sec); margin-bottom:0.18rem;">Ziyaret Tarihi</label>
+                                                <input type="text" id="ritem-date-${idx}" class="filter-input" style="width:100%; font-size:0.74rem;" value="${escapeHtml(vDate)}" placeholder="GG.AA.YYYY">
+                                            </div>
+                                            <div>
+                                                <label style="display:block; font-size:0.68rem; font-weight:600; color:var(--text-sec); margin-bottom:0.18rem;">Saat</label>
+                                                <input type="text" id="ritem-time-${idx}" class="filter-input" style="width:100%; font-size:0.74rem;" value="${escapeHtml(vTime)}" placeholder="14:30">
+                                            </div>
+                                            <div>
+                                                <label style="display:block; font-size:0.68rem; font-weight:600; color:var(--text-sec); margin-bottom:0.18rem;">Personel</label>
+                                                <select id="ritem-pers-${idx}" class="filter-input" style="width:100%; font-size:0.74rem;">
+                                                    ${users.map(u => `<option value="${escapeHtml(u.name)}" ${normalizeTR(u.name) === normalizeTR(it.personnel || rt.assignee) ? 'selected' : ''}>${escapeHtml(u.name)}</option>`).join('')}
+                                                </select>
+                                            </div>
+                                            <div>
+                                                <label style="display:block; font-size:0.68rem; font-weight:600; color:var(--text-sec); margin-bottom:0.18rem;">Görüşülen Kişi</label>
+                                                <input type="text" id="ritem-auth-${idx}" class="filter-input" style="width:100%; font-size:0.74rem;" value="${escapeHtml(it.authorized || '')}" placeholder="Ad Soyad">
+                                            </div>
+                                            <div>
+                                                <label style="display:block; font-size:0.68rem; font-weight:600; color:var(--text-sec); margin-bottom:0.18rem;">Görevi</label>
+                                                <input type="text" id="ritem-role-${idx}" class="filter-input" style="width:100%; font-size:0.74rem;" value="${escapeHtml(it.contactRole || 'Yetkili')}" placeholder="Yetkili">
+                                            </div>
+                                            <div>
+                                                <label style="display:block; font-size:0.68rem; font-weight:600; color:var(--text-sec); margin-bottom:0.18rem;">Görüşme Sonucu</label>
+                                                <select id="ritem-result-${idx}" class="filter-input" style="width:100%; font-size:0.74rem;">
+                                                    <option value="" ${!it.visitResult ? 'selected' : ''}>Sonuç Seçin...</option>
+                                                    <option value="1 - Olumlu / Sipariş & Randevu Alındı" ${it.visitResult === '1 - Olumlu / Sipariş & Randevu Alındı' ? 'selected' : ''}>1 - Olumlu / Randevu Alındı</option>
+                                                    <option value="2 - Tanışma / İlk Temas Sağlandı" ${it.visitResult === '2 - Tanışma / İlk Temas Sağlandı' || it.visitResult === '2 - Tanışma / İlk Temas' ? 'selected' : ''}>2 - Tanışma / İlk Temas</option>
+                                                    <option value="3 - Teklif / Fiyat Sunuldu (Takip)" ${it.visitResult === '3 - Teklif / Fiyat Sunuldu (Takip)' ? 'selected' : ''}>3 - Teklif / Fiyat Sunuldu</option>
+                                                    <option value="4 - Tahsilat / Cari Mutabakat Yapıldı" ${it.visitResult === '4 - Tahsilat / Cari Mutabakat Yapıldı' ? 'selected' : ''}>4 - Tahsilat / Mutabakat</option>
+                                                    <option value="5 - Tekrar Ziyaret Edilecek" ${it.visitResult === '5 - Tekrar Ziyaret Edilecek' ? 'selected' : ''}>5 - Tekrar Ziyaret Edilecek</option>
+                                                </select>
+                                            </div>
+                                            <div>
+                                                <label style="display:block; font-size:0.68rem; font-weight:600; color:var(--text-sec); margin-bottom:0.18rem;">Sonraki Ziyaret</label>
+                                                <input type="text" id="ritem-nextdate-${idx}" class="filter-input" style="width:100%; font-size:0.74rem;" value="${escapeHtml(it.nextVisitDate || '')}" placeholder="GG.AA.YYYY">
+                                            </div>
+                                        </div>
+                                        <div style="display:grid; grid-template-columns:1fr 220px auto; gap:0.5rem; align-items:end;">
+                                            <div>
+                                                <label style="display:block; font-size:0.68rem; font-weight:600; color:var(--text-sec); margin-bottom:0.18rem;">Ziyaret Açıklaması (Müşteri Kartına İşlenir)</label>
+                                                <input type="text" id="ritem-notes-${idx}" class="filter-input" style="width:100%; font-size:0.75rem;" value="${escapeHtml(it.visitNotes || '')}" placeholder="Görüşme detayları, araç/servis talebi, müşterinin geri bildirimi...">
+                                            </div>
+                                            <div>
+                                                <label style="display:block; font-size:0.68rem; font-weight:600; color:var(--text-sec); margin-bottom:0.18rem;">Ek Not</label>
+                                                <input type="text" id="ritem-extra-${idx}" class="filter-input" style="width:100%; font-size:0.74rem;" value="${escapeHtml(it.extraNotes || '')}" placeholder="Ek not...">
+                                            </div>
+                                            <div>
+                                                <button type="button" id="ritem-save-btn-${idx}" class="btn btn-primary btn-sm" style="padding:0.44rem 1rem; font-size:0.76rem; font-weight:800; background:linear-gradient(135deg, #10b981, #0284c7);" onclick="saveRouteItemDetails('${rt.id}', ${idx})">
+                                                    <i class="fa-solid fa-floppy-disk"></i> Bilgileri Kaydet
+                                                </button>
+                                            </div>
+                                        </div>
+                                    `}
+                                </td>
+                            </tr>
+                            ` : ''}
+                        `;
+                    }).join('')}
+                </tbody>
+            </table>
+        </div>
+    `;
+
+    if (window.AutoDateHelper && typeof window.AutoDateHelper.upgradeAll === 'function') {
+        window.AutoDateHelper.upgradeAll(box);
+    }
+}
+
+function handleUnvisitedReasonSelectChange(idx) {
+    const sel = document.getElementById(`ritem-reason-sel-${idx}`);
+    const wrap = document.getElementById(`ritem-reason-custom-wrap-${idx}`);
+    if (sel && wrap) {
+        wrap.style.display = sel.value === 'Diğer' ? 'block' : 'none';
+    }
+}
+
+function readAutoDateOrInputVal(id) {
+    const el = document.getElementById(id);
+    if (!el) return '';
+    const directVal = (el.value || '').trim();
+    if (directVal) return directVal;
+    const nextSib = el.nextElementSibling;
+    if (nextSib && nextSib.classList && nextSib.classList.contains('auto-date-container')) {
+        const d = (nextSib.querySelector('.auto-date-subinput-day')?.value || '').trim();
+        const m = (nextSib.querySelector('.auto-date-subinput-month')?.value || '').trim();
+        const y = (nextSib.querySelector('.auto-date-subinput-year')?.value || '').trim();
+        if (d && m && y && y.length === 4) {
+            return `${d.padStart(2, '0')}.${m.padStart(2, '0')}.${y}`;
+        }
+    }
+    return '';
+}
+
+async function handleRouteItemTick(routeId, itemIdx, targetStatus, isChecked) {
+    const rt = (appState.customRoutes || []).find(r => r.id === routeId);
+    if (!rt) return;
+    const items = ensureRouteItemsNormalized(rt);
+    const it = items[itemIdx];
+    if (!it) return;
+
+    collectRouteItemInputsIntoObject(it, itemIdx, rt);
+
+    // Bir ziyaret için aynı anda birden fazla durum seçilemez
+    const newStatus = isChecked ? targetStatus : 'PENDING';
+    it.status = newStatus;
+    activeExpandedRouteItemIdx = isChecked ? itemIdx : null;
+
+    if (newStatus === 'VISITED') {
+        if (!it.visitDate) it.visitDate = getTodayTRStr();
+        if (!it.visitTime) it.visitTime = getNowTimeTRStr();
+        it.unvisitedReason = '';
+        it.unvisitedReasonCustom = '';
+    }
+    if (newStatus === 'NOT_VISITED' && !it.unvisitedReason) {
+        const reasonSel = document.getElementById(`ritem-reason-sel-${itemIdx}`)?.value || '';
+        const reasonCustom = (document.getElementById(`ritem-reason-custom-${itemIdx}`)?.value || '').trim();
+        it.unvisitedReason = reasonSel === 'Diğer' ? (reasonCustom || 'Diğer Sebep') : (reasonSel || reasonCustom || 'Müşteri yerinde bulunamadı.');
+    }
+
+    persistRouteItemAndSyncToCustomer(rt, it);
+    renderSavedCustomRoutesList();
+    renderActiveRouteExecutionPanel();
+    renderReportsTab();
+    updateRouteAndReportsBadges();
+
+    const label = newStatus === 'VISITED' ? '✓ Ziyaret Edildi' : (newStatus === 'NOT_VISITED' ? '✗ Ziyaret Edilemedi' : (newStatus === 'CANCELLED' ? 'İptal Edildi' : 'Bekliyor'));
+    showToast(`${it.title}: "${label}" seçildi. Detay / not girip "Bilgileri Kaydet" diyebilirsiniz.`, newStatus === 'VISITED' ? 'success' : 'info');
+}
+
+function collectRouteItemInputsIntoObject(it, idx, rt) {
+    const dateVal = readAutoDateOrInputVal(`ritem-date-${idx}`);
+    const timeVal = (document.getElementById(`ritem-time-${idx}`)?.value || '').trim();
+    const persVal = (document.getElementById(`ritem-pers-${idx}`)?.value || '').trim();
+    const authVal = (document.getElementById(`ritem-auth-${idx}`)?.value || '').trim();
+    const roleVal = (document.getElementById(`ritem-role-${idx}`)?.value || '').trim();
+    const resVal = (document.getElementById(`ritem-result-${idx}`)?.value || '').trim();
+    const nextDateVal = readAutoDateOrInputVal(`ritem-nextdate-${idx}`);
+    const notesVal = (document.getElementById(`ritem-notes-${idx}`)?.value || '').trim();
+    const extraVal = (document.getElementById(`ritem-extra-${idx}`)?.value || '').trim();
+    const reasonSelEl = document.getElementById(`ritem-reason-sel-${idx}`);
+    const reasonCustomEl = document.getElementById(`ritem-reason-custom-${idx}`);
+    const reasonSel = (reasonSelEl?.value || '').trim();
+    const reasonCustom = (reasonCustomEl?.value || '').trim();
+
+    if (dateVal) it.visitDate = dateVal;
+    if (timeVal) it.visitTime = timeVal;
+    if (persVal) it.personnel = persVal;
+    if (authVal) it.authorized = authVal;
+    if (roleVal) it.contactRole = roleVal;
+    it.visitResult = resVal || it.visitResult || '';
+    it.nextVisitDate = nextDateVal;
+    it.visitNotes = notesVal;
+    it.extraNotes = extraVal;
+    if (reasonSelEl || reasonCustomEl) {
+        it.unvisitedReasonCustom = reasonCustom;
+        if (reasonSel === 'Diğer') {
+            it.unvisitedReason = reasonCustom || 'Diğer';
+        } else if (reasonSel) {
+            it.unvisitedReason = reasonSel;
+        } else if (reasonCustom) {
+            it.unvisitedReason = reasonCustom;
+        }
+    }
+    it.updatedAt = formatNowTR();
+}
+
+async function saveRouteItemDetails(routeId, itemIdx) {
+    const rt = (appState.customRoutes || []).find(r => r.id === routeId);
+    if (!rt) return;
+    const items = ensureRouteItemsNormalized(rt);
+    const it = items[itemIdx];
+    if (!it) return;
+
+    collectRouteItemInputsIntoObject(it, itemIdx, rt);
+
+    // Kullanıcı "Bilgileri Kaydet"e bastığında henüz durum seçilmediyse (PENDING):
+    // Eğer edilememe sebebi girilmişse NOT_VISITED, aksi halde doğrudan VISITED (Ziyaret Edildi) olarak kaydet
+    if (!it.status || it.status === 'PENDING') {
+        if (it.unvisitedReason && !it.visitNotes && !it.visitResult) {
+            it.status = 'NOT_VISITED';
+        } else {
+            it.status = 'VISITED';
+        }
+    }
+    if (it.status === 'VISITED') {
+        if (!it.visitDate) it.visitDate = getTodayTRStr();
+        if (!it.visitTime) it.visitTime = getNowTimeTRStr();
+        if (!it.visitResult) it.visitResult = '1 - Olumlu / Sipariş & Randevu Alındı';
+        it.unvisitedReason = '';
+        it.unvisitedReasonCustom = '';
+    }
+
+    it.lastSavedAt = formatNowTR();
+    activeExpandedRouteItemIdx = null;
+
+    persistRouteItemAndSyncToCustomer(rt, it);
+    renderSavedCustomRoutesList();
+    renderActiveRouteExecutionPanel();
+    renderLegacyCustomers();
+    renderDistrictStrategies();
+    renderReportsTab();
+    updateRouteAndReportsBadges();
+
+    showToast(`✓ "${it.title}" ziyaret bilgileri müşteri kartına ve raporlara kaydedildi!`, 'success');
+}
+
+function persistRouteItemAndSyncToCustomer(rt, it) {
+    const customers = appState.customers || [];
+    const targetCode = it.convertedCustomerCode || it.code;
+    const c = customers.find(x => x.code === targetCode);
+    const actor = it.personnel || rt.assignee || (currentUser ? currentUser.name : 'ÖMER EREN');
+    const vDate = it.visitDate || rt.plannedDate || getTodayTRStr();
+
+    // Bölüm 6 Kuralı: Bir müşteriye farklı tarihlerde yapılan ziyaretler birbirinin üzerine yazılmaz; her ziyaret ayrı kayıt olarak saklanır.
+    const historyEntryId = `VH-${rt.id}-${it.code}-${vDate.replace(/\./g, '')}`;
+
+    if (c) {
+        if (it.authorized) c.authorized = it.authorized;
+        if (it.contactRole) c.contactRole = it.contactRole;
+        c.rut = rt.name;
+        c.lastVisit = vDate;
+        c.lastVisitPersonnel = actor;
+        if (!Array.isArray(c.visitHistory)) c.visitHistory = [];
+
+        if (it.status === 'VISITED' || it.status === 'NOT_VISITED') {
+            const histObj = {
+                id: historyEntryId,
+                routeId: rt.id,
+                routeName: rt.name,
+                date: vDate,
+                time: it.visitTime || getNowTimeTRStr(),
+                personnel: actor,
+                contactPerson: it.authorized || c.authorized || '-',
+                contactRole: it.contactRole || 'Yetkili',
+                status: it.status,
+                notes: it.status === 'VISITED' ? (it.visitNotes || 'Saha rut ziyareti gerçekleştirildi.') : `Ziyaret Edilemedi: ${it.unvisitedReason || '-'}`,
+                extraNotes: it.extraNotes || '',
+                result: it.status === 'VISITED' ? (it.visitResult || '1 - Olumlu / Ziyaret Edildi') : `Ziyaret Edilemedi (${it.unvisitedReason || '-'})`,
+                nextVisitDate: it.nextVisitDate || '',
+                unvisitedReason: it.unvisitedReason || '',
+                updatedAt: formatNowTR()
+            };
+            const existingHIdx = c.visitHistory.findIndex(h => h && h.id === historyEntryId);
+            if (existingHIdx !== -1) {
+                c.visitHistory[existingHIdx] = histObj;
+            } else {
+                c.visitHistory.unshift(histObj);
+            }
+        }
+
+        if (it.status === 'VISITED') {
+            c.visitStatus = 'Ziyaret Edildi';
+            c.lastVisitNotes = it.visitNotes || '';
+            c.lastVisitResult = it.visitResult || 'Ziyaret Edildi';
+        } else if (it.status === 'NOT_VISITED') {
+            c.visitStatus = 'Ziyaret Edilemedi';
+            c.unvisitedReason = it.unvisitedReason || '';
+        }
+        c._modifiedAt = new Date().toISOString();
+    }
+
+    if (!Array.isArray(appState.visits)) appState.visits = [];
+    const visitRecordId = `VISIT-RUT-${rt.id}-${it.code}-${vDate.replace(/\./g, '')}`;
+    const existingVIdx = appState.visits.findIndex(v => v.id === visitRecordId);
+
+    if (it.status === 'VISITED' || it.status === 'NOT_VISITED') {
+        const visitPayload = {
+            id: visitRecordId,
+            routeId: rt.id,
+            routeName: rt.name,
+            plannedDate: rt.plannedDate || vDate,
+            date: vDate,
+            time: it.visitTime || getNowTimeTRStr(),
+            customerCode: targetCode,
+            customerTitle: it.title,
+            city: it.city || (c ? c.city : ''),
+            district: it.district || (c ? c.district : ''),
+            personnel: actor,
+            contactPerson: it.authorized || (c ? c.authorized : '-') || '-',
+            contactRole: it.contactRole || 'Yetkili',
+            plates: it.plates || (c ? c.plates : '-') || '-',
+            type: it.isManual ? 'MANUEL TANIŞMA ZİYARETİ' : 'SAHA RUT ZİYARETİ',
+            result: it.status === 'VISITED'
+                ? (it.visitResult || '1 - Olumlu / Ziyaret Edildi')
+                : `Ziyaret Edilemedi (${it.unvisitedReason || 'Sebep Belirtilmedi'})`,
+            visitStatus: it.status,
+            isManual: Boolean(it.isManual),
+            visitPurpose: it.visitPurpose || '',
+            unvisitedReason: it.unvisitedReason || '',
+            nextVisitDate: it.nextVisitDate || '',
+            notes: it.status === 'VISITED'
+                ? (it.visitNotes || 'Rut kapsamında müşteri ziyaret edildi.')
+                : `Ziyaret Edilememe Sebebi: ${it.unvisitedReason || '-'}${it.visitNotes ? ' | Not: ' + it.visitNotes : ''}`,
+            extraNotes: it.extraNotes || ''
+        };
+        if (existingVIdx !== -1) {
+            appState.visits[existingVIdx] = visitPayload;
+        } else {
+            appState.visits.unshift(visitPayload);
+        }
+    }
+
+    // Tüm ziyaretler sonuçlandıysa plan durumunu otomatik güncelle
+    const total = (rt.items || []).length;
+    const done = (rt.items || []).filter(i => i.status === 'VISITED' || i.status === 'NOT_VISITED' || i.status === 'CANCELLED').length;
+    if (total > 0 && done === total) {
+        rt.planStatus = 'Tamamlandı';
+    } else if (done > 0 && rt.planStatus === 'Planlandı') {
+        rt.planStatus = 'Devam Ediyor';
+    }
+
+    rt.updatedAt = formatNowTR();
+    addAuditLog('RUT ZİYARET İŞLEME', `[${rt.name}] ${it.title} -> ${it.status} (${actor})`);
+    renderDashboard();
+    renderActiveVisits();
+    syncToServer();
+}
+
+// Bölüm 7: Manuel Ziyaret Kaydını Mevcut Müşteri Kayıt Sistemine Dönüştürme (Mükerrer Kontrolü + Kullanıcı Onayı)
+async function convertManualVisitToCustomer(routeId, itemIdx) {
+    const rt = (appState.customRoutes || []).find(r => r.id === routeId);
+    if (!rt) return;
+    const items = ensureRouteItemsNormalized(rt);
+    const it = items[itemIdx];
+    if (!it) return;
+
+    const customers = appState.customers || [];
+    const normTitle = normalizeTR(it.title || '');
+    const duplicate = customers.find(c => normalizeTR(c.title) === normTitle || (normTitle.length > 5 && normalizeTR(c.title).includes(normTitle)));
+
+    if (duplicate) {
+        const useExisting = confirm(`DİKKAT: Sistemde benzer ünvanlı bir müşteri zaten mevcut:\n\nKod: ${duplicate.code}\nÜnvan: ${duplicate.title}\nİl/İlçe: ${duplicate.city} / ${duplicate.district}\n\nMükerrer kayıt oluşmaması için bu manuel ziyareti mevcut "${duplicate.title}" kartına bağlamak ister misiniz?`);
+        if (useExisting) {
+            it.convertedCustomerCode = duplicate.code;
+            await persistRouteItemAndSyncToCustomer(rt, it);
+            renderActiveRouteExecutionPanel();
+            renderReportsTab();
+            showToast(`Manuel ziyaret mevcut "${duplicate.title}" (${duplicate.code}) müşteri kartına bağlandı.`, 'success');
+        }
+        return;
+    }
+
+    if (!confirm(`"${it.title}" (${it.city} / ${it.district}) işletmesini D-PRO müşteri veritabanına kalıcı MÜŞTERİ KAYDI olarak dönüştürmek istediğinize emin misiniz?`)) {
+        return;
+    }
+
+    const newCode = '120.YENI.' + String(Date.now()).slice(-5);
+    const newCust = {
+        code: newCode,
+        title: it.title,
+        authorized: it.authorized || 'İşletme Yetkilisi',
+        contactRole: it.contactRole || 'Yetkili',
+        phone: it.phone || '-',
+        city: it.city || 'Çorum',
+        district: it.district || 'Merkez',
+        address: it.address || `${it.city} / ${it.district}`,
+        rut: rt.name,
+        plates: it.plates || 'Plakasız',
+        vehicleModel: '-',
+        totalRevenue: 0,
+        balance: 0,
+        ba: '-',
+        priority: 'P2 - Yeni Potansiyel (Saha Kazanım)',
+        lastDate: it.visitDate || getTodayTRStr(),
+        lastVisit: it.visitDate || getTodayTRStr(),
+        visitStatus: it.status === 'VISITED' ? 'Ziyaret Edildi' : 'Yeni Kayıt',
+        isCustom: true,
+        isManualIntro: true,
+        serviceHistory: [],
+        visitHistory: [],
+        _modifiedAt: new Date().toISOString()
+    };
+
+    appState.customers.unshift(newCust);
+    it.convertedCustomerCode = newCode;
+    if (!rt.customerCodes.includes(newCode)) rt.customerCodes.push(newCode);
+
+    await persistRouteItemAndSyncToCustomer(rt, it);
+    populateFilterOptions();
+    renderActiveRouteExecutionPanel();
+    renderReportsTab();
+    showToast(`"${it.title}" başarıyla müşteri kaydına (${newCode}) dönüştürüldü!`, 'success');
+}
+
+// Bölüm 5 & 9.E: Ziyaret Edilemeyen Müşteriyi Yeni Bir Rut Planına Tekrar Ekleme
+function reAddUnvisitedToRouteDraft(code, city, district, title) {
+    switchTab('route-plan-tab');
+    if (code && !String(code).startsWith('MANUEL-')) {
+        customRouteDraftSelectedCodes.add(code);
+    }
+    if (city) {
+        const stopLabel = district ? `${city} / ${district}` : city;
+        if (!customRouteDraftDistricts.some(x => normalizeTR(x) === normalizeTR(stopLabel))) {
+            customRouteDraftDistricts.push(stopLabel);
+        }
+    }
+    renderCustomRouteDistrictBadges();
+    renderCustomRouteCustomerPicker();
+    renderCustomRouteSelectedChips();
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+    showToast(`"${title || code}" yeni RUT planı taslağına eklendi. Tarih ve personel seçip kaydedebilirsiniz.`, 'success');
+}
+
+// Bölüm 6: Müşteri Kartı İçinde Ziyaret Bilgi Girişi ve Tarih Sıralı ZİYARET GEÇMİŞİ Tablosu
+function getCustomerFullVisitHistory(customer) {
+    if (!customer) return [];
+    const list = [];
+    const seenIds = new Set();
+
+    if (Array.isArray(customer.visitHistory)) {
+        customer.visitHistory.forEach(h => {
+            if (!h) return;
+            const id = h.id || `${h.date}-${h.personnel}-${h.notes}`;
+            if (!seenIds.has(id)) {
+                seenIds.add(id);
+                list.push(h);
+            }
+        });
+    }
+
+    (appState.visits || []).forEach(v => {
+        if (!v) return;
+        if (v.customerCode === customer.code || normalizeTR(v.customerTitle) === normalizeTR(customer.title)) {
+            const id = v.id || `${v.date}-${v.personnel}-${v.notes}`;
+            if (!seenIds.has(id)) {
+                seenIds.add(id);
+                list.push({
+                    id,
+                    routeName: v.routeName || 'Saha Ziyareti',
+                    date: v.date || v.plannedDate || '-',
+                    time: v.time || '',
+                    personnel: v.personnel || '-',
+                    contactPerson: v.contactPerson || customer.authorized || '-',
+                    contactRole: v.contactRole || 'Yetkili',
+                    status: v.visitStatus || (String(v.result || '').includes('Edilemedi') ? 'NOT_VISITED' : 'VISITED'),
+                    notes: v.notes || '-',
+                    result: v.result || '-'
+                });
+            }
+        }
+    });
+
+    return list;
+}
+
+function buildCustomerAreaVisitEntryHtml(customer) {
+    if (!customer) return '';
+    const code = customer.code || '';
+    const safeCode = escapeHtml(code).replace(/'/g, "\\'");
+    const todayStr = getTodayTRStr();
+    const nowTimeStr = getNowTimeTRStr();
+    const visitHistory = getCustomerFullVisitHistory(customer);
+
+    let matchedRoute = null;
+    let matchedItem = null;
+    for (const rt of (appState.customRoutes || [])) {
+        const items = ensureRouteItemsNormalized(rt);
+        const found = items.find(i => i.code === code || i.convertedCustomerCode === code);
+        if (found) {
+            matchedRoute = rt;
+            matchedItem = found;
+            break;
+        }
+    }
+
+    const curStatus = matchedItem ? matchedItem.status : (customer.visitStatus === 'Ziyaret Edildi' ? 'VISITED' : (customer.visitStatus === 'Ziyaret Edilemedi' ? 'NOT_VISITED' : 'PENDING'));
+    const isVisited = curStatus === 'VISITED';
+    const isNotVisited = curStatus === 'NOT_VISITED';
+
+    return `
+        <div style="background:linear-gradient(135deg, rgba(16,185,129,0.14), rgba(2,132,199,0.16)); border:1px solid rgba(16,185,129,0.45); border-radius:12px; padding:0.95rem 1.1rem; margin-bottom:1.1rem;">
+            <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:0.65rem; margin-bottom:0.75rem; padding-bottom:0.6rem; border-bottom:1px solid rgba(148,163,184,0.2);">
+                <div>
+                    <div style="font-size:0.9rem; font-weight:800; color:#fff; display:flex; align-items:center; gap:0.45rem;">
+                        <i class="fa-solid fa-clipboard-check" style="color:#34d399;"></i>
+                        <span>MÜŞTERİ KARTI — YENİ ZİYARET BİLGİSİ GİRİŞİ &amp; DURUM İŞARETLEME</span>
+                    </div>
+                    <div style="font-size:0.73rem; color:#cbd5e1; margin-top:2px;">
+                        ${matchedRoute ? `Kayıtlı Rut Planı: <strong style="color:#fde68a;">${escapeHtml(matchedRoute.name)}</strong> (Plan Tarihi: ${escapeHtml(matchedRoute.plannedDate || '-')})` : 'Girilen her ziyaret önceki kayıtların üzerine yazılmadan aşağıdaki ZİYARET GEÇMİŞİ tablosuna ayrı kayıt olarak eklenir.'}
+                    </div>
+                </div>
+
+                <!-- SAĞDA ZİYARET EDİLDİ / EDİLEMEDİ TİK ALANI -->
+                <div style="display:flex; align-items:center; gap:0.5rem; flex-wrap:wrap;">
+                    <label style="display:inline-flex; align-items:center; gap:0.4rem; padding:0.4rem 0.75rem; border-radius:8px; cursor:pointer; background:${isVisited ? 'rgba(16,185,129,0.28)' : 'rgba(15,23,42,0.85)'}; border:2px solid ${isVisited ? '#10b981' : 'rgba(16,185,129,0.4)'}; color:${isVisited ? '#34d399' : '#e2e8f0'}; font-weight:800; font-size:0.78rem;">
+                        <input type="checkbox" id="carea-tick-visited" ${isVisited ? 'checked' : ''} onchange="handleCustomerAreaTick('${safeCode}', 'VISITED', this.checked)" style="width:17px; height:17px; accent-color:#10b981; cursor:pointer; margin:0;">
+                        <span>✓ Ziyaret Edildi</span>
+                    </label>
+                    <label style="display:inline-flex; align-items:center; gap:0.4rem; padding:0.4rem 0.75rem; border-radius:8px; cursor:pointer; background:${isNotVisited ? 'rgba(239,68,68,0.28)' : 'rgba(15,23,42,0.85)'}; border:2px solid ${isNotVisited ? '#ef4444' : 'rgba(239,68,68,0.4)'}; color:${isNotVisited ? '#fca5a5' : '#e2e8f0'}; font-weight:800; font-size:0.78rem;">
+                        <input type="checkbox" id="carea-tick-notvisited" ${isNotVisited ? 'checked' : ''} onchange="handleCustomerAreaTick('${safeCode}', 'NOT_VISITED', this.checked)" style="width:17px; height:17px; accent-color:#ef4444; cursor:pointer; margin:0;">
+                        <span>✗ Ziyaret Edilemedi</span>
+                    </label>
+                </div>
+            </div>
+
+            <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(155px, 1fr)); gap:0.6rem; align-items:end; margin-bottom:0.85rem;">
+                <div>
+                    <label style="display:block; font-size:0.7rem; font-weight:700; color:#fde68a; margin-bottom:0.2rem;">Ziyaret Tarihi (GG.AA.YYYY)</label>
+                    <input type="text" id="carea-visit-date" class="filter-input" style="width:100%;" value="${escapeHtml(todayStr)}" placeholder="GG.AA.YYYY">
+                </div>
+                <div>
+                    <label style="display:block; font-size:0.7rem; font-weight:700; color:#fde68a; margin-bottom:0.2rem;">Ziyaret Saati</label>
+                    <input type="text" id="carea-visit-time" class="filter-input" style="width:100%;" value="${escapeHtml(nowTimeStr)}" placeholder="14:30">
+                </div>
+                <div>
+                    <label style="display:block; font-size:0.7rem; font-weight:700; color:#93c5fd; margin-bottom:0.2rem;">Görüşülen Kişi</label>
+                    <input type="text" id="carea-visit-contact" class="filter-input" style="width:100%;" value="${escapeHtml(customer.authorized || '')}" placeholder="Görüşülen kişi">
+                </div>
+                <div>
+                    <label style="display:block; font-size:0.7rem; font-weight:700; color:#93c5fd; margin-bottom:0.2rem;">Görüşülen Kişinin Görevi</label>
+                    <input type="text" id="carea-visit-role" class="filter-input" style="width:100%;" value="${escapeHtml(customer.contactRole || 'Firma Yetkilisi')}" placeholder="Firma Sahibi / Müdür">
+                </div>
+                <div>
+                    <label style="display:block; font-size:0.7rem; font-weight:700; color:#34d399; margin-bottom:0.2rem;">Görüşme Sonucu</label>
+                    <select id="carea-visit-result" class="filter-input" style="width:100%;">
+                        <option value="1 - Olumlu / Sipariş & Randevu Alındı">1 - Olumlu / Randevu Alındı</option>
+                        <option value="2 - Tanışma / İlk Temas Sağlandı">2 - Tanışma / İlk Temas</option>
+                        <option value="3 - Teklif / Fiyat Sunuldu (Takip)">3 - Teklif / Fiyat Sunuldu</option>
+                        <option value="4 - Tahsilat / Cari Mutabakat Yapıldı">4 - Tahsilat / Mutabakat</option>
+                        <option value="5 - Tekrar Ziyaret Edilecek">5 - Tekrar Ziyaret Edilecek</option>
+                    </select>
+                </div>
+                <div>
+                    <label style="display:block; font-size:0.7rem; font-weight:700; color:#fca5a5; margin-bottom:0.2rem;">Ziyaret Edilememe Sebebi</label>
+                    <select id="carea-unvisited-reason" class="filter-input" style="width:100%;">
+                        <option value="">-- Edilemediyse Seçin --</option>
+                        ${UNVISITED_REASON_OPTIONS.map(opt => `<option value="${escapeHtml(opt)}">${escapeHtml(opt)}</option>`).join('')}
+                    </select>
+                </div>
+                <div style="grid-column:span 2; min-width:210px;">
+                    <label style="display:block; font-size:0.7rem; font-weight:700; color:#e2e8f0; margin-bottom:0.2rem;">Ziyaret Açıklaması / Görüşme Notu</label>
+                    <input type="text" id="carea-visit-notes" class="filter-input" style="width:100%;" value="" placeholder="Müşteri ziyaret açıklaması, araç/servis talebi, görüşme sonucu...">
+                </div>
+                <div>
+                    <button type="button" class="btn btn-primary" style="width:100%; justify-content:center; padding:0.48rem 0.85rem; font-weight:800; background:linear-gradient(135deg,#10b981,#0284c7);" onclick="saveCustomerVisitFromCustomerArea('${safeCode}')">
+                        <i class="fa-solid fa-floppy-disk"></i> Ziyareti Geçmişe Kaydet
+                    </button>
+                </div>
+            </div>
+
+            <!-- BÖLÜM 6: MÜŞTERİ ZİYARET GEÇMİŞİ TABLOSU (ÜZERİNE YAZILMAZ, TARİH SIRASIYLA SAKLANIR) -->
+            <div style="background:rgba(2,6,23,0.65); border:1px solid rgba(56,189,248,0.3); border-radius:10px; padding:0.7rem 0.9rem;">
+                <div style="font-size:0.8rem; font-weight:800; color:#38bdf8; margin-bottom:0.45rem; display:flex; justify-content:space-between; align-items:center;">
+                    <span><i class="fa-solid fa-clock-rotate-left"></i> MÜŞTERİ ZİYARET GEÇMİŞİ (Tarih Sırasıyla Tüm Ziyaretler)</span>
+                    <span class="badge badge-success">${visitHistory.length} Ziyaret Kaydı</span>
+                </div>
+                ${visitHistory.length === 0 ? `
+                    <div style="font-size:0.75rem; color:var(--text-muted); padding:0.4rem 0;">Bu müşteriye ait henüz kayıtlı bir saha ziyareti geçmişi bulunmuyor.</div>
+                ` : `
+                    <div class="table-responsive" style="max-height:190px; overflow-y:auto;">
+                        <table class="dizsan-table" style="font-size:0.74rem;">
+                            <thead>
+                                <tr>
+                                    <th>Tarih &amp; Saat</th>
+                                    <th>Personel</th>
+                                    <th>Görüşülen Kişi &amp; Görevi</th>
+                                    <th>Ziyaret Açıklaması</th>
+                                    <th>Görüşme Sonucu</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                ${visitHistory.map(h => `
+                                    <tr>
+                                        <td style="white-space:nowrap; font-weight:700; color:#fde68a;">${escapeHtml(h.date || '-')} ${escapeHtml(h.time || '')}</td>
+                                        <td>${escapeHtml(h.personnel || '-')}</td>
+                                        <td>${escapeHtml(h.contactPerson || '-')} <span style="color:#94a3b8; font-size:0.68rem;">(${escapeHtml(h.contactRole || 'Yetkili')})</span></td>
+                                        <td>${escapeHtml(h.notes || '-')}</td>
+                                        <td><span class="badge ${h.status === 'NOT_VISITED' ? 'badge-p1' : 'badge-success'}" style="font-size:0.66rem;">${escapeHtml(h.result || '-')}</span></td>
+                                    </tr>
+                                `).join('')}
+                            </tbody>
+                        </table>
+                    </div>
+                `}
+            </div>
+        </div>
+    `;
+}
+
+function handleCustomerAreaTick(code, status, isChecked) {
+    const vCb = document.getElementById('carea-tick-visited');
+    const nvCb = document.getElementById('carea-tick-notvisited');
+    if (status === 'VISITED' && isChecked && nvCb) nvCb.checked = false;
+    if (status === 'NOT_VISITED' && isChecked && vCb) vCb.checked = false;
+    saveCustomerVisitFromCustomerArea(code, isChecked ? status : 'PENDING');
+}
+
+async function saveCustomerVisitFromCustomerArea(code, explicitStatus = null) {
+    const c = (appState.customers || []).find(x => x.code === code);
+    if (!c) return;
+
+    const vCb = document.getElementById('carea-tick-visited');
+    const nvCb = document.getElementById('carea-tick-notvisited');
+    const vDate = (document.getElementById('carea-visit-date')?.value || '').trim() || getTodayTRStr();
+    const vTime = (document.getElementById('carea-visit-time')?.value || '').trim() || getNowTimeTRStr();
+    const vContact = (document.getElementById('carea-visit-contact')?.value || '').trim() || c.authorized || 'Yetkili';
+    const vRole = (document.getElementById('carea-visit-role')?.value || '').trim() || 'Yetkili';
+    const vResult = (document.getElementById('carea-visit-result')?.value || '').trim();
+    const vNotes = (document.getElementById('carea-visit-notes')?.value || '').trim();
+    const vReason = (document.getElementById('carea-unvisited-reason')?.value || '').trim();
+
+    let status = explicitStatus;
+    if (!status) {
+        if (vCb && vCb.checked) status = 'VISITED';
+        else if (nvCb && nvCb.checked) status = 'NOT_VISITED';
+        else if (vReason && !vNotes) status = 'NOT_VISITED';
+        else status = 'VISITED';
+    }
+
+    const actor = currentUser ? currentUser.name : 'ÖMER EREN';
+    let targetRoute = null;
+    let targetItem = null;
+
+    for (const rt of (appState.customRoutes || [])) {
+        const items = ensureRouteItemsNormalized(rt);
+        const found = items.find(i => i.code === code || i.convertedCustomerCode === code);
+        if (found) {
+            targetRoute = rt;
+            targetItem = found;
+            break;
+        }
+    }
+
+    if (!targetRoute) {
+        targetRoute = {
+            id: 'RUTPLAN-' + Date.now(),
+            name: `${c.city || 'Saha'} / ${c.district || 'Merkez'} Rutu`,
+            routeText: `${c.city || ''} / ${c.district || ''}`,
+            plannedDate: vDate,
+            planStatus: 'Devam Ediyor',
+            assignee: actor,
+            notes: 'Müşteri kartından oluşturulan ziyaret kaydı',
+            districts: [`${c.city || ''} / ${c.district || ''}`],
+            customerCodes: [c.code],
+            items: [],
+            updatedAt: formatNowTR(),
+            createdBy: actor
+        };
+        if (!Array.isArray(appState.customRoutes)) appState.customRoutes = [];
+        appState.customRoutes.unshift(targetRoute);
+        ensureRouteItemsNormalized(targetRoute);
+        targetItem = targetRoute.items[0];
+    }
+
+    if (targetItem) {
+        targetItem.status = status;
+        targetItem.visitDate = vDate;
+        targetItem.visitTime = vTime;
+        targetItem.authorized = vContact;
+        targetItem.contactRole = vRole;
+        targetItem.visitResult = vResult;
+        targetItem.visitNotes = vNotes;
+        targetItem.unvisitedReason = vReason;
+        targetItem.personnel = actor;
+        await persistRouteItemAndSyncToCustomer(targetRoute, targetItem);
+    }
+
+    renderSavedCustomRoutesList();
+    renderActiveRouteExecutionPanel();
+    renderReportsTab();
+    updateRouteAndReportsBadges();
+    openCustomerDetailModal(code);
+    showToast(`"${c.title}" ziyaret kaydı müşteri ziyaret geçmişine ve raporlara eklendi!`, 'success');
+}
+
+// ==========================================================================
+// BÖLÜM 9 & 10: RAPORLAR MODÜLÜ (A. GENEL, B. PERSONEL, C. İL/İLÇE, D. MÜŞTERİ, E. EDİLEMEYENLER, F. MANUEL)
+// ==========================================================================
+function collectAllRouteReportRows() {
+    const routes = Array.isArray(appState.customRoutes) ? appState.customRoutes : [];
+    const rows = [];
+    const seenKeys = new Set();
+
+    routes.forEach(rt => {
+        const items = ensureRouteItemsNormalized(rt);
+        items.forEach((it, idx) => {
+            const key = `${rt.id}|${it.code}`;
+            seenKeys.add(key);
+            rows.push({
+                routeId: rt.id,
+                routeName: rt.name || 'Rut Planı',
+                routeText: rt.routeText || '-',
+                planStatus: rt.planStatus || 'Planlandı',
+                plannedDate: rt.plannedDate || '-',
+                personnel: it.personnel || rt.assignee || 'ÖMER EREN',
+                itemIdx: idx,
+                code: it.code,
+                convertedCustomerCode: it.convertedCustomerCode || '',
+                title: it.title || it.code,
+                city: it.city || '-',
+                district: it.district || '-',
+                authorized: it.authorized || '-',
+                contactRole: it.contactRole || 'Yetkili',
+                phone: it.phone || '-',
+                plates: it.plates || '-',
+                isManual: Boolean(it.isManual),
+                visitPurpose: it.visitPurpose || 'Tanışma Ziyareti',
+                status: it.status || 'PENDING',
+                visitDate: it.visitDate || '',
+                visitTime: it.visitTime || '',
+                visitResult: it.visitResult || '',
+                visitNotes: it.visitNotes || '',
+                extraNotes: it.extraNotes || '',
+                unvisitedReason: it.unvisitedReason || ''
+            });
+        });
+    });
+
+    (appState.visits || []).forEach(v => {
+        const key = `${v.routeId || 'NOROUTE'}|${v.customerCode || v.customerTitle}`;
+        if (v.routeId && seenKeys.has(key)) return;
+        const isNotVis = v.visitStatus === 'NOT_VISITED' || String(v.result || '').toLowerCase().includes('edilemedi');
+        rows.push({
+            routeId: v.routeId || '',
+            routeName: v.routeName || 'Genel Saha Ziyareti',
+            routeText: `${v.city || '-'} / ${v.district || '-'}`,
+            planStatus: 'Tamamlandı',
+            plannedDate: v.plannedDate || v.date || '-',
+            personnel: v.personnel || 'ÖMER EREN',
+            itemIdx: -1,
+            code: v.customerCode || '',
+            convertedCustomerCode: '',
+            title: v.customerTitle || '-',
+            city: v.city || '-',
+            district: v.district || '-',
+            authorized: v.contactPerson || '-',
+            contactRole: v.contactRole || 'Yetkili',
+            phone: '-',
+            plates: v.plates || '-',
+            isManual: Boolean(v.isManual) || String(v.customerCode || '').startsWith('MANUEL-') || String(v.customerCode || '').startsWith('TANISMA-'),
+            visitPurpose: v.visitPurpose || 'Saha Ziyareti',
+            status: v.visitStatus || (isNotVis ? 'NOT_VISITED' : 'VISITED'),
+            visitDate: v.date || '',
+            visitTime: v.time || '',
+            visitResult: v.result || '',
+            visitNotes: v.notes || '',
+            extraNotes: v.extraNotes || '',
+            unvisitedReason: v.unvisitedReason || (isNotVis ? v.notes : '')
+        });
+    });
+
+    return rows;
+}
+
+function handleReportCityFilterChange() {
+    const citySel = document.getElementById('rep-filter-city');
+    const distSel = document.getElementById('rep-filter-district');
+    if (distSel) distSel.value = '';
+    populateReportsFilters(true);
+    renderReportsTab();
+}
+
+function populateReportsFilters(rebuildDistricts = false) {
+    const rows = collectAllRouteReportRows();
+    const routeSel = document.getElementById('rep-filter-route');
+    const persSel = document.getElementById('rep-filter-personnel');
+    const citySel = document.getElementById('rep-filter-city');
+    const distSel = document.getElementById('rep-filter-district');
+    const custSel = document.getElementById('rep-filter-customer');
+
+    if (routeSel) {
+        const cur = routeSel.value;
+        const rNames = Array.from(new Set((appState.customRoutes || []).map(r => r.name).filter(Boolean)));
+        routeSel.innerHTML = `<option value="">🚗 Tüm Rut Planları (${rNames.length})</option>` +
+            rNames.map(n => `<option value="${escapeHtml(n)}">${escapeHtml(n)}</option>`).join('');
+        if (cur) routeSel.value = cur;
+    }
+
+    if (persSel) {
+        const cur = persSel.value;
+        const pNames = Array.from(new Set([
+            ...(appState.users || []).map(u => u.name),
+            ...rows.map(r => r.personnel)
+        ].filter(Boolean)));
+        persSel.innerHTML = `<option value="">👤 Tüm Personeller (${pNames.length})</option>` +
+            pNames.map(n => `<option value="${escapeHtml(n)}">${escapeHtml(n)}</option>`).join('');
+        if (cur) persSel.value = cur;
+    }
+
+    if (citySel) {
+        const cur = citySel.value;
+        const cities = Array.from(new Set([
+            ...rows.map(r => r.city),
+            ...(appState.customers || []).map(c => c.city)
+        ].filter(c => c && c !== '-'))).sort((a, b) => a.localeCompare(b, 'tr'));
+        citySel.innerHTML = `<option value="">📍 Tüm İller (${cities.length})</option>` +
+            cities.map(c => `<option value="${escapeHtml(c)}">${escapeHtml(c)}</option>`).join('');
+        if (cur) citySel.value = cur;
+    }
+
+    if (distSel) {
+        const cur = distSel.value;
+        const selectedCity = citySel ? citySel.value : '';
+        const dists = Array.from(new Set([
+            ...rows.filter(r => !selectedCity || normalizeTR(r.city) === normalizeTR(selectedCity)).map(r => r.district),
+            ...(appState.customers || []).filter(c => !selectedCity || normalizeTR(c.city) === normalizeTR(selectedCity)).map(c => c.district)
+        ].filter(d => d && d !== '-'))).sort((a, b) => a.localeCompare(b, 'tr'));
+        distSel.innerHTML = `<option value="">🏘️ Tüm İlçeler (${dists.length})</option>` +
+            dists.map(d => `<option value="${escapeHtml(d)}">${escapeHtml(d)}</option>`).join('');
+        if (cur && dists.includes(cur)) distSel.value = cur;
+    }
+
+    if (custSel && custSel.options.length <= 1) {
+        const visitedCusts = Array.from(new Set(rows.map(r => r.title).filter(Boolean))).slice(0, 300);
+        custSel.innerHTML = `<option value="">🏢 Tüm Müşteriler</option>` +
+            visitedCusts.map(t => `<option value="${escapeHtml(t)}">${escapeHtml(t)}</option>`).join('');
+    }
+}
+
+function setReportStatusFilter(status) {
+    const sel = document.getElementById('rep-filter-status');
+    if (sel) sel.value = status || 'ALL';
+    renderReportsTab();
+}
+
+function filterReportByRegion(city, district) {
+    const citySel = document.getElementById('rep-filter-city');
+    const distSel = document.getElementById('rep-filter-district');
+    if (citySel) citySel.value = city || '';
+    populateReportsFilters(true);
+    if (distSel) distSel.value = district || '';
+    renderReportsTab();
+}
+
+function resetReportsFilters() {
+    ['rep-filter-search', 'rep-filter-route', 'rep-filter-personnel', 'rep-filter-city', 'rep-filter-district', 'rep-filter-customer', 'rep-filter-date-from', 'rep-filter-date-to'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.value = '';
+    });
+    const st = document.getElementById('rep-filter-status');
+    if (st) st.value = 'ALL';
+    const cb = document.getElementById('rep-only-unvisited-customers-cb');
+    if (cb) cb.checked = false;
+    populateReportsFilters(true);
+    renderReportsTab();
+}
+
+function renderReportsTab() {
+    const mainBody = document.getElementById('rep-main-table-body');
+    if (!mainBody) return;
+
+    populateReportsFilters();
+    const allRows = collectAllRouteReportRows();
+
+    const search = normalizeTR(document.getElementById('rep-filter-search')?.value || '');
+    const routeFilter = document.getElementById('rep-filter-route')?.value || '';
+    const persFilter = document.getElementById('rep-filter-personnel')?.value || '';
+    const cityFilter = document.getElementById('rep-filter-city')?.value || '';
+    const distFilter = document.getElementById('rep-filter-district')?.value || '';
+    const custFilter = document.getElementById('rep-filter-customer')?.value || '';
+    const statusFilter = document.getElementById('rep-filter-status')?.value || 'ALL';
+    const fromStr = (document.getElementById('rep-filter-date-from')?.value || '').trim();
+    const toStr = (document.getElementById('rep-filter-date-to')?.value || '').trim();
+    const fromDt = parseSqlEntryDateObj(fromStr);
+    const toDt = parseSqlEntryDateObj(toStr);
+
+    // Filtrelenmiş satırlar (Tarih, Personel, İl, İlçe, Müşteri ortak filtresi)
+    const baseFiltered = allRows.filter(r => {
+        if (routeFilter && r.routeName !== routeFilter) return false;
+        if (persFilter && normalizeTR(r.personnel) !== normalizeTR(persFilter)) return false;
+        if (cityFilter && normalizeTR(r.city) !== normalizeTR(cityFilter)) return false;
+        if (distFilter && normalizeTR(r.district) !== normalizeTR(distFilter)) return false;
+        if (custFilter && normalizeTR(r.title) !== normalizeTR(custFilter)) return false;
+        if (fromDt || toDt) {
+            const rDt = parseSqlEntryDateObj(r.visitDate || r.plannedDate);
+            if (fromDt && (!rDt || rDt.getTime() < fromDt.getTime())) return false;
+            if (toDt && (!rDt || rDt.getTime() > toDt.getTime())) return false;
+        }
+        if (search) {
+            const hay = normalizeTR(`${r.routeName} ${r.routeText} ${r.title} ${r.code} ${r.city} ${r.district} ${r.personnel} ${r.visitNotes} ${r.unvisitedReason} ${r.authorized}`);
+            if (!hay.includes(search)) return false;
+        }
+        return true;
+    });
+
+    // A. GENEL ZİYARET RAPORU HESAPLAMALARI (BÖLÜM 9.A FORMÜLÜ)
+    // Gerçekleşen Ziyaret / (Gerçekleşen + Ziyaret Edilemeyen + İptal Edilen Ziyaretler) * 100
+    // Bekleyen ziyaretler gerçekleşme oranına dahil edilmez!
+    const totalPlanned = baseFiltered.length;
+    const totalVisited = baseFiltered.filter(r => r.status === 'VISITED').length;
+    const totalNotVisited = baseFiltered.filter(r => r.status === 'NOT_VISITED').length;
+    const totalCancelled = baseFiltered.filter(r => r.status === 'CANCELLED').length;
+    const totalManual = baseFiltered.filter(r => r.isManual).length;
+    const totalPending = baseFiltered.filter(r => r.status === 'PENDING').length;
+
+    const rateDenomWithCancel = totalVisited + totalNotVisited + totalCancelled;
+    const rateWithCancel = rateDenomWithCancel > 0 ? Math.round((totalVisited / rateDenomWithCancel) * 100) : 0;
+    const rateDenomNoCancel = totalVisited + totalNotVisited;
+    const rateNoCancel = rateDenomNoCancel > 0 ? Math.round((totalVisited / rateDenomNoCancel) * 100) : 0;
+
+    const kpiTotal = document.getElementById('rep-kpi-total-planned');
+    const kpiSub = document.getElementById('rep-kpi-routes-sub');
+    const kpiVis = document.getElementById('rep-kpi-visited');
+    const kpiVisPct = document.getElementById('rep-kpi-visited-pct');
+    const kpiNotVis = document.getElementById('rep-kpi-not-visited');
+    const kpiCancelSub = document.getElementById('rep-kpi-cancelled-sub');
+    const kpiMan = document.getElementById('rep-kpi-manual');
+    const kpiPend = document.getElementById('rep-kpi-pending');
+
+    if (kpiTotal) kpiTotal.textContent = String(totalPlanned);
+    if (kpiSub) kpiSub.textContent = `${(appState.customRoutes || []).length} Oluşturulan Rut Planı`;
+    if (kpiVis) kpiVis.textContent = String(totalVisited);
+    if (kpiVisPct) kpiVisPct.textContent = `%${rateWithCancel} Gerçekleşme (İptal Hariç: %${rateNoCancel})`;
+    if (kpiNotVis) kpiNotVis.textContent = String(totalNotVisited);
+    if (kpiCancelSub) kpiCancelSub.textContent = `İptal Edilen: ${totalCancelled} Ziyaret`;
+    if (kpiMan) kpiMan.textContent = String(totalManual);
+    if (kpiPend) kpiPend.textContent = String(totalPending);
+
+    const filtered = baseFiltered.filter(r => {
+        if (statusFilter === 'VISITED' && r.status !== 'VISITED') return false;
+        if (statusFilter === 'NOT_VISITED' && r.status !== 'NOT_VISITED') return false;
+        if (statusFilter === 'PENDING' && r.status !== 'PENDING') return false;
+        if (statusFilter === 'CANCELLED' && r.status !== 'CANCELLED') return false;
+        if (statusFilter === 'MANUAL' && !r.isManual) return false;
+        return true;
+    });
+
+    const countBadge = document.getElementById('rep-main-table-count');
+    if (countBadge) countBadge.textContent = `${filtered.length} Kayıt`;
+
+    if (filtered.length === 0) {
+        mainBody.innerHTML = `<tr><td colspan="10" style="text-align:center; padding:1.4rem; color:var(--text-muted);">Seçilen filtrelere uygun ziyaret kaydı bulunamadı.</td></tr>`;
+    } else {
+        mainBody.innerHTML = filtered.map((r, i) => {
+            const stBadge = r.status === 'VISITED'
+                ? `<span class="badge badge-success">✅ Ziyaret Edildi</span>`
+                : (r.status === 'NOT_VISITED'
+                    ? `<span class="badge badge-p1">❌ Edilemedi</span>`
+                    : (r.status === 'CANCELLED' ? `<span class="badge badge-secondary">🚫 İptal Edildi</span>` : `<span class="badge" style="background:rgba(245,158,11,0.2); color:#fbbf24;">⏳ Bekliyor</span>`));
+            const safeCode = escapeHtml(r.convertedCustomerCode || r.code || '').replace(/'/g, "\\'");
+            const detailText = r.status === 'NOT_VISITED'
+                ? `<strong style="color:#fca5a5;">Sebep:</strong> ${escapeHtml(r.unvisitedReason || '-')}`
+                : `${r.authorized && r.authorized !== '-' ? `<strong style="color:#93c5fd;">Görüşülen: ${escapeHtml(r.authorized)}</strong> &bull; ` : ''}${r.visitResult ? `<strong style="color:#34d399;">${escapeHtml(r.visitResult)}</strong> — ` : ''}${escapeHtml(r.visitNotes || '-')}`;
+
+            return `
+                <tr>
+                    <td>${i + 1}</td>
+                    <td>
+                        <strong style="color:#fff;">${escapeHtml(r.routeName)}</strong>
+                        <div style="font-size:0.69rem; color:#38bdf8;">${escapeHtml(r.routeText)}</div>
+                    </td>
+                    <td>${escapeHtml(r.plannedDate)}</td>
+                    <td><span class="badge badge-secondary">${escapeHtml(r.personnel)}</span></td>
+                    <td>
+                        <strong style="color:#f8fafc;">${escapeHtml(r.title)}</strong>
+                        <div>
+                            ${r.isManual ? `<span class="badge" style="background:rgba(139,92,246,0.22); color:#e9d5ff; font-size:0.64rem;">🤝 Manuel (${escapeHtml(r.visitPurpose)})</span>` : `<span style="font-family:monospace; font-size:0.68rem; color:#93c5fd;">${escapeHtml(r.code)}</span>`}
+                        </div>
+                    </td>
+                    <td>${escapeHtml(r.city)} / ${escapeHtml(r.district)}</td>
+                    <td>${stBadge}</td>
+                    <td>${escapeHtml(r.visitDate || '-')} ${escapeHtml(r.visitTime || '')}</td>
+                    <td style="max-width:270px; white-space:normal; font-size:0.74rem;">${detailText}</td>
+                    <td style="text-align:right;">
+                        ${!r.isManual || r.convertedCustomerCode ? `
+                            <button type="button" class="btn btn-secondary btn-sm" style="padding:0.22rem 0.5rem; font-size:0.7rem;" onclick="openCustomerDetailModal('${safeCode}')">
+                                <i class="fa-solid fa-id-card" style="color:#38bdf8;"></i> Müşteri Kartı
+                            </button>
+                        ` : ''}
+                    </td>
+                </tr>
+            `;
+        }).join('');
+    }
+
+    // E. ZİYARET EDİLEMEYENLER RAPORU (BÖLÜM 9.E)
+    const unvisBody = document.getElementById('rep-unvisited-table-body');
+    const unvisBadge = document.getElementById('rep-unvisited-badge');
+    const unvisList = baseFiltered.filter(r => r.status === 'NOT_VISITED');
+    if (unvisBadge) unvisBadge.textContent = `${unvisList.length} Kayıt`;
+    if (unvisBody) {
+        unvisBody.innerHTML = unvisList.length === 0
+            ? `<tr><td colspan="5" style="text-align:center; padding:1rem; color:var(--text-muted);">Ziyaret edilemeyen müşteri kaydı yok.</td></tr>`
+            : unvisList.map(r => {
+                const safeCode = escapeHtml(r.code || '').replace(/'/g, "\\'");
+                const safeCity = escapeHtml(r.city || '').replace(/'/g, "\\'");
+                const safeDist = escapeHtml(r.district || '').replace(/'/g, "\\'");
+                const safeTitle = escapeHtml(r.title || '').replace(/'/g, "\\'");
+                return `
+                    <tr>
+                        <td><strong style="color:#fff;">${escapeHtml(r.title)}</strong><div style="font-size:0.68rem; color:#94a3b8;">${escapeHtml(r.routeName)}</div></td>
+                        <td>${escapeHtml(r.city)} / ${escapeHtml(r.district)}</td>
+                        <td>${escapeHtml(r.plannedDate)}<div style="font-size:0.68rem; color:#38bdf8;">${escapeHtml(r.personnel)}</div></td>
+                        <td style="color:#fca5a5; font-weight:700;">${escapeHtml(r.unvisitedReason || 'Sebep Belirtilmedi')}</td>
+                        <td style="text-align:right;">
+                            <button type="button" class="btn btn-primary btn-sm" style="padding:0.2rem 0.48rem; font-size:0.68rem;" onclick="reAddUnvisitedToRouteDraft('${safeCode}', '${safeCity}', '${safeDist}', '${safeTitle}')" title="Yeni Rut Planına Tekrar Ekle">
+                                <i class="fa-solid fa-rotate-right"></i> Yeni Plana Ekle
+                            </button>
+                        </td>
+                    </tr>
+                `;
+            }).join('');
+    }
+
+    // F. MANUEL ZİYARETLER RAPORU (BÖLÜM 9.F)
+    const manBody = document.getElementById('rep-manual-table-body');
+    const manBadge = document.getElementById('rep-manual-badge');
+    const manList = baseFiltered.filter(r => r.isManual);
+    if (manBadge) manBadge.textContent = `${manList.length} Kayıt`;
+    if (manBody) {
+        manBody.innerHTML = manList.length === 0
+            ? `<tr><td colspan="5" style="text-align:center; padding:1rem; color:var(--text-muted);">Manuel eklenen işletme ziyareti yok.</td></tr>`
+            : manList.map(r => `
+                <tr>
+                    <td><strong style="color:#e9d5ff;">🤝 ${escapeHtml(r.title)}</strong><div style="font-size:0.68rem; color:#94a3b8;">Görüşülen: ${escapeHtml(r.authorized)}</div></td>
+                    <td>${escapeHtml(r.city)} / ${escapeHtml(r.district)}<div style="font-size:0.68rem; color:#38bdf8;">${escapeHtml(r.phone)}</div></td>
+                    <td>${escapeHtml(r.visitDate || r.plannedDate)}<div style="font-size:0.68rem; color:#34d399;">${escapeHtml(r.personnel)} &bull; ${escapeHtml(r.visitPurpose)}</div></td>
+                    <td style="font-size:0.73rem;">${escapeHtml(r.visitNotes || '-')}</td>
+                    <td style="text-align:right;">
+                        ${r.convertedCustomerCode ? `
+                            <span class="badge badge-success" style="font-size:0.66rem;">Müşteri: ${escapeHtml(r.convertedCustomerCode)}</span>
+                        ` : (r.routeId && r.itemIdx >= 0 ? `
+                            <button type="button" class="btn btn-success btn-sm" style="padding:0.2rem 0.5rem; font-size:0.68rem;" onclick="convertManualVisitToCustomer('${r.routeId}', ${r.itemIdx})">
+                                <i class="fa-solid fa-user-plus"></i> Müşteriye Dönüştür
+                            </button>
+                        ` : '-')}
+                    </td>
+                </tr>
+            `).join('');
+    }
+
+    // B. PERSONEL BAZLI RAPOR (BÖLÜM 9.B)
+    const persBody = document.getElementById('rep-personnel-table-body');
+    if (persBody) {
+        const pMap = {};
+        (appState.customRoutes || []).forEach(rt => {
+            const p = rt.assignee || 'ÖMER EREN';
+            if (!pMap[p]) pMap[p] = { plans: 0, planned: 0, visited: 0, notVisited: 0, cancelled: 0, manual: 0 };
+            pMap[p].plans += 1;
+        });
+        baseFiltered.forEach(r => {
+            const p = r.personnel || 'ÖMER EREN';
+            if (!pMap[p]) pMap[p] = { plans: 0, planned: 0, visited: 0, notVisited: 0, cancelled: 0, manual: 0 };
+            pMap[p].planned += 1;
+            if (r.status === 'VISITED') pMap[p].visited += 1;
+            if (r.status === 'NOT_VISITED') pMap[p].notVisited += 1;
+            if (r.status === 'CANCELLED') pMap[p].cancelled += 1;
+            if (r.isManual) pMap[p].manual += 1;
+        });
+        const pEntries = Object.entries(pMap);
+        persBody.innerHTML = pEntries.length === 0
+            ? `<tr><td colspan="7" style="text-align:center; padding:1rem; color:var(--text-muted);">Personel verisi bulunamadı.</td></tr>`
+            : pEntries.map(([pName, st]) => {
+                const denom = st.visited + st.notVisited + st.cancelled;
+                const pRate = denom > 0 ? Math.round((st.visited / denom) * 100) : 0;
+                return `
+                    <tr>
+                        <td><strong style="color:#fff;"><i class="fa-solid fa-user-tie" style="color:#38bdf8;"></i> ${escapeHtml(pName)}</strong></td>
+                        <td>${st.plans} Plan</td>
+                        <td><strong>${st.planned}</strong></td>
+                        <td style="color:#34d399; font-weight:800;">${st.visited}</td>
+                        <td style="color:#f87171; font-weight:800;">${st.notVisited}</td>
+                        <td style="color:#c084fc; font-weight:800;">${st.manual}</td>
+                        <td><span class="badge ${pRate >= 70 ? 'badge-success' : 'badge-secondary'}">%${pRate}</span></td>
+                    </tr>
+                `;
+            }).join('');
+    }
+
+    // C. İL VE İLÇE BAZLI RAPOR (BÖLÜM 9.C)
+    const regBody = document.getElementById('rep-region-table-body');
+    if (regBody) {
+        const regMap = {};
+        baseFiltered.forEach(r => {
+            const key = `${r.city || 'Diğer'}|${r.district || 'Merkez'}`;
+            if (!regMap[key]) regMap[key] = { city: r.city || 'Diğer', district: r.district || 'Merkez', planned: 0, visited: 0, notVisited: 0, cancelled: 0 };
+            regMap[key].planned += 1;
+            if (r.status === 'VISITED') regMap[key].visited += 1;
+            if (r.status === 'NOT_VISITED') regMap[key].notVisited += 1;
+            if (r.status === 'CANCELLED') regMap[key].cancelled += 1;
+        });
+        const regList = Object.values(regMap).sort((a, b) => b.visited - a.visited || b.planned - a.planned);
+        regBody.innerHTML = regList.length === 0
+            ? `<tr><td colspan="7" style="text-align:center; padding:1rem; color:var(--text-muted);">İl ve ilçe bazlı ziyaret kaydı yok.</td></tr>`
+            : regList.map(rg => {
+                const denom = rg.visited + rg.notVisited + rg.cancelled;
+                const rRate = denom > 0 ? Math.round((rg.visited / denom) * 100) : 0;
+                const safeC = escapeHtml(rg.city).replace(/'/g, "\\'");
+                const safeD = escapeHtml(rg.district).replace(/'/g, "\\'");
+                return `
+                    <tr>
+                        <td><strong style="color:#fde68a;">${escapeHtml(rg.city)}</strong></td>
+                        <td><strong>${escapeHtml(rg.district)}</strong></td>
+                        <td>${rg.planned}</td>
+                        <td style="color:#34d399; font-weight:800;">${rg.visited}</td>
+                        <td style="color:#f87171; font-weight:800;">${rg.notVisited}</td>
+                        <td><span class="badge ${rRate >= 70 ? 'badge-success' : 'badge-secondary'}">%${rRate}</span></td>
+                        <td style="text-align:right;">
+                            <button type="button" class="btn btn-secondary btn-sm" style="padding:0.18rem 0.45rem; font-size:0.68rem;" onclick="filterReportByRegion('${safeC}', '${safeD}')">
+                                <i class="fa-solid fa-filter"></i> Müşterileri Gör
+                            </button>
+                        </td>
+                    </tr>
+                `;
+            }).join('');
+    }
+
+    // D. MÜŞTERİ BAZLI RAPOR & HİÇ ZİYARET EDİLMEMİŞ MEVCUT MÜŞTERİLER FİLTRESİ (BÖLÜM 9.D)
+    const custBody = document.getElementById('rep-customer-table-body');
+    const custBadge = document.getElementById('rep-customer-report-badge');
+    const onlyUnvisitedCusts = Boolean(document.getElementById('rep-only-unvisited-customers-cb')?.checked);
+    if (custBody) {
+        const visitedByCode = new Map();
+        baseFiltered.filter(r => r.status === 'VISITED').forEach(r => {
+            const k = r.convertedCustomerCode || r.code || r.title;
+            if (!visitedByCode.has(k)) {
+                visitedByCode.set(k, {
+                    code: r.convertedCustomerCode || r.code,
+                    title: r.title,
+                    city: r.city,
+                    district: r.district,
+                    count: 0,
+                    lastDate: r.visitDate || r.plannedDate,
+                    personnels: new Set(),
+                    notes: []
+                });
+            }
+            const entry = visitedByCode.get(k);
+            entry.count += 1;
+            if (r.visitDate) entry.lastDate = r.visitDate;
+            if (r.personnel) entry.personnels.add(r.personnel);
+            if (r.visitNotes) entry.notes.push(`${r.visitDate || ''}: ${r.visitNotes}`);
+        });
+
+        if (onlyUnvisitedCusts) {
+            const allCustomers = (appState.customers || []).filter(c => {
+                if (cityFilter && normalizeTR(c.city) !== normalizeTR(cityFilter)) return false;
+                if (distFilter && normalizeTR(c.district) !== normalizeTR(distFilter)) return false;
+                if (search && !normalizeTR(`${c.code} ${c.title} ${c.city} ${c.district}`).includes(search)) return false;
+                return !visitedByCode.has(c.code);
+            });
+            if (custBadge) custBadge.textContent = `${allCustomers.length} Hiç Ziyaret Edilmemiş Müşteri`;
+            custBody.innerHTML = allCustomers.slice(0, 100).map(c => {
+                const safeCode = escapeHtml(c.code || '').replace(/'/g, "\\'");
+                const safeCity = escapeHtml(c.city || '').replace(/'/g, "\\'");
+                const safeDist = escapeHtml(c.district || '').replace(/'/g, "\\'");
+                const safeTitle = escapeHtml(c.title || '').replace(/'/g, "\\'");
+                return `
+                    <tr>
+                        <td><strong style="color:#fff;">${escapeHtml(c.title)}</strong> <span style="font-family:monospace; color:#38bdf8; font-size:0.7rem;">(${escapeHtml(c.code)})</span></td>
+                        <td>${escapeHtml(c.city || '-')} / ${escapeHtml(c.district || '-')}</td>
+                        <td><span class="badge badge-p1">0 Ziyaret</span></td>
+                        <td>${escapeHtml(c.lastVisit || 'Ziyaret Yok')}</td>
+                        <td>-</td>
+                        <td style="font-size:0.72rem; color:#94a3b8;">Seçilen tarih aralığında hiç ziyaret edilmedi.</td>
+                        <td style="text-align:right;">
+                            <button type="button" class="btn btn-primary btn-sm" style="padding:0.2rem 0.5rem; font-size:0.68rem;" onclick="reAddUnvisitedToRouteDraft('${safeCode}', '${safeCity}', '${safeDist}', '${safeTitle}')">
+                                <i class="fa-solid fa-plus"></i> Rut Planına Ekle
+                            </button>
+                        </td>
+                    </tr>
+                `;
+            }).join('');
+        } else {
+            const vList = Array.from(visitedByCode.values());
+            if (custBadge) custBadge.textContent = `${vList.length} Ziyaret Edilen Müşteri`;
+            custBody.innerHTML = vList.length === 0
+                ? `<tr><td colspan="7" style="text-align:center; padding:1rem; color:var(--text-muted);">Ziyaret edilen müşteri kaydı yok. "Hiç Ziyaret Edilmemiş Mevcut Müşterileri Göster" kutucuğunu işaretleyerek ziyaret edilmeyenleri listeleyebilirsiniz.</td></tr>`
+                : vList.map(v => {
+                    const safeCode = escapeHtml(v.code || '').replace(/'/g, "\\'");
+                    return `
+                        <tr>
+                            <td><strong style="color:#fff;">${escapeHtml(v.title)}</strong> <span style="font-family:monospace; color:#38bdf8; font-size:0.7rem;">(${escapeHtml(v.code)})</span></td>
+                            <td>${escapeHtml(v.city || '-')} / ${escapeHtml(v.district || '-')}</td>
+                            <td><span class="badge badge-success">${v.count} Ziyaret</span></td>
+                            <td>${escapeHtml(v.lastDate || '-')}</td>
+                            <td>${escapeHtml(Array.from(v.personnels).join(', '))}</td>
+                            <td style="font-size:0.73rem; max-width:260px; white-space:normal;">${escapeHtml(v.notes.slice(0, 2).join(' | ') || '-')}</td>
+                            <td style="text-align:right;">
+                                <button type="button" class="btn btn-secondary btn-sm" style="padding:0.2rem 0.5rem; font-size:0.68rem;" onclick="openCustomerDetailModal('${safeCode}')">
+                                    <i class="fa-solid fa-clock-rotate-left" style="color:#38bdf8;"></i> Geçmişi Gör
+                                </button>
+                            </td>
+                        </tr>
+                    `;
+                }).join('');
+        }
+    }
+
+    // 5. KAYITLI RUT PLANLARI ÖZET TABLOSU
+    const sumBody = document.getElementById('rep-summary-table-body');
+    if (sumBody) {
+        const routes = Array.isArray(appState.customRoutes) ? appState.customRoutes : [];
+        sumBody.innerHTML = routes.length === 0
+            ? `<tr><td colspan="12" style="text-align:center; padding:1rem; color:var(--text-muted);">Henüz kayıtlı bir rut planı bulunmuyor.</td></tr>`
+            : routes.map(rt => {
+                const items = ensureRouteItemsNormalized(rt);
+                const tot = items.length;
+                const vis = items.filter(i => i.status === 'VISITED').length;
+                const nvis = items.filter(i => i.status === 'NOT_VISITED').length;
+                const canc = items.filter(i => i.status === 'CANCELLED').length;
+                const man = items.filter(i => i.isManual).length;
+                const pend = items.filter(i => i.status === 'PENDING').length;
+                const denom = vis + nvis + canc;
+                const pct = denom > 0 ? Math.round((vis / denom) * 100) : 0;
+                return `
+                    <tr>
+                        <td><strong style="color:#fff;">${escapeHtml(rt.name)}</strong></td>
+                        <td style="color:#38bdf8;">${escapeHtml(rt.routeText || '-')}</td>
+                        <td>${escapeHtml(rt.plannedDate || '-')}</td>
+                        <td>${escapeHtml(rt.assignee || '-')}</td>
+                        <td><span class="badge badge-secondary">${escapeHtml(rt.planStatus || 'Planlandı')}</span></td>
+                        <td><strong>${tot}</strong></td>
+                        <td style="color:#34d399; font-weight:800;">${vis}</td>
+                        <td style="color:#f87171; font-weight:800;">${nvis}</td>
+                        <td style="color:#c084fc; font-weight:800;">${man}</td>
+                        <td style="color:#fbbf24; font-weight:800;">${pend}</td>
+                        <td><span class="badge ${pct >= 70 ? 'badge-success' : 'badge-secondary'}">%${pct}</span></td>
+                        <td style="text-align:right;">
+                            <button type="button" class="btn btn-primary btn-sm" style="padding:0.22rem 0.55rem; font-size:0.7rem;" onclick="switchTab('route-plan-tab'); selectActiveRouteForExecution('${rt.id}')">
+                                <i class="fa-solid fa-folder-open"></i> Planı Aç
+                            </button>
+                        </td>
+                    </tr>
+                `;
+            }).join('');
+    }
+}
+
+function exportRouteReportsExcel() {
+    const rows = collectAllRouteReportRows();
+    if (rows.length === 0) {
+        showToast('Dışa aktarılacak rapor verisi bulunamadı.', 'warning');
+        return;
+    }
+    const headers = ['Rut Planı', 'Plan Durumu', 'Güzergah', 'Planlanan Tarih', 'Görevli Personel', 'Müşteri Kodu', 'Müşteri / İşletme Ünvanı', 'Tür', 'İl', 'İlçe', 'Ziyaret Durumu', 'Gerçekleşen Ziyaret Tarihi', 'Saat', 'Görüşülen Kişi', 'Görevi', 'Görüşme Sonucu', 'Ziyaret Açıklaması', 'Ziyaret Edilememe Sebebi'];
+    const csvLines = [
+        headers.join(';'),
+        ...rows.map(r => [
+            r.routeName,
+            r.planStatus,
+            r.routeText,
+            r.plannedDate,
+            r.personnel,
+            r.code,
+            r.title,
+            r.isManual ? `Manuel (${r.visitPurpose})` : 'Kayıtlı Cari',
+            r.city,
+            r.district,
+            r.status === 'VISITED' ? 'Ziyaret Edildi' : (r.status === 'NOT_VISITED' ? 'Ziyaret Edilemedi' : (r.status === 'CANCELLED' ? 'İptal Edildi' : 'Bekliyor')),
+            r.visitDate || '-',
+            r.visitTime || '-',
+            r.authorized || '-',
+            r.contactRole || '-',
+            r.visitResult || '-',
+            (r.visitNotes || '').replace(/;/g, ','),
+            (r.unvisitedReason || '').replace(/;/g, ',')
+        ].map(v => `"${String(v || '').replace(/"/g, '""')}"`).join(';'))
+    ];
+    const blob = new Blob(['\uFEFF' + csvLines.join('\n')], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `Dizsan_Saha_Rut_ve_Ziyaret_Raporu_${getTodayTRStr()}.csv`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    showToast('Rapor Excel (CSV) formatında indirildi.', 'success');
+}
+
+function printRouteReportsSummary() {
+    const rows = collectAllRouteReportRows();
+    const area = document.getElementById('print-report-area');
+    if (!area) return;
+    const vis = rows.filter(r => r.status === 'VISITED').length;
+    const nvis = rows.filter(r => r.status === 'NOT_VISITED').length;
+    const man = rows.filter(r => r.isManual).length;
+
+    area.innerHTML = `
+        <div style="font-family:Arial, sans-serif; color:#000; padding:20px;">
+            <h2 style="margin:0; color:#0284c7;">DİZSAN OTOMOTİV — SAHA &amp; RUT ZİYARET RAPORU</h2>
+            <div style="font-size:12px; margin:6px 0 14px;">
+                <strong>Rapor Tarihi:</strong> ${formatNowTR()} &bull;
+                <strong>Toplam Hedef:</strong> ${rows.length} &bull;
+                <strong>Ziyaret Edilen:</strong> ${vis} &bull;
+                <strong>Ziyaret Edilemeyen:</strong> ${nvis} &bull;
+                <strong>Manuel Ziyaret:</strong> ${man}
+            </div>
+            <table style="width:100%; border-collapse:collapse; font-size:11px;">
+                <thead>
+                    <tr style="background:#e2e8f0;">
+                        <th style="border:1px solid #94a3b8; padding:5px;">#</th>
+                        <th style="border:1px solid #94a3b8; padding:5px;">Rut Adı</th>
+                        <th style="border:1px solid #94a3b8; padding:5px;">Plan Tarihi</th>
+                        <th style="border:1px solid #94a3b8; padding:5px;">Personel</th>
+                        <th style="border:1px solid #94a3b8; padding:5px;">Müşteri / İşletme</th>
+                        <th style="border:1px solid #94a3b8; padding:5px;">İl / İlçe</th>
+                        <th style="border:1px solid #94a3b8; padding:5px;">Durum</th>
+                        <th style="border:1px solid #94a3b8; padding:5px;">Ziyaret Tarihi</th>
+                        <th style="border:1px solid #94a3b8; padding:5px;">Ziyaret Açıklaması / Edilememe Sebebi</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    ${rows.map((r, i) => `
+                        <tr>
+                            <td style="border:1px solid #94a3b8; padding:5px;">${i + 1}</td>
+                            <td style="border:1px solid #94a3b8; padding:5px;">${escapeHtml(r.routeName)}</td>
+                            <td style="border:1px solid #94a3b8; padding:5px;">${escapeHtml(r.plannedDate)}</td>
+                            <td style="border:1px solid #94a3b8; padding:5px;">${escapeHtml(r.personnel)}</td>
+                            <td style="border:1px solid #94a3b8; padding:5px; font-weight:bold;">${escapeHtml(r.title)} ${r.isManual ? '(Manuel)' : ''}</td>
+                            <td style="border:1px solid #94a3b8; padding:5px;">${escapeHtml(r.city)} / ${escapeHtml(r.district)}</td>
+                            <td style="border:1px solid #94a3b8; padding:5px;">${r.status === 'VISITED' ? '✓ Ziyaret Edildi' : (r.status === 'NOT_VISITED' ? '✗ Edilemedi' : 'Bekliyor')}</td>
+                            <td style="border:1px solid #94a3b8; padding:5px;">${escapeHtml(r.visitDate || '-')}</td>
+                            <td style="border:1px solid #94a3b8; padding:5px;">${escapeHtml(r.status === 'NOT_VISITED' ? r.unvisitedReason : r.visitNotes)}</td>
+                        </tr>
+                    `).join('')}
+                </tbody>
+            </table>
+        </div>
+    `;
+    window.print();
 }
 
 function ensureDistrictStrategiesPopulated() {
@@ -5739,7 +9856,9 @@ function sendLocalOrServiceWorkerPush(notif) {
 }
 
 function showPhoneReminderModal(task) {
-    const phoneClean = (task.phone || '').replace(/[^0-9+]/g, '');
+    const phInfo = parseTurkishPhones(task.phone);
+    const safePhone = String(task.phone || '').replace(/'/g, "\\'");
+    const safeTitle = String(task.customerTitle || '').replace(/'/g, "\\'");
     const modalHtml = `
         <div id="phone-reminder-active-banner" style="position:fixed; bottom:20px; right:20px; z-index:99999; max-width:420px; width:calc(100% - 40px); background:rgba(15,23,42,0.96); border:2px solid #38bdf8; border-radius:16px; padding:1.2rem; box-shadow:0 15px 45px rgba(0,0,0,0.8), 0 0 30px rgba(56,189,248,0.3); backdrop-filter:blur(15px); animation:fadeInUp 0.3s ease;">
             <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:0.5rem;">
@@ -5757,11 +9876,14 @@ function showPhoneReminderModal(task) {
             <p style="font-size:0.85rem; color:#cbd5e1; margin-bottom:0.75rem; line-height:1.4;">
                 <strong style="color:#fde68a;">${task.customerTitle}</strong> ile saat <strong style="color:#fff;">${task.dueTime}</strong> randevunuz var.${task.contactPerson ? ` (Yetkili: ${task.contactPerson})` : ''}
             </p>
-            <div style="display:flex; gap:0.5rem;">
-                ${phoneClean ? `
-                    <a href="tel:${phoneClean}" class="btn btn-success btn-sm" style="flex:1; justify-content:center; text-decoration:none;">
-                        <i class="fa-solid fa-phone"></i> Hemen Ara (${task.phone})
+            <div style="display:flex; gap:0.5rem; flex-wrap:wrap;">
+                ${phInfo.valid ? `
+                    <a href="tel:${phInfo.tel}" class="btn btn-primary btn-sm" style="flex:1; justify-content:center; text-decoration:none;">
+                        <i class="fa-solid fa-phone"></i> Ara (${phInfo.display})
                     </a>
+                    <button type="button" class="btn btn-success btn-sm" style="flex:1; justify-content:center;" onclick="openWhatsAppChat('${safePhone}', 'Sayın ${safeTitle}, Dizsan Otomotiv adına iyi çalışmalar dileriz.')">
+                        <i class="fa-brands fa-whatsapp"></i> WhatsApp
+                    </button>
                 ` : ''}
                 <button type="button" class="btn btn-secondary btn-sm" onclick="document.getElementById('phone-reminder-active-banner').remove()">
                     Tamam
@@ -5781,7 +9903,9 @@ function openUrgentDepartureModal(task) {
     if (!modal || !body || !footer) return;
 
     const mapsUrl = `https://www.google.com/maps/dir/?api=1&origin=Dizsan+Otomotiv+Corum&destination=${encodeURIComponent(task.location || task.customerTitle)}`;
-    const phoneClean = (task.phone || '').replace(/[^0-9+]/g, '');
+    const phInfo = parseTurkishPhones(task.phone);
+    const safePhone = String(task.phone || '').replace(/'/g, "\\'");
+    const safeTitle = String(task.customerTitle || '').replace(/'/g, "\\'");
 
     body.innerHTML = `
         <div class="urgent-departure-card">
@@ -5818,7 +9942,7 @@ function openUrgentDepartureModal(task) {
 
             ${task.contactPerson || task.phone ? `
                 <div style="font-size:0.82rem; color:#cbd5e1; margin-bottom:0.75rem;">
-                    Yetkili: <strong>${task.contactPerson || '-'}</strong> &bull; Telefon: <strong>${task.phone || '-'}</strong>
+                    Yetkili: <strong>${task.contactPerson || '-'}</strong> &bull; Telefon: <strong>${phInfo.display || task.phone || '-'}</strong>
                 </div>
             ` : ''}
         </div>
@@ -5828,10 +9952,13 @@ function openUrgentDepartureModal(task) {
         <a href="${mapsUrl}" target="_blank" class="btn btn-primary" style="flex:1; justify-content:center; text-decoration:none;">
             <i class="fa-solid fa-diamond-turn-right"></i> Google Haritalar Rota Başlat
         </a>
-        ${phoneClean ? `
-            <a href="tel:${phoneClean}" class="btn btn-success" style="justify-content:center; text-decoration:none;">
-                <i class="fa-solid fa-phone"></i> Müşteriyi Ara
+        ${phInfo.valid ? `
+            <a href="tel:${phInfo.tel}" class="btn btn-primary" style="justify-content:center; text-decoration:none;">
+                <i class="fa-solid fa-phone"></i> Ara
             </a>
+            <button type="button" class="btn btn-success" onclick="openWhatsAppChat('${safePhone}', 'Sayın ${safeTitle}, Dizsan Otomotiv saha ekibimiz ziyaretiniz için yola çıkmıştır.')">
+                <i class="fa-brands fa-whatsapp"></i> WhatsApp
+            </button>
         ` : ''}
         <button type="button" class="btn btn-secondary" onclick="closeUrgentDepartureModal()">
             <i class="fa-solid fa-check"></i> Yola Çıktım / Kapat
@@ -6128,7 +10255,7 @@ function getLivePreferredUrl() {
 function shareAppOnWhatsApp() {
     const url = getLivePreferredUrl();
     const msg = `📢 *DİZSAN Müşteri Ziyaret & Saha Takip Sistemi*\n\n🔗 *Uygulama Giriş Linki:*\n${url}\n\n📲 *Telefon ve Tablete Kurulum:*\n• *iPhone / iPad:* Safari'de açın ➔ *Paylaş (⬆️)* ➔ *Ana Ekrana Ekle*\n• *Android:* Chrome menüsünden *Uygulamayı Yükle* seçin.\n\n🔑 *Giriş Şifresi:* 123 veya 123456`;
-    window.open(`https://wa.me/?text=${encodeURIComponent(msg)}`, '_blank');
+    openWhatsAppChat('', msg);
 }
 
 // PWA Kurulum İstemi Dinleyicisi
@@ -6271,20 +10398,965 @@ window.approveRequest = approveRequest;
 window.rejectRequest = rejectRequest;
 
 // ==========================================================================
+// 10.5 KOYU / AÇIK TEMA SİSTEMİ & HER SEKMEDE GLOBAL MÜŞTERİ ARAMA MOTORU
+// ==========================================================================
+const STORAGE_KEY_THEME = 'dizsan_ziyaret_theme_v1';
+let globalCustomerQuickFilter = 'ALL';
+
+function getSavedZiyaretTheme() {
+    try {
+        return localStorage.getItem(STORAGE_KEY_THEME) || 'dark';
+    } catch (e) {
+        return 'dark';
+    }
+}
+
+function applyZiyaretTheme(theme, notifyParent = true) {
+    const normalized = theme === 'light' ? 'light' : 'dark';
+    document.documentElement.setAttribute('data-theme', normalized);
+    if (document.body) {
+        document.body.setAttribute('data-theme', normalized);
+    }
+    try {
+        localStorage.setItem(STORAGE_KEY_THEME, normalized);
+    } catch (e) {}
+
+    const isLight = normalized === 'light';
+    const globalIcon = document.getElementById('global-theme-icon');
+    const globalText = document.getElementById('global-theme-text');
+    if (globalIcon) {
+        globalIcon.className = isLight ? 'fa-solid fa-moon' : 'fa-solid fa-sun';
+        globalIcon.style.color = isLight ? '#38bdf8' : '#fbbf24';
+    }
+    if (globalText) {
+        globalText.textContent = isLight ? 'Koyu Tema' : 'Açık Tema';
+    }
+
+    const sideIcon = document.getElementById('sidebar-theme-icon');
+    const sideText = document.getElementById('sidebar-theme-text');
+    if (sideIcon) {
+        sideIcon.className = isLight ? 'fa-solid fa-moon' : 'fa-solid fa-sun';
+        sideIcon.style.color = isLight ? '#0284c7' : '#fbbf24';
+    }
+    if (sideText) {
+        sideText.textContent = isLight ? 'Koyu Tema' : 'Açık Tema';
+    }
+
+    if (notifyParent && window.parent && window.parent !== window) {
+        try {
+            window.parent.postMessage({ type: 'DPRO_THEME_CHANGED', theme: normalized }, '*');
+        } catch (e) {}
+    }
+}
+
+function toggleZiyaretTheme() {
+    const current = document.body.getAttribute('data-theme') || getSavedZiyaretTheme();
+    const next = current === 'light' ? 'dark' : 'light';
+    applyZiyaretTheme(next, true);
+}
+
+function escapeHtml(str) {
+    if (str === null || str === undefined) return '';
+    return String(str)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+}
+
+let selectedAiCustomerCode = '';
+
+function normSearchTR(s) {
+    if (!s) return '';
+    return String(s)
+        .replace(/İ/g, 'i').replace(/I/g, 'i').replace(/ı/g, 'i')
+        .replace(/Ş/g, 's').replace(/ş/g, 's')
+        .replace(/Ğ/g, 'g').replace(/ğ/g, 'g')
+        .replace(/Ü/g, 'u').replace(/ü/g, 'u')
+        .replace(/Ö/g, 'o').replace(/ö/g, 'o')
+        .replace(/Ç/g, 'c').replace(/ç/g, 'c')
+        .replace(/[Ââ]/g, 'a').replace(/[Îî]/g, 'i').replace(/[Ûû]/g, 'u')
+        .toLowerCase()
+        .replace(/[^a-z0-9\s]/g, ' ')
+        .replace(/\s+/g, ' ')
+        .trim();
+}
+
+function phoneticKeyTR(s) {
+    const n = normSearchTR(s);
+    if (!n) return '';
+    // Türkçe fonetik ve klavye yakın harf dönüşümü (g/c/k/q -> k, b/p/v -> b, d/t -> t, z/s -> s)
+    return n
+        .replace(/[gckq]/g, 'k')
+        .replace(/[bpv]/g, 'b')
+        .replace(/[dt]/g, 't')
+        .replace(/[zs]/g, 's')
+        .replace(/(.)\1+/g, '$1');
+}
+
+function getBigrams(str) {
+    const clean = String(str || '').replace(/\s+/g, '');
+    const set = new Set();
+    if (clean.length < 2) {
+        if (clean) set.add(clean);
+        return set;
+    }
+    for (let i = 0; i < clean.length - 1; i++) {
+        set.add(clean.slice(i, i + 2));
+    }
+    return set;
+}
+
+function levenshteinDist(a, b) {
+    if (a === b) return 0;
+    if (!a.length) return b.length;
+    if (!b.length) return a.length;
+    if (a.length < b.length) { const tmp = a; a = b; b = tmp; }
+    let prev = new Array(b.length + 1);
+    for (let j = 0; j <= b.length; j++) prev[j] = j;
+    for (let i = 0; i < a.length; i++) {
+        const curr = [i + 1];
+        for (let j = 0; j < b.length; j++) {
+            const cost = a[i] === b[j] ? 0 : 1;
+            curr[j + 1] = Math.min(prev[j + 1] + 1, curr[j] + 1, prev[j] + cost);
+        }
+        prev = curr;
+    }
+    return prev[b.length];
+}
+
+function charNorm1to1TR(str) {
+    const map = {
+        'İ': 'i', 'I': 'i', 'ı': 'i', 'i': 'i',
+        'Ş': 's', 'ş': 's',
+        'Ğ': 'g', 'ğ': 'g',
+        'Ü': 'u', 'ü': 'u',
+        'Ö': 'o', 'ö': 'o',
+        'Ç': 'c', 'ç': 'c',
+        'Â': 'a', 'â': 'a',
+        'Î': 'i', 'î': 'i',
+        'Û': 'u', 'û': 'u'
+    };
+    let out = '';
+    const s = String(str || '');
+    for (let i = 0; i < s.length; i++) {
+        const ch = s[i];
+        out += map[ch] !== undefined ? map[ch] : ch.toLowerCase();
+    }
+    return out;
+}
+
+// Büyük/küçük harf, Türkçe karakter ve TÜM noktalama işaretleri / boşlukları yok sayan saf alfanümerik normalizasyon
+function normCompactTR(str) {
+    return charNorm1to1TR(str).replace(/[^a-z0-9]/g, '');
+}
+
+function highlightSearchText(rawText, queryText, extraMatchedWord = '') {
+    const src = String(rawText ?? '');
+    if (!src) return '';
+
+    const rawTerms = [];
+    const qClean = String(queryText || '').trim();
+    if (qClean) {
+        rawTerms.push(qClean);
+        normSearchTR(qClean).split(' ').filter(t => t.length >= 2).forEach(t => {
+            if (!rawTerms.includes(t)) rawTerms.push(t);
+        });
+    }
+    const extraClean = String(extraMatchedWord || '').trim();
+    if (extraClean && !rawTerms.includes(extraClean)) {
+        rawTerms.unshift(extraClean);
+    }
+    if (rawTerms.length === 0) return escapeHtml(src);
+
+    // Kaynak metindeki her alfanümerik karakteri (noktalama ve boşlukları atlayarak) orijinal indeksine eşle
+    const normFull = charNorm1to1TR(src);
+    let compactSrc = '';
+    const compactIdxMap = [];
+    for (let i = 0; i < normFull.length; i++) {
+        const c = normFull[i];
+        if ((c >= 'a' && c <= 'z') || (c >= '0' && c <= '9')) {
+            compactSrc += c;
+            compactIdxMap.push(i);
+        }
+    }
+    if (!compactSrc) return escapeHtml(src);
+
+    const compactTerms = Array.from(new Set(
+        rawTerms
+            .map(t => normCompactTR(t))
+            .filter(t => t.length >= 2)
+    )).sort((a, b) => b.length - a.length);
+
+    if (compactTerms.length === 0) return escapeHtml(src);
+
+    const ranges = [];
+    for (const ct of compactTerms) {
+        let startIdx = 0;
+        while (startIdx < compactSrc.length) {
+            const idx = compactSrc.indexOf(ct, startIdx);
+            if (idx === -1) break;
+            const origStart = compactIdxMap[idx];
+            const origEnd = compactIdxMap[idx + ct.length - 1] + 1;
+            ranges.push([origStart, origEnd]);
+            startIdx = idx + ct.length;
+        }
+    }
+
+    if (ranges.length === 0) return escapeHtml(src);
+
+    ranges.sort((a, b) => a[0] - b[0] || b[1] - a[1]);
+    const merged = [ranges[0]];
+    for (let i = 1; i < ranges.length; i++) {
+        const prev = merged[merged.length - 1];
+        const curr = ranges[i];
+        if (curr[0] < prev[1]) {
+            if (curr[1] > prev[1]) prev[1] = curr[1];
+        } else {
+            merged.push(curr);
+        }
+    }
+
+    let html = '';
+    let cursor = 0;
+    for (const [sIdx, eIdx] of merged) {
+        if (sIdx > cursor) {
+            html += escapeHtml(src.slice(cursor, sIdx));
+        }
+        const matchedSlice = src.slice(sIdx, eIdx);
+        html += `<mark class="search-match-highlight" title="Eşleşen kısım">🔍 ${escapeHtml(matchedSlice)}</mark>`;
+        cursor = eIdx;
+    }
+    if (cursor < src.length) {
+        html += escapeHtml(src.slice(cursor));
+    }
+    return html;
+}
+
+let currentSearchScope = 'CARI'; // 'CARI' (Cariye Göre Ara) veya 'LOCATION' (İl - İlçeye Göre Ara)
+
+function setCustomerSearchScope(scope) {
+    currentSearchScope = scope === 'LOCATION' ? 'LOCATION' : 'CARI';
+    const sel = document.getElementById('global-customer-search-scope');
+    if (sel && sel.value !== currentSearchScope) {
+        sel.value = currentSearchScope;
+    }
+    const btnCari = document.getElementById('scope-btn-cari');
+    const btnLoc = document.getElementById('scope-btn-location');
+    if (btnCari && btnLoc) {
+        if (currentSearchScope === 'CARI') {
+            btnCari.style.background = 'linear-gradient(135deg,#10b981,#059669)';
+            btnCari.style.color = '#fff';
+            btnCari.style.borderColor = '#34d399';
+            btnCari.style.boxShadow = '0 3px 10px rgba(16,185,129,0.3)';
+            btnLoc.style.background = 'rgba(30,41,59,0.85)';
+            btnLoc.style.color = '#cbd5e1';
+            btnLoc.style.borderColor = 'rgba(148,163,184,0.3)';
+            btnLoc.style.boxShadow = 'none';
+        } else {
+            btnLoc.style.background = 'linear-gradient(135deg,#f59e0b,#d97706)';
+            btnLoc.style.color = '#fff';
+            btnLoc.style.borderColor = '#fbbf24';
+            btnLoc.style.boxShadow = '0 3px 10px rgba(245,158,11,0.35)';
+            btnCari.style.background = 'rgba(30,41,59,0.85)';
+            btnCari.style.color = '#cbd5e1';
+            btnCari.style.borderColor = 'rgba(148,163,184,0.3)';
+            btnCari.style.boxShadow = 'none';
+        }
+    }
+    const inp = document.getElementById('global-customer-search-input');
+    if (inp) {
+        inp.placeholder = currentSearchScope === 'LOCATION'
+            ? 'İl, ilçe, belde, köy, adres veya vergi dairesi yazın (Örn: Merzifon, Çorum, Suluova)...'
+            : 'Müşteri ünvanı, şoför/yetkili adı (Örn: Ganik), 120 kod, plaka veya telefon yazın...';
+        const q = String(inp.value || '').trim();
+        if (q.length > 0 || globalCustomerQuickFilter !== 'ALL') {
+            handleGlobalCustomerSearchInput(q, true, currentSearchPageMode);
+        } else {
+            clearGlobalCustomerSearch();
+        }
+        inp.focus();
+    }
+}
+
+function computeCustomerMatchByMode(c, rawQuery, mode = 'EXACT', scopeOverride = '') {
+    const scope = scopeOverride || currentSearchScope || 'CARI';
+    const nq = normSearchTR(rawQuery);
+    const nqCompRaw = normCompactTR(rawQuery);
+    if (!nq && !nqCompRaw) return { score: 100, reason: 'Tüm Liste', isExact: true, matchedWord: '', matchedContextHtml: '' };
+    // Yanlışlıkla çift basılan harfleri (örn: "merziifon" -> "merzifon") otomatik normalize et
+    const nqCompDedup = nqCompRaw.replace(/([A-Z])\1+/g, '$1');
+    const hasDoubleLetterTypo = nqCompDedup.length >= 4 && nqCompDedup !== nqCompRaw;
+    const nqComp = nqCompRaw;
+    const matchSub = (hay, needle) => Boolean(hay && needle && (hay.includes(needle) || (hasDoubleLetterTypo && hay.replace(/([A-Z])\1+/g, '$1').includes(nqCompDedup))));
+    const qTokens = nq.split(' ').filter(Boolean);
+    const qCompTokens = qTokens.map(t => normCompactTR(t)).filter(Boolean);
+
+    const titleRaw = String(c.title || '').trim();
+    const codeRaw = String(c.code || '').trim();
+    const authRaw = String(c.authorized || '').trim();
+    const platesRaw = String(c.plates || '').trim();
+    const phoneRaw = String(c.phone || '').trim();
+    const addrRaw = String(c.address || '').trim();
+    const cityRaw = String(c.city || '').trim();
+    const distRaw = String(c.district || '').trim();
+    const rutRaw = String(c.rut || '').trim();
+    const taxOfficeRaw = String(c.taxOffice || c.vergiDairesi || c.vd || '').trim();
+    const notesRaw = String(c.visitNotes || c.dataAudit || '').trim();
+
+    const nt = normSearchTR(titleRaw);
+    const ntComp = normCompactTR(titleRaw);
+    const ncComp = normCompactTR(codeRaw);
+    const naComp = normCompactTR(authRaw);
+    const npComp = normCompactTR(platesRaw);
+    const nphComp = normCompactTR(phoneRaw);
+    const naddrComp = normCompactTR(addrRaw);
+    const ncityComp = normCompactTR(cityRaw);
+    const ndistComp = normCompactTR(distRaw);
+    const nrutComp = normCompactTR(rutRaw);
+    const ntaxComp = normCompactTR(taxOfficeRaw);
+    const nnotesComp = normCompactTR(notesRaw);
+
+    const titleWordsOrig = titleRaw.split(/[\s.,;:\-\/()'"&]+/).filter(Boolean);
+    const titleWordsNorm = titleWordsOrig.map(w => normCompactTR(w)).filter(Boolean);
+    const historyList = Array.isArray(c.serviceHistory) ? c.serviceHistory : [];
+
+    // =========================================================================
+    // KAPSAM 2: İL - İLÇEYE GÖRE ARA (scope === 'LOCATION')
+    // Cari içinde nerede yazdığına bakılmaksızın (İlçe, İl, Vergi Dairesi, Adres,
+    // Rut, Cari Ünvan veya Alt Fatura alanları) eşleşen TÜM müşterileri getirir!
+    // =========================================================================
+    if (scope === 'LOCATION') {
+        const matchedParts = [];
+        let locScore = 0;
+        let locReason = '';
+
+        // 1) İlçe (c.district) veya İl (c.city)
+        if (matchSub(ndistComp, nqComp) || matchSub(ncityComp, nqComp) ||
+            (qCompTokens.length > 1 && qCompTokens.every(qt => matchSub(ndistComp + ncityComp, qt)))) {
+            locScore = Math.max(locScore, (ndistComp === nqComp || ncityComp === nqComp || ndistComp === nqCompDedup || ncityComp === nqCompDedup) ? 100 : 99);
+            locReason = `📍 İl / İlçe Kaydı Eşleşmesi (${cityRaw || '-'} / ${distRaw || '-'})`;
+            matchedParts.push(`<span>İl / İlçe:</span> <strong>${highlightSearchText(`${cityRaw || '-'} / ${distRaw || '-'}`, rawQuery)}</strong>`);
+        }
+
+        // 2) Vergi Dairesi (c.taxOffice / c.vergiDairesi)
+        if (ntaxComp && (matchSub(ntaxComp, nqComp) || (qCompTokens.length > 1 && qCompTokens.every(qt => matchSub(ntaxComp, qt))))) {
+            locScore = Math.max(locScore, 98);
+            if (!locReason) locReason = `🏛️ Vergi Dairesi Eşleşmesi (${taxOfficeRaw})`;
+            matchedParts.push(`<span>Vergi Dairesi:</span> <strong>${highlightSearchText(taxOfficeRaw, rawQuery)}</strong>`);
+        }
+
+        // 3) Açık Adres (c.address) - Vergi dairesi veya ili başka şehir olsa bile adres içinde geçiyorsa mutlaka gelir!
+        if (naddrComp && (matchSub(naddrComp, nqComp) || (qCompTokens.length > 1 && qCompTokens.every(qt => matchSub(naddrComp, qt))))) {
+            locScore = Math.max(locScore, 98);
+            if (!locReason) locReason = `📍 Açık Adres İçinde Geçiyor`;
+            matchedParts.push(`<span>Açık Adres:</span> <strong>${highlightSearchText(addrRaw, rawQuery)}</strong>`);
+        }
+
+        // 4) Rut / Bölge (c.rut)
+        if (nrutComp && matchSub(nrutComp, nqComp)) {
+            locScore = Math.max(locScore, 97);
+            if (!locReason) locReason = `🛣️ Rut / Bölge Eşleşmesi (${rutRaw})`;
+            matchedParts.push(`<span>Rut:</span> <strong>${highlightSearchText(rutRaw, rawQuery)}</strong>`);
+        }
+
+        // 5) Cari Ünvan (c.title) içinde bölge/ilçe adı geçiyorsa (Örn: "MERZİFON GÜLBAHAR UN...")
+        if (ntComp && (matchSub(ntComp, nqComp) || (qCompTokens.length > 1 && qCompTokens.every(qt => matchSub(ntComp, qt))))) {
+            locScore = Math.max(locScore, 97);
+            if (!locReason) locReason = `🏢 Cari Ünvan İçinde Geçiyor`;
+            matchedParts.push(`<span>Cari Ünvan:</span> <strong>${highlightSearchText(titleRaw, rawQuery)}</strong>`);
+        }
+
+        // 6) Cari içindeki diğer herhangi bir alan (Notlar, Yetkili, Fatura Açıklamaları vb.)
+        if (nnotesComp && matchSub(nnotesComp, nqComp)) {
+            locScore = Math.max(locScore, 96);
+            if (!locReason) locReason = `📝 Cari Not / Detay Alanında Geçiyor`;
+            matchedParts.push(`<span>Not / Detay:</span> <strong>${highlightSearchText(notesRaw, rawQuery)}</strong>`);
+        }
+        if (locScore === 0) {
+            for (let hIdx = 0; hIdx < historyList.length; hIdx++) {
+                const h = historyList[hIdx];
+                if (!h) continue;
+                const hCombined = `${h.islem || ''} ${h.sofor || ''} ${h.plaka || ''} ${h.fatura_no || ''}`.trim();
+                if (hCombined && matchSub(normCompactTR(hCombined), nqComp)) {
+                    locScore = 95;
+                    locReason = `🧾 Cari Alt Fatura Detayında Geçiyor (${h.fatura_no || '-'})`;
+                    matchedParts.push(`<span>Fatura Detayı (${escapeHtml(h.fatura_no || '-')}):</span> <strong>${highlightSearchText(hCombined, rawQuery)}</strong>`);
+                    break;
+                }
+            }
+        }
+
+        if (locScore >= 95) {
+            // Eğer açık adreste geçmiyorsa bile ziyaret kolaylığı için açık adresi de yanına bilgi olarak ekle
+            if (addrRaw && !matchedParts.some(p => p.includes('Açık Adres:'))) {
+                matchedParts.push(`<span>Adres:</span> ${highlightSearchText(addrRaw, rawQuery)}`);
+            }
+            return {
+                score: locScore,
+                reason: locReason,
+                isExact: true,
+                matchedWord: rawQuery,
+                matchedContextHtml: `<div class="matched-field-callout"><i class="fa-solid fa-map-location-dot"></i> ${matchedParts.join(' &bull; ')}</div>`
+            };
+        }
+
+        if (mode === 'EXACT') {
+            return { score: 0, reason: '', isExact: false, matchedWord: '', matchedContextHtml: '' };
+        }
+
+        // LOCATION modunda 'SIMILAR' (Detaylandır / Benzerlerini Ara): İlçe, İl ve Adres kelimelerinde 1-2 harf yazım hatası toleransı
+        const locWords = `${cityRaw} ${distRaw} ${addrRaw} ${taxOfficeRaw}`.split(/[\s.,;:\-\/()'"&]+/).filter(Boolean);
+        let bestLocScore = 0;
+        let bestLocWord = '';
+        for (const lw of locWords) {
+            const wComp = normCompactTR(lw);
+            if (wComp.length < 3 || nqComp.length < 3) continue;
+            const dist = levenshteinDist(nqComp, wComp);
+            if (dist === 1 && 92 > bestLocScore) {
+                bestLocScore = 92;
+                bestLocWord = lw;
+            } else if (nqComp.length >= 4 && wComp.startsWith(nqComp.slice(0, 3)) && dist <= 2 && 88 > bestLocScore) {
+                bestLocScore = 88;
+                bestLocWord = lw;
+            }
+        }
+        if (bestLocScore > 0) {
+            return {
+                score: bestLocScore,
+                reason: `🤖 Yakın İl/İlçe/Adres Kelimesi: "${bestLocWord}"`,
+                isExact: false,
+                matchedWord: bestLocWord,
+                matchedContextHtml: `<div class="matched-field-callout"><i class="fa-solid fa-map-location-dot"></i> <span>Benzer Konum Bilgisinde Bulundu:</span> ${highlightSearchText(`${cityRaw} / ${distRaw} - ${addrRaw}`, rawQuery, bestLocWord)}</div>`
+            };
+        }
+        return { score: 0, reason: '', isExact: false, matchedWord: '', matchedContextHtml: '' };
+    }
+
+    // =========================================================================
+    // KAPSAM 1: CARİYE GÖRE ARA (scope === 'CARI')
+    // Sadece Müşteri Adı/Ünvanı, 120 Cari Kodu, Yetkili, Şoför, Plaka, Telefon
+    // ve Fatura No alanlarına bakar (İl/İlçe/Adres karıştırmaz!).
+    // =========================================================================
+    // A) Cari Ünvan & 120 Cari Kodu
+    if (ntComp === nqComp || ncComp === nqComp) {
+        return {
+            score: 100,
+            reason: `🎯 Tam Eşleşme (Cari Ünvan / Kod)`,
+            isExact: true,
+            matchedWord: rawQuery,
+            matchedContextHtml: `<div class="matched-field-callout"><i class="fa-solid fa-bullseye"></i> <span>Eşleşen Alan (Cari Ünvan / Kod):</span> ${highlightSearchText(titleRaw + ' (' + codeRaw + ')', rawQuery)}</div>`
+        };
+    }
+    if (titleWordsNorm.includes(nqComp)) {
+        const matchedOrig = titleWordsOrig.find(w => normCompactTR(w) === nqComp) || rawQuery.toUpperCase();
+        return {
+            score: 100,
+            reason: `🎯 Tam Kelime Eşleşmesi (Ünvanda: "${matchedOrig}")`,
+            isExact: true,
+            matchedWord: matchedOrig,
+            matchedContextHtml: `<div class="matched-field-callout"><i class="fa-solid fa-building"></i> <span>Cari Ünvanda Eşleşen Kelime:</span> ${highlightSearchText(titleRaw, rawQuery, matchedOrig)}</div>`
+        };
+    }
+    if ((nqComp && ntComp.includes(nqComp)) || (nqComp && ncComp.includes(nqComp)) || (nq && nt.includes(nq))) {
+        return {
+            score: 99,
+            reason: `🎯 Tam Eşleşme (Cari Ünvan / Kod İçinde Geçiyor)`,
+            isExact: true,
+            matchedWord: rawQuery,
+            matchedContextHtml: `<div class="matched-field-callout"><i class="fa-solid fa-building"></i> <span>Cari Ünvan / Kod İçinde Geçiyor:</span> ${highlightSearchText(titleRaw + ' [' + codeRaw + ']', rawQuery)}</div>`
+        };
+    }
+    if (qCompTokens.length > 1 && qCompTokens.every(qt => ntComp.includes(qt) || ncComp.includes(qt))) {
+        return {
+            score: 98,
+            reason: `🎯 Tam Çoklu Kelime Eşleşmesi (Cari Ünvan)`,
+            isExact: true,
+            matchedWord: rawQuery,
+            matchedContextHtml: `<div class="matched-field-callout"><i class="fa-solid fa-building"></i> <span>Cari Ünvanda Geçen Kelimeler:</span> ${highlightSearchText(titleRaw, rawQuery)}</div>`
+        };
+    }
+
+    // B) Yetkili Kişi (c.authorized)
+    if (naComp && ((nqComp && naComp.includes(nqComp)) || (qCompTokens.length > 1 && qCompTokens.every(qt => naComp.includes(qt))))) {
+        return {
+            score: 97,
+            reason: `🎯 Yetkili Kişi Eşleşmesi ("${authRaw}")`,
+            isExact: true,
+            matchedWord: rawQuery,
+            matchedContextHtml: `<div class="matched-field-callout"><i class="fa-solid fa-user-tie"></i> <span>Yetkili Kişi Alanında Geçiyor:</span> ${highlightSearchText(authRaw, rawQuery)}</div>`
+        };
+    }
+
+    // C) Fatura Altındaki Şoför Adı (h.sofor), Plaka (h.plaka) veya Fatura No (h.fatura_no)
+    for (let hIdx = 0; hIdx < historyList.length; hIdx++) {
+        const h = historyList[hIdx];
+        if (!h) continue;
+        const soforRaw = String(h.sofor || '').trim();
+        const plakaRaw = String(h.plaka || '').trim();
+        const fatNoRaw = String(h.fatura_no || '').trim();
+
+        const nsComp = normCompactTR(soforRaw);
+        const nplComp = normCompactTR(plakaRaw);
+        const nfComp = normCompactTR(fatNoRaw);
+
+        if (nsComp && ((nqComp && nsComp.includes(nqComp)) || (qCompTokens.length > 1 && qCompTokens.every(qt => nsComp.includes(qt))))) {
+            return {
+                score: 96,
+                reason: `🚛 Fatura İçi Şoför Eşleşmesi: "${soforRaw}"`,
+                isExact: true,
+                matchedWord: soforRaw,
+                matchedContextHtml: `<div class="matched-field-callout"><i class="fa-solid fa-id-card-clip"></i> <span>Alt Fatura Şoför Kaydında Bulundu:</span> Şoför: ${highlightSearchText(soforRaw, rawQuery)} &bull; Fatura No: <strong>${escapeHtml(fatNoRaw || '-')}</strong> (${escapeHtml(h.tarih || '-')}) &bull; Plaka: <strong>${escapeHtml(plakaRaw || '-')}</strong></div>`
+            };
+        }
+        if (nplComp && nqComp && nplComp.includes(nqComp)) {
+            return {
+                score: 96,
+                reason: `🚚 Fatura Araç Plakası Eşleşmesi: "${plakaRaw}"`,
+                isExact: true,
+                matchedWord: plakaRaw,
+                matchedContextHtml: `<div class="matched-field-callout"><i class="fa-solid fa-truck-front"></i> <span>Alt Fatura Plaka Kaydında Bulundu:</span> Plaka: ${highlightSearchText(plakaRaw, rawQuery)} &bull; Fatura No: <strong>${escapeHtml(fatNoRaw || '-')}</strong> (${escapeHtml(h.tarih || '-')})</div>`
+            };
+        }
+        if (nfComp && nqComp && nfComp.includes(nqComp)) {
+            return {
+                score: 96,
+                reason: `🧾 Fatura No Eşleşmesi: "${fatNoRaw}"`,
+                isExact: true,
+                matchedWord: fatNoRaw,
+                matchedContextHtml: `<div class="matched-field-callout"><i class="fa-solid fa-file-invoice"></i> <span>Fatura Numarasında Bulundu:</span> ${highlightSearchText(fatNoRaw, rawQuery)} (${escapeHtml(h.tarih || '-')})</div>`
+            };
+        }
+    }
+
+    // D) Kayıtlı Plakalar (c.plates) veya Telefon (c.phone)
+    if (npComp && nqComp && npComp.includes(nqComp)) {
+        return {
+            score: 95,
+            reason: `🚚 Araç Plakası Eşleşmesi`,
+            isExact: true,
+            matchedWord: rawQuery,
+            matchedContextHtml: `<div class="matched-field-callout"><i class="fa-solid fa-truck-front"></i> <span>Kayıtlı Plakalarda Geçiyor:</span> ${highlightSearchText(platesRaw, rawQuery)}</div>`
+        };
+    }
+    if (nphComp && nqComp && nphComp.includes(nqComp)) {
+        return {
+            score: 95,
+            reason: `📞 Telefon Numarası Eşleşmesi`,
+            isExact: true,
+            matchedWord: rawQuery,
+            matchedContextHtml: `<div class="matched-field-callout"><i class="fa-solid fa-phone"></i> <span>Telefon Numarasında Geçiyor:</span> ${highlightSearchText(phoneRaw, rawQuery)}</div>`
+        };
+    }
+
+    // Eğer mod SADECE 'EXACT' (Tam Eşleşme) ise burada dur, benzer kayıtları getirme!
+    if (mode === 'EXACT') {
+        return { score: 0, reason: '', isExact: false, matchedWord: '', matchedContextHtml: '' };
+    }
+
+    // 2. DETAYLANDIR / BENZERLERİNİ ARA MODU (mode === 'SIMILAR')
+    // Cari Ünvan ve Şoför/Yetkili kelimeleri üzerinde yakın/benzer kelime taraması yapar (İlçe adlarını karıştırmaz!)
+    const pq = phoneticKeyTR(rawQuery);
+    let bestScore = 0;
+    let bestReason = '';
+    let bestWord = '';
+    let bestContext = '';
+
+    const candidateSources = [
+        { label: 'Cari Ünvan', icon: 'fa-building', text: titleRaw, words: titleWordsOrig }
+    ];
+    if (authRaw) {
+        candidateSources.push({ label: 'Yetkili Kişi', icon: 'fa-user-tie', text: authRaw, words: authRaw.split(/[\s.,;:\-\/()'"&]+/).filter(Boolean) });
+    }
+    const seenDriverSet = new Set();
+    for (let hIdx = 0; hIdx < historyList.length; hIdx++) {
+        const sRaw = String(historyList[hIdx]?.sofor || '').trim();
+        if (sRaw && !seenDriverSet.has(sRaw)) {
+            seenDriverSet.add(sRaw);
+            candidateSources.push({
+                label: `Fatura Şoförü (${historyList[hIdx]?.fatura_no || '-'})`,
+                icon: 'fa-id-card-clip',
+                text: sRaw,
+                words: sRaw.split(/[\s.,;:\-\/()'"&]+/).filter(Boolean)
+            });
+        }
+    }
+
+    for (const srcObj of candidateSources) {
+        for (let wIdx = 0; wIdx < srcObj.words.length; wIdx++) {
+            const origW = srcObj.words[wIdx];
+            const w = normCompactTR(origW);
+            if (w.length < 3) continue;
+
+            // 1 Harf Farkı (Örn: "ganik" <-> "GINIK" -> ERHAN GINIK)
+            if (nqComp.length >= 3 && Math.abs(w.length - nqComp.length) <= 1) {
+                const dist = levenshteinDist(nqComp, w);
+                if (dist === 1 && 93 > bestScore) {
+                    bestScore = 93;
+                    bestWord = origW;
+                    bestReason = `🤖 1 Harf Benzer Kelime (${srcObj.label}: "${origW}")`;
+                    bestContext = `<div class="matched-field-callout"><i class="fa-solid ${srcObj.icon}"></i> <span>${escapeHtml(srcObj.label)} (1 Harf Farklı Benzer Kelime):</span> ${highlightSearchText(srcObj.text, rawQuery, origW)}</div>`;
+                }
+            }
+
+            if (nqComp.length >= 4 && w.length >= 4) {
+                // Aynı ilk 3 harfle başlayan benzer uzunlukta kelime
+                if (w.startsWith(nqComp.slice(0, 3)) && Math.abs(w.length - nqComp.length) <= 3 && 90 > bestScore) {
+                    bestScore = 90;
+                    bestWord = origW;
+                    bestReason = `🤖 Başlangıç Benzeri (${srcObj.label}: "${origW}")`;
+                    bestContext = `<div class="matched-field-callout"><i class="fa-solid ${srcObj.icon}"></i> <span>${escapeHtml(srcObj.label)} (Başlangıç Benzeri):</span> ${highlightSearchText(srcObj.text, rawQuery, origW)}</div>`;
+                }
+                // Ortak 4+ harfli kök (Örn: "anik" -> UYANIK, YANIKOĞLU, BAĞRIYANIK)
+                else if ((w.includes(nqComp.slice(1)) || w.includes(nqComp.slice(0, -1))) && 88 > bestScore) {
+                    bestScore = 88;
+                    bestWord = origW;
+                    bestReason = `🤖 Benzer Kök Kelime (${srcObj.label}: "${origW}")`;
+                    bestContext = `<div class="matched-field-callout"><i class="fa-solid ${srcObj.icon}"></i> <span>${escapeHtml(srcObj.label)} (Benzer Kök Kelime):</span> ${highlightSearchText(srcObj.text, rawQuery, origW)}</div>`;
+                }
+                // Fonetik / Harf Grubu Benzeri (Örn: "ganik" <-> "KINIK", "KINIKLAR")
+                else if (pq && phoneticKeyTR(w) === pq && 86 > bestScore) {
+                    bestScore = 86;
+                    bestWord = origW;
+                    bestReason = `🤖 Ses/Harf Benzeri (${srcObj.label}: "${origW}")`;
+                    bestContext = `<div class="matched-field-callout"><i class="fa-solid ${srcObj.icon}"></i> <span>${escapeHtml(srcObj.label)} (Ses/Harf Benzeri):</span> ${highlightSearchText(srcObj.text, rawQuery, origW)}</div>`;
+                } else if (pq && phoneticKeyTR(w).startsWith(pq.slice(0, 3)) && Math.abs(w.length - nqComp.length) <= 2 && levenshteinDist(nqComp, w) <= 2 && 84 > bestScore) {
+                    bestScore = 84;
+                    bestWord = origW;
+                    bestReason = `🤖 Yakın Kelime (${srcObj.label}: "${origW}")`;
+                    bestContext = `<div class="matched-field-callout"><i class="fa-solid ${srcObj.icon}"></i> <span>${escapeHtml(srcObj.label)} (Yakın Kelime):</span> ${highlightSearchText(srcObj.text, rawQuery, origW)}</div>`;
+                }
+            }
+        }
+    }
+
+    return { score: bestScore, reason: bestReason, isExact: false, matchedWord: bestWord, matchedContextHtml: bestContext };
+}
+
+let currentSearchPageMode = 'EXACT';
+
+function focusGlobalCustomerSearch() {
+    switchTab('customer-search-tab');
+    setTimeout(() => {
+        const inp = document.getElementById('global-customer-search-input');
+        if (inp) {
+            inp.focus();
+            inp.select();
+        }
+    }, 60);
+}
+
+function onCustomerSearchInputChange(val) {
+    const q = String(val || '').trim();
+    const clearBtn = document.getElementById('global-customer-search-clear');
+    if (clearBtn) {
+        clearBtn.style.display = q.length > 0 ? 'inline-flex' : 'none';
+    }
+    if (q.length > 0) {
+        handleGlobalCustomerSearchInput(q, true, currentSearchPageMode);
+    } else if (globalCustomerQuickFilter !== 'ALL') {
+        handleGlobalCustomerSearchInput('', true, currentSearchPageMode);
+    } else {
+        clearGlobalCustomerSearch();
+    }
+}
+
+function executeCustomerSearch(mode = 'EXACT') {
+    currentSearchPageMode = mode === 'SIMILAR' ? 'SIMILAR' : 'EXACT';
+    const inp = document.getElementById('global-customer-search-input');
+    const q = inp ? inp.value : '';
+    handleGlobalCustomerSearchInput(q, true, currentSearchPageMode);
+}
+
+function triggerGlobalAiCustomerSearch() {
+    executeCustomerSearch('EXACT');
+}
+
+function setGlobalCustomerQuickFilter(filterKey) {
+    globalCustomerQuickFilter = filterKey || 'ALL';
+    document.querySelectorAll('#global-customer-search-bar .global-chip').forEach(btn => {
+        btn.classList.toggle('active', btn.getAttribute('data-qfilter') === globalCustomerQuickFilter);
+    });
+    const inp = document.getElementById('global-customer-search-input');
+    const q = inp ? inp.value : '';
+    handleGlobalCustomerSearchInput(q, true, currentSearchPageMode);
+}
+
+function clearGlobalCustomerSearch() {
+    const inp = document.getElementById('global-customer-search-input');
+    if (inp) inp.value = '';
+    selectedAiCustomerCode = '';
+    currentSearchPageMode = 'EXACT';
+    globalCustomerQuickFilter = 'ALL';
+    document.querySelectorAll('#global-customer-search-bar .global-chip').forEach(btn => {
+        btn.classList.toggle('active', btn.getAttribute('data-qfilter') === 'ALL');
+    });
+    const clearBtn = document.getElementById('global-customer-search-clear');
+    if (clearBtn) clearBtn.style.display = 'none';
+    const cornerCount = document.getElementById('global-search-corner-count');
+    if (cornerCount) cornerCount.style.display = 'none';
+    const cornerOther = document.getElementById('global-search-corner-other');
+    if (cornerOther) {
+        cornerOther.style.display = 'none';
+        cornerOther.innerHTML = '';
+    }
+    const panel = document.getElementById('global-customer-search-results');
+    if (panel) {
+        panel.style.display = 'block';
+        const scopeLabel = currentSearchScope === 'LOCATION'
+            ? '<strong>İl, İlçe, Adres, Vergi Dairesi veya Bölge Adı (Örn: Merzifon, Çorum, Suluova)</strong>'
+            : '<strong>Müşteri Ünvanı, Yetkili/Şoför Adı (Örn: Ganik), 120 Cari Kodu, Araç Plakası veya Telefonu</strong>';
+        panel.innerHTML = `
+            <div style="padding:1.4rem; text-align:center; color:#94a3b8; font-size:0.86rem;">
+                <i class="fa-solid ${currentSearchScope === 'LOCATION' ? 'fa-map-location-dot' : 'fa-magnifying-glass'}" style="font-size:1.5rem; color:${currentSearchScope === 'LOCATION' ? '#f59e0b' : '#38bdf8'}; margin-bottom:0.5rem; display:block;"></i>
+                Yukarıdaki kutuya aramak istediğiniz ${scopeLabel} yazın; büyük/küçük harf ve noktalama işaretlerine bakılmaksızın eşleşenler aşağıya liste olarak gelir ve eşleşen kelime <mark class="search-match-highlight">🔍 sarı ile işaretlenir</mark>.
+            </div>
+        `;
+    }
+}
+
+function selectAiCustomerFromList(code, eventObj) {
+    if (eventObj && typeof eventObj.stopPropagation === 'function') {
+        eventObj.stopPropagation();
+    }
+    selectedAiCustomerCode = code;
+    document.querySelectorAll('.global-search-result-item').forEach(row => {
+        const isCurrent = row.getAttribute('data-cust-code') === code;
+        row.style.borderColor = isCurrent ? '#10b981' : '';
+        row.style.background = isCurrent ? 'rgba(16, 185, 129, 0.14)' : '';
+        const cb = row.querySelector('.ai-cust-select-cb');
+        if (cb) cb.checked = isCurrent;
+    });
+    openCustomerDetailModal(code);
+}
+
+function syncGlobalSearchToActiveTab(queryText) {
+    // Artık arama kendi özel sayfasında (customer-search-tab) çalışır
+}
+
+function handleGlobalCustomerSearchInput(rawVal, forceShowByChip = false, searchMode = 'EXACT') {
+    const q = String(rawVal || '').trim();
+    const mode = searchMode === 'SIMILAR' ? 'SIMILAR' : 'EXACT';
+    currentSearchPageMode = mode;
+
+    const clearBtn = document.getElementById('global-customer-search-clear');
+    if (clearBtn) {
+        clearBtn.style.display = (q.length > 0 || globalCustomerQuickFilter !== 'ALL') ? 'inline-flex' : 'none';
+    }
+
+    const totalEl = document.getElementById('global-search-total-count');
+    if (totalEl && Array.isArray(appState.customers)) {
+        totalEl.textContent = appState.customers.length.toLocaleString('tr-TR');
+    }
+
+    const panel = document.getElementById('global-customer-search-results');
+    if (!panel) return;
+
+    if (!q && globalCustomerQuickFilter === 'ALL' && !forceShowByChip) {
+        panel.style.display = 'block';
+        return;
+    }
+
+    const list = Array.isArray(appState.customers) ? appState.customers : [];
+    const scoredList = [];
+    let otherScopeCount = 0;
+    const otherScope = currentSearchScope === 'LOCATION' ? 'CARI' : 'LOCATION';
+
+    for (let i = 0; i < list.length; i++) {
+        const c = list[i];
+        if (!c) continue;
+
+        if (globalCustomerQuickFilter === 'VIP') {
+            const p = normSearchTR(c.priority || '');
+            if (!p.includes('vip') && (Number(c.totalRevenue) || 0) < 250000) continue;
+        } else if (globalCustomerQuickFilter === 'BORCLU') {
+            const acc = getCustomerAccountingSummary(c);
+            if (acc.baCode !== 'B' && acc.baCode !== '(B)') continue;
+        } else if (globalCustomerQuickFilter === 'ALACAKLI') {
+            const acc = getCustomerAccountingSummary(c);
+            if (acc.baCode !== 'A' && acc.baCode !== '(A)') continue;
+        } else if (globalCustomerQuickFilter === 'CORUM') {
+            if (!normSearchTR(c.city || '').includes('corum')) continue;
+        }
+
+        if (q) {
+            const matchInfo = computeCustomerMatchByMode(c, q, mode, currentSearchScope);
+            if (mode === 'EXACT' && matchInfo.score >= 95) {
+                scoredList.push({
+                    customer: c,
+                    score: matchInfo.score,
+                    reason: matchInfo.reason,
+                    isExact: true,
+                    matchedWord: matchInfo.matchedWord || q,
+                    matchedContextHtml: matchInfo.matchedContextHtml || ''
+                });
+            } else if (mode === 'SIMILAR' && matchInfo.score >= 65) {
+                scoredList.push({
+                    customer: c,
+                    score: matchInfo.score,
+                    reason: matchInfo.reason,
+                    isExact: !!matchInfo.isExact,
+                    matchedWord: matchInfo.matchedWord || q,
+                    matchedContextHtml: matchInfo.matchedContextHtml || ''
+                });
+            }
+
+            // Diğer arama kapsamında (Örn: Cari modundayken İl-İlçe'de kaç kayıt var?) sayısını da hesapla
+            const otherMatch = computeCustomerMatchByMode(c, q, 'EXACT', otherScope);
+            if (otherMatch.score >= 95) {
+                otherScopeCount++;
+            }
+        } else {
+            scoredList.push({ customer: c, score: 100, reason: 'Hızlı Filtre Eşleşmesi', isExact: true, matchedWord: '', matchedContextHtml: '' });
+        }
+    }
+
+    scoredList.sort((a, b) => {
+        if (b.score !== a.score) return b.score - a.score;
+        return (Number(b.customer.totalRevenue) || 0) - (Number(a.customer.totalRevenue) || 0);
+    });
+
+    const topMatches = scoredList.slice(0, 500);
+
+    const otherScopeBannerBtn = (q && otherScopeCount > 0)
+        ? `<button type="button" onclick="setCustomerSearchScope('${otherScope}')" style="background:linear-gradient(135deg,#f59e0b,#d97706); border:1px solid #fde68a; color:#fff; cursor:pointer; font-weight:800; font-size:0.74rem; padding:0.35rem 0.65rem; border-radius:8px; display:inline-flex; align-items:center; gap:0.35rem; box-shadow:0 2px 8px rgba(245,158,11,0.3);">
+               <i class="fa-solid ${otherScope === 'LOCATION' ? 'fa-map-location-dot' : 'fa-building-user'}"></i>
+               ${otherScope === 'LOCATION' ? `İl-İlçe'de ${otherScopeCount} Kayıt` : `Cari'de ${otherScopeCount} Kayıt`}
+           </button>`
+        : '';
+
+    const cornerCount = document.getElementById('global-search-corner-count');
+    if (cornerCount) {
+        cornerCount.style.display = 'inline-flex';
+        cornerCount.style.alignItems = 'center';
+        cornerCount.style.gap = '0.35rem';
+        cornerCount.innerHTML = `<i class="fa-solid fa-layer-group"></i> <span>${scoredList.length.toLocaleString('tr-TR')} Kayıt</span>`;
+    }
+    const cornerOther = document.getElementById('global-search-corner-other');
+    if (cornerOther) {
+        if (otherScopeBannerBtn) {
+            cornerOther.style.display = 'inline-flex';
+            cornerOther.innerHTML = otherScopeBannerBtn;
+        } else {
+            cornerOther.style.display = 'none';
+            cornerOther.innerHTML = '';
+        }
+    }
+
+    if (topMatches.length === 0) {
+        panel.style.display = 'block';
+        panel.innerHTML = `
+            <div style="padding:1.1rem; text-align:center; color:#cbd5e1; font-size:0.86rem; background:rgba(15,23,42,0.5); border:1px dashed rgba(56,189,248,0.35); border-radius:10px;">
+                <i class="fa-solid fa-magnifying-glass" style="color:#f59e0b; font-size:1.2rem; margin-bottom:0.4rem; display:block;"></i>
+                "<strong>${escapeHtml(q)}</strong>" için <strong>${currentSearchScope === 'LOCATION' ? 'İl - İlçeye Göre' : 'Cariye Göre'} (${mode === 'EXACT' ? 'Tam Eşleşme' : 'Benzer Kayıt'})</strong> bulunamadı.
+                <div style="margin-top:0.65rem; display:flex; justify-content:center; gap:0.5rem; flex-wrap:wrap;">
+                    ${otherScopeBannerBtn}
+                    ${mode === 'EXACT' ? `
+                        <button type="button" class="btn btn-primary btn-sm" style="background:linear-gradient(135deg,#0284c7,#6366f1); font-weight:800;" onclick="executeCustomerSearch('SIMILAR')">
+                            <i class="fa-solid fa-wand-magic-sparkles"></i> Detaylandır (Benzerlerini ve Yakın İsimleri Ara)
+                        </button>
+                    ` : ''}
+                    <button type="button" class="btn btn-success btn-sm" onclick="openCustomerModal()">
+                        <i class="fa-solid fa-user-plus"></i> Yeni Müşteri Ekle
+                    </button>
+                </div>
+            </div>
+        `;
+        return;
+    }
+
+    panel.style.display = 'block';
+    panel.innerHTML = `
+        ${topMatches.map((item, idx) => {
+            const c = item.customer;
+            const safeCode = escapeHtml(c.code || '');
+            const isChecked = selectedAiCustomerCode === c.code;
+            const nqComp = normCompactTR(q);
+
+            const titleHighlighted = highlightSearchText(c.title || '-', q, item.matchedWord);
+            const codeHighlighted = highlightSearchText(c.code || '', q, item.matchedWord);
+            const cityHighlighted = highlightSearchText(c.city || '-', q, item.matchedWord);
+            const distHighlighted = highlightSearchText(c.district || '-', q, item.matchedWord);
+
+            // Eğer eşleşme Ünvan, Kod veya İl/İlçe dışında bir alt alanda (Şoför, Plaka, Adres, Vergi Dairesi vb.) ise sadece o kısa eşleşmeyi yanına ekle
+            const inMainFields = nqComp && (
+                normCompactTR(c.title || '').includes(nqComp) ||
+                normCompactTR(c.code || '').includes(nqComp) ||
+                normCompactTR(c.city || '').includes(nqComp) ||
+                normCompactTR(c.district || '').includes(nqComp)
+            );
+            let subMatchTag = '';
+            if (!inMainFields && item.matchedWord) {
+                subMatchTag = `<span style="font-size:0.74rem; color:#fde68a;">• ${highlightSearchText(item.matchedWord, q, item.matchedWord)}</span>`;
+            } else if (!inMainFields && c.address && nqComp && normCompactTR(c.address).includes(nqComp)) {
+                subMatchTag = `<span style="font-size:0.74rem; color:#cbd5e1;">• ${highlightSearchText(c.address, q)}</span>`;
+            }
+
+            return `
+                <div class="global-search-result-item" data-cust-code="${safeCode}" onclick="selectAiCustomerFromList('${safeCode}', event)" style="cursor:pointer; padding:0.5rem 0.7rem; margin-bottom:0.3rem; display:flex; align-items:center; justify-content:space-between; gap:0.6rem; ${isChecked ? 'border-color:#10b981; background:rgba(16,185,129,0.14);' : ''}">
+                    <div style="display:flex; align-items:center; gap:0.55rem; flex:1; min-width:0; flex-wrap:wrap;">
+                        <input type="checkbox" class="ai-cust-select-cb" ${isChecked ? 'checked' : ''} onclick="selectAiCustomerFromList('${safeCode}', event)" style="width:16px; height:16px; accent-color:#10b981; cursor:pointer; margin:0;">
+                        <span style="font-size:0.72rem; color:#64748b; font-weight:700; min-width:22px;">#${idx + 1}</span>
+                        <span style="font-weight:800; font-size:0.86rem; color:#38bdf8;">${titleHighlighted}</span>
+                        <span style="font-size:0.72rem; padding:0.1rem 0.4rem; border-radius:5px; background:rgba(56,189,248,0.12); color:#93c5fd; font-family:monospace; font-weight:700;">${codeHighlighted}</span>
+                        <span style="font-size:0.76rem; color:#cbd5e1;"><i class="fa-solid fa-location-dot" style="color:#f59e0b;"></i> ${cityHighlighted} / ${distHighlighted}</span>
+                        ${subMatchTag}
+                    </div>
+                    <i class="fa-solid fa-chevron-right" style="color:#64748b; font-size:0.78rem;"></i>
+                </div>
+            `;
+        }).join('')}
+    `;
+}
+
+window.toggleZiyaretTheme = toggleZiyaretTheme;
+window.applyZiyaretTheme = applyZiyaretTheme;
+window.focusGlobalCustomerSearch = focusGlobalCustomerSearch;
+window.executeCustomerSearch = executeCustomerSearch;
+window.setCustomerSearchScope = setCustomerSearchScope;
+window.onCustomerSearchInputChange = onCustomerSearchInputChange;
+window.triggerGlobalAiCustomerSearch = triggerGlobalAiCustomerSearch;
+window.selectAiCustomerFromList = selectAiCustomerFromList;
+window.handleGlobalCustomerSearchInput = handleGlobalCustomerSearchInput;
+window.setGlobalCustomerQuickFilter = setGlobalCustomerQuickFilter;
+window.clearGlobalCustomerSearch = clearGlobalCustomerSearch;
+
+// ==========================================================================
 // 11. BAŞLATICI (INITIALIZATION)
 // ==========================================================================
 function renderAll() {
+    updateRouteAndReportsBadges();
     renderDashboard();
     populateFilterOptions();
-    renderLegacyCustomers();
-    renderCariEkstreTable(false);
     renderActiveVisits();
     renderTasks();
     renderOmerApprovalCenter();
-    renderDistrictStrategies();
-    renderLogs();
-    runAiDeduplicationAnalysis();
     checkPwaInstallState();
+
+    const activeTabId = document.querySelector('.tab-section.active')?.id || 'dashboard-tab';
+    if (activeTabId === 'route-plan-tab') {
+        initCustomRoutePlannerUI();
+    } else if (activeTabId === 'reports-tab') {
+        renderReportsTab();
+    } else if (activeTabId === 'legacy-tab') {
+        renderLegacyCustomers();
+    } else if (activeTabId === 'cari-ekstre-tab') {
+        renderCariEkstreTable(false);
+    } else if (activeTabId === 'strategy-tab') {
+        renderDistrictStrategies();
+    } else if (activeTabId === 'logs-tab') {
+        renderLogs();
+    } else if (activeTabId === 'ai-match-tab') {
+        runAiDeduplicationAnalysis();
+    }
+
+    // Gizli sekmelerin ağır tablolarını ana thread'i bloklamadan boşta (idle) hazırla
+    setTimeout(() => {
+        if (activeTabId !== 'route-plan-tab') initCustomRoutePlannerUI();
+        if (activeTabId !== 'reports-tab') renderReportsTab();
+        if (activeTabId !== 'legacy-tab') renderLegacyCustomers();
+    }, 60);
 }
 
 document.addEventListener('DOMContentLoaded', async () => {
@@ -6292,6 +11364,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     if (isDproEmbedded) {
         document.body.classList.add('dpro-embedded');
     }
+    applyZiyaretTheme(getSavedZiyaretTheme(), true);
 
     // Eski Service Worker ve önbellekleri zorla temizle (v1.2.0)
     if ('serviceWorker' in navigator) {
@@ -6302,12 +11375,16 @@ document.addEventListener('DOMContentLoaded', async () => {
     if ('caches' in window) {
         caches.keys().then(keys => {
             keys.forEach(k => {
-                if (k !== 'dizsan-ziyaret-vv1.5.4: Sonsuz otomatik yenileme (reload loop) ve Service Worker cakismasi tamamen giderildi') caches.delete(k);
+                if (k !== 'dpro-ziyaret-v20261025-fix6') caches.delete(k);
             });
         });
     }
 
-    await loadInitialData();
+    // Giriş ekranını, hızlı personel seçimini ve oturumu 0 ms içinde (5.5MB veriyi beklemeden) hemen hazırla!
+    const loginFormEl = document.getElementById('login-form');
+    if (loginFormEl) {
+        loginFormEl.addEventListener('submit', handleLogin);
+    }
     renderQuickUserChips();
     loadRememberedCredentials();
 
@@ -6343,7 +11420,8 @@ document.addEventListener('DOMContentLoaded', async () => {
     if (saved) {
         try {
             const p = JSON.parse(saved);
-            const matched = appState.users.find(u => normalizeTR(u.name) === normalizeTR(p.name) || normalizeTR(u.username) === normalizeTR(p.username));
+            const userPool = (Array.isArray(appState.users) && appState.users.length > 0) ? appState.users : DEFAULT_USERS;
+            const matched = userPool.find(u => normalizeTR(u.name) === normalizeTR(p.name) || normalizeTR(u.username) === normalizeTR(p.username));
             if (matched) currentUser = matched;
         } catch (e) {}
     }
@@ -6357,6 +11435,13 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     applyAuthenticatedUser();
 
+    await loadInitialData();
+    renderQuickUserChips();
+    if (currentUser) {
+        renderAll();
+        checkIncomingRouteNotifications();
+    }
+
     // Dokunma ve tıklamalarda otomatik bildirim ve ses aktivasyonu
     const unlockGesture = () => {
         startSilentAudioKeepAlive();
@@ -6367,16 +11452,29 @@ document.addEventListener('DOMContentLoaded', async () => {
     document.addEventListener('click', unlockGesture, { passive: true });
     document.addEventListener('touchend', unlockGesture, { passive: true });
 
-    // Her 12 saniyede bir bulut kontrolü
+    // Her 5 saniyede bir ve ekran/sekme odaklandığında anlık Telefon <-> PC bulut senkronizasyonu
     setInterval(() => {
         syncFromServer();
-    }, 12000);
+    }, 5000);
+    window.addEventListener('focus', () => { syncFromServer(); });
+    document.addEventListener('visibilitychange', () => {
+        if (document.visibilityState === 'visible') syncFromServer();
+    });
 
     // Her 8 saniyede bir telefon hatırlatıcısı & çıkış uyarısı motorunu çalıştır
     setInterval(() => {
         checkDueReminders();
     }, 8000);
     checkDueReminders();
+    checkIncomingRouteNotifications();
+
+    if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.addEventListener('message', (e) => {
+            if (e.data && e.data.type === 'OPEN_ROUTE_PLAN_BRIEF' && e.data.routeId) {
+                openRouteTaskBriefModal(e.data.routeId);
+            }
+        });
+    }
 
     // Otomatik Sürüm Denetimi (İlk açılışta ve her 30 saniyede bir)
     updateAppVersionDisplay();
@@ -6453,6 +11551,6 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     // Service Worker Kaydı (Sonsuz yenileme döngüsü yaratmadan sessiz çalışır)
     if ('serviceWorker' in navigator) {
-        navigator.serviceWorker.register('sw.js?v=Aranan kelimenin gectigi alani ve kelimeyi sari isaretleme (highlight) sistemi eklendi').catch(() => {});
+        navigator.serviceWorker.register('sw.js?v=1.7.2').catch(() => {});
     }
 });

@@ -1,5 +1,5 @@
-// DİZSAN Müşteri Ziyaret & Saha Takip Service Worker (v1.4.1)
-const CACHE_NAME = "dizsan-ziyaret-v1.7.1";
+// DİZSAN Müşteri Ziyaret & Saha Takip Service Worker (v1.4.2)
+const CACHE_NAME = 'dpro-ziyaret-v20261025-fix6';
 const ASSETS = [
   './',
   './index.html',
@@ -134,10 +134,22 @@ self.addEventListener('notificationclick', (e) => {
   if (e.action === 'close') return;
 
   const targetUrl = (e.notification.data && e.notification.data.url) ? e.notification.data.url : './';
+  let routeId = null;
+  try {
+    const qIdx = targetUrl.indexOf('?');
+    if (qIdx !== -1) {
+      const sp = new URLSearchParams(targetUrl.slice(qIdx));
+      routeId = sp.get('routeId');
+    }
+  } catch (err) {}
+
   e.waitUntil(
     clients.matchAll({ type: 'window', includeUncontrolled: true }).then((clientList) => {
       for (const client of clientList) {
         if ('focus' in client) {
+          if (routeId) {
+            try { client.postMessage({ type: 'OPEN_ROUTE_PLAN_BRIEF', routeId: routeId, url: targetUrl }); } catch (err) {}
+          }
           client.navigate(targetUrl);
           return client.focus();
         }
