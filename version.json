@@ -1,7 +1,7 @@
 {
-  "version": "1.7.7",
-  "build": 177,
-  "releasedAt": "2026-10-25 23:14:13",
-  "releaseNotes": "Raporlar tablosuna doğrudan Sil butonu eklendi ve silinen ziyaret/rut kayıtlarının raporlarda kalması önlendi",
+  "version": "1.7.8",
+  "build": 178,
+  "releasedAt": "2026-10-25 23:23:54",
+  "releaseNotes": "Güvenlik Denetimi & Sıkılaştırma: Zorunlu e-posta bağlantılı tek kullanımlık şifre sıfırlama linki, e-posta sızıntısı koruması, şifrelenmiş Beni Hatırla, 5 deneme Brute-Force koruması ve tüm personel için Yönetici Ömer Eren silme onay kalkanı devreye alındı.",
   "author": "Ömer Eren & DİZSAN"
 }

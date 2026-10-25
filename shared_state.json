@@ -181039,7 +181039,7 @@
       "platform": "Android / Mobil"
     }
   ],
-  "updatedAt": "2026-10-25T20:14:13.576397Z",
+  "updatedAt": "2026-10-25T20:23:54.103565Z",
   "stateRevision": 289,
   "cities": [
     "Adana",
@@ -181210,7 +181210,7 @@
     "scannedPeriods": []
   },
   "routeNotifications": [],
-  "appVersion": "1.7.7",
-  "versionUpdatedAt": "2026-10-25 23:14:13",
-  "versionReleaseNotes": "Raporlar tablosuna doğrudan Sil butonu eklendi ve silinen ziyaret/rut kayıtlarının raporlarda kalması önlendi"
+  "appVersion": "1.7.8",
+  "versionUpdatedAt": "2026-10-25 23:23:54",
+  "versionReleaseNotes": "Güvenlik Denetimi & Sıkılaştırma: Zorunlu e-posta bağlantılı tek kullanımlık şifre sıfırlama linki, e-posta sızıntısı koruması, şifrelenmiş Beni Hatırla, 5 deneme Brute-Force koruması ve tüm personel için Yönetici Ömer Eren silme onay kalkanı devreye alındı."
 }
