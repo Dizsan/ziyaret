@@ -181039,7 +181039,7 @@
       "platform": "Android / Mobil"
     }
   ],
-  "updatedAt": "2026-10-25T21:13:32.552349Z",
+  "updatedAt": "2026-10-25T21:32:24.193905Z",
   "stateRevision": 289,
   "cities": [
     "Adana",
@@ -181210,7 +181210,7 @@
     "scannedPeriods": []
   },
   "routeNotifications": [],
-  "appVersion": "v1.8.1: Sadece Ömer Eren'e özel 24 personel uygulama erişim/işlem yetki matrisi ve tam kullanıcı gizlilik kalkanı",
-  "versionUpdatedAt": "2026-10-26 00:13:32",
-  "versionReleaseNotes": "Kredi Ödemeleri Takip Mobil PWA ve Canlı GitHub Senkronizasyonu (vv1.8.1: Sadece Ömer Eren'e özel 24 personel uygulama erişim/işlem yetki matrisi ve tam kullanıcı gizlilik kalkanı)"
+  "appVersion": "v1.8.2: 3-Depo GitHub Canlı Yedekleme, Otomatik Cihaz Senkronizasyonu ve Tek Tıkla Tam Sistem Kurtarma Altyapısı",
+  "versionUpdatedAt": "2026-10-26 00:32:24",
+  "versionReleaseNotes": "Kredi Ödemeleri Takip Mobil PWA ve Canlı GitHub Senkronizasyonu (vv1.8.2: 3-Depo GitHub Canlı Yedekleme, Otomatik Cihaz Senkronizasyonu ve Tek Tıkla Tam Sistem Kurtarma Altyapısı)"
 }
