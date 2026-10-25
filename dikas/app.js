@@ -4615,8 +4615,23 @@ function processExcelImport() {
 }
 
 // ==================== 19. YÖNETİCİ PANELİ, KULLANICI YETKİLERİ, LOGLAR VE YEDEKLEME ====================
+function isOmerErenDikas(u = currentUser) {
+    if (!u) return false;
+    const un = normalizeTR(u.username || "");
+    const fn = normalizeTR(u.name || "");
+    return un === "ömer" || un === "omer" || fn === "ömer eren" || fn === "omer eren";
+}
+
 function renderAdminSection() {
     const usrTbody = document.getElementById("admin-users-tbody");
+    const auditTbody = document.getElementById("audit-logs-tbody");
+    const errTbody = document.getElementById("error-logs-tbody");
+    if (!isOmerErenDikas(currentUser)) {
+        if (usrTbody) usrTbody.innerHTML = "";
+        if (auditTbody) auditTbody.innerHTML = "";
+        if (errTbody) errTbody.innerHTML = "";
+        return;
+    }
     if (usrTbody) {
         usrTbody.innerHTML = (appState.users || []).map(u => `
             <tr>
@@ -4631,7 +4646,6 @@ function renderAdminSection() {
         `).join("");
     }
 
-    const auditTbody = document.getElementById("audit-logs-tbody");
     if (auditTbody) {
         auditTbody.innerHTML = (appState.auditLogs || []).slice(0, 60).map(l => `
             <tr>
@@ -4643,7 +4657,6 @@ function renderAdminSection() {
         `).join("");
     }
 
-    const errTbody = document.getElementById("error-logs-tbody");
     if (errTbody) {
         const errs = appState.errorLogs || [];
         errTbody.innerHTML = errs.length === 0
@@ -4829,6 +4842,10 @@ if (window.matchMedia) {
 }
 
 function switchTab(tabId) {
+    if (tabId === "admin" && !isOmerErenDikas(currentUser)) {
+        alert("⛔ Yönetici & Yetki Paneli yalnızca Ana Sistem Yöneticisi (Ömer Eren) tarafından görüntülenebilir!");
+        return;
+    }
     uiState.activeTab = tabId;
     document.querySelectorAll(".tab-section").forEach(sec => {
         sec.classList.toggle("active", sec.id === `tab-${tabId}`);
@@ -5010,14 +5027,14 @@ function handleLogin(e) {
     currentUser = matched;
 
     if (rem) {
-        localStorage.setItem(STORAGE_KEY_DIKAS_REMEMBER, JSON.stringify({ username: matched.username, savedPass: pVal }));
+        localStorage.setItem(STORAGE_KEY_DIKAS_REMEMBER, JSON.stringify({ username: matched.username, pinStamp: matched.pinStamp }));
         localStorage.setItem(STORAGE_KEY_DIKAS_SESSION, JSON.stringify(currentUser));
     } else {
         localStorage.removeItem(STORAGE_KEY_DIKAS_REMEMBER);
         sessionStorage.setItem(STORAGE_KEY_DIKAS_SESSION, JSON.stringify(currentUser));
     }
 
-    addAuditLog("OTURUM", `${currentUser.name} (${currentUser.role}) sisteme giriş yaptı.`);
+    addAuditLog("OTURUM", `${currentUser.name} sisteme giriş yaptı.`);
     syncStateToServer();
     applyAuthenticatedSession();
 }
@@ -5030,10 +5047,16 @@ function applyAuthenticatedSession() {
     }
     overlay?.classList.add("hidden");
 
+    const isOmer = isOmerErenDikas(currentUser);
+    document.querySelectorAll('[data-tab="admin"], [data-section="admin"], #tab-admin').forEach(el => {
+        if (el.id === "tab-admin" && !isOmer) el.classList.remove("active");
+        else el.style.display = isOmer ? "" : "none";
+    });
+
     const nameEl = document.getElementById("sidebar-user-name");
     const roleEl = document.getElementById("sidebar-user-role");
     if (nameEl) nameEl.textContent = currentUser.name;
-    if (roleEl) roleEl.textContent = `${currentUser.role} • ${currentUser.dept || ""}`;
+    if (roleEl) roleEl.textContent = isOmer ? "👑 Yönetici" : `${currentUser.dept || "Personel"}`;
 
     renderAll();
 }
@@ -5057,17 +5080,27 @@ function openForgotPasswordModal() {
 
 function sendPasswordResetCode() {
     const uVal = normalizeTR(document.getElementById("forgot-username").value);
-    const eVal = document.getElementById("forgot-email").value.trim();
+    const eVal = (document.getElementById("forgot-email").value || "").trim().toLowerCase();
     const matched = (appState.users || []).find(u => normalizeTR(u.username) === uVal || normalizeTR(u.name) === uVal);
-    if (!matched) {
-        alert("Kullanıcı bulunamadı!");
+    if (!matched || !eVal || eVal !== String(matched.email || "").trim().toLowerCase()) {
+        alert("❌ Girdiğiniz kullanıcı adı ve kayıtlı kurumsal e-posta adresi eşleşmiyor!");
         return;
     }
-    const code = String(Math.floor(100000 + Math.random() * 900000));
-    activePasswordReset = { username: matched.username, code };
-    document.getElementById("forgot-step-1").style.display = "none";
-    document.getElementById("forgot-step-2").style.display = "block";
-    document.getElementById("forgot-code-display").innerHTML = `${escapeHtml(eVal || matched.email)} için doğrulama kodu oluşturuldu: <strong>${code}</strong>`;
+    const expMs = Date.now() + 15 * 60 * 1000;
+    const nonce = Math.random().toString(36).substring(2, 10).toUpperCase();
+    const curStamp = matched.pinStamp || DEFAULT_PIN_STAMP;
+    const sig = hashPin(`DPRO_RESET_LINK_V1|${matched.username}|${expMs}|${nonce}|${curStamp}`);
+    const token = btoa(unescape(encodeURIComponent(JSON.stringify({ u: matched.username, e: expMs, n: nonce, s: sig }))));
+    const liveLink = `https://dizsan.github.io/dpro/index.html?resetToken=${encodeURIComponent(token)}&user=${encodeURIComponent(matched.username)}`;
+    try {
+        fetch("/api/send-reset-link", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ email: eVal, userName: matched.name, username: matched.username, resetToken: token, liveLink })
+        }).catch(() => {});
+    } catch (e) {}
+    alert(`✅ Doğrulanan kurumsal e-posta adresinize (${eVal}) tek kullanımlık Şifre Yenileme Bağlantısı gönderildi.`);
+    closeModal("modal-forgot-password");
 }
 
 function verifyAndResetPassword() {
@@ -5169,14 +5202,22 @@ window.addEventListener("DOMContentLoaded", async () => {
             if (rem?.username) document.getElementById("login-username").value = rem.username;
             if (rem?.savedPass) document.getElementById("login-password").value = rem.savedPass;
         }
-        const sessRaw = localStorage.getItem(STORAGE_KEY_DIKAS_SESSION) || sessionStorage.getItem(STORAGE_KEY_DIKAS_SESSION);
+        const sessRaw = localStorage.getItem(STORAGE_KEY_DIKAS_SESSION) || sessionStorage.getItem(STORAGE_KEY_DIKAS_SESSION) || localStorage.getItem("dpro_active_session_v1") || sessionStorage.getItem("dpro_active_session_v1") || localStorage.getItem("dizsan_ziyaret_active_user") || sessionStorage.getItem("dizsan_ziyaret_active_user") || localStorage.getItem("dizsan_gunluk_kasa_active_user") || sessionStorage.getItem("dizsan_gunluk_kasa_active_user");
         if (sessRaw) {
             const parsedUser = JSON.parse(sessRaw);
-            const matched = (appState.users || []).find(u => u.username === parsedUser.username);
+            const matched = (appState.users || []).find(u => u.username === parsedUser.username || u.name === parsedUser.name);
             if (matched) {
                 currentUser = matched;
             }
-        } else {
+        }
+        if (!currentUser) {
+            const dproU = localStorage.getItem("dizsan_dpro_active_session_v1") || sessionStorage.getItem("dizsan_dpro_active_session_v1") || (new URLSearchParams(window.location.search || "").get("dproUser")) || "";
+            if (dproU) {
+                const matched = (appState.users || []).find(u => u.username.toLowerCase() === dproU.toLowerCase() || u.name.toLowerCase() === dproU.toLowerCase());
+                if (matched) currentUser = matched;
+            }
+        }
+        if (!currentUser) {
             // Varsayılan hızlı kurumsal erişim: Ömer Eren oturumu hazırla
             currentUser = appState.users[0];
         }
