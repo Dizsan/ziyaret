@@ -181304,7 +181304,7 @@
       "platform": "Android / Mobil"
     }
   ],
-  "updatedAt": "2026-10-25T12:24:28.517Z",
+  "updatedAt": "2026-10-25T18:21:00.191852Z",
   "stateRevision": 127,
   "logoMetadata": {
     "queryTimestamp": "2026-10-25T15:20:08+03:00",
@@ -181473,5 +181473,8 @@
     "İzmir": 5,
     "Şanlıurfa": 4
   },
-  "customRoutePersonnelPool": []
+  "customRoutePersonnelPool": [],
+  "appVersion": "1.7.4",
+  "versionUpdatedAt": "2026-10-25 21:21:00",
+  "versionReleaseNotes": "Kredi Ödemeleri Takip Mobil PWA ve Canlı GitHub Senkronizasyonu (v1.7.4)"
 }

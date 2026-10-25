@@ -1,7 +1,7 @@
 {
-  "version": "1.7.2",
-  "build": 172,
-  "releasedAt": "2026-10-25 15:46:42",
-  "releaseNotes": "Mobil giris ekrani aninda acilis, WhatsApp rut paylasimi ve Ziyaret Plani Gorevi bildirim karti (v1.7.2)",
+  "version": "1.7.4",
+  "build": 174,
+  "releasedAt": "2026-10-25 21:21:00",
+  "releaseNotes": "Kredi Ödemeleri Takip Mobil PWA ve Canlı GitHub Senkronizasyonu (v1.7.4)",
   "author": "Ömer Eren & DİZSAN"
 }
