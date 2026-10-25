@@ -12,7 +12,7 @@
  */
 
 const INITIAL_APP_VERSION = "v1.3.0";
-const CURRENT_APP_VERSION = "1.7.6";
+const CURRENT_APP_VERSION = "1.7.7";
 let hasShownUpdateNotice = false;
 const VAPID_PUBLIC_KEY = "BJIJfCBiDwya3clZOWS08EDxfuN18xtfJGTX0n_apWBTEW7-kO_FGKNy5VDRvUsMgc46IP5oxLlIHqgrDo-JTkE";
 const STORAGE_KEY_STATE = "dizsan_ziyaret_shared_state_v1";
@@ -4702,20 +4702,79 @@ function previewAttachment(visitId, attIdx) {
 // 7. YÖNETİCİ ONAY KALKANI, GÖREVLENDİRME & İKİ YÖNLÜ BİLDİRİM MOTORU
 // (YÖNETİCİ ÖMER EREN HARİCİNDE KİMSE DEĞİŞTİREMEZ VEYA SİLEMEZ)
 // ==========================================================================
+function purgeVisitEverywhere(visitObjOrId) {
+    const v = typeof visitObjOrId === 'string'
+        ? (appState.visits || []).find(x => x.id === visitObjOrId)
+        : visitObjOrId;
+    const visitId = typeof visitObjOrId === 'string' ? visitObjOrId : (v ? v.id : '');
+    if (visitId) {
+        registerDeletedRecordId(visitId);
+        appState.visits = (appState.visits || []).filter(x => x.id !== visitId);
+    }
+    const routeId = (v && v.routeId) || (visitId.startsWith('VISIT-RUT-') ? visitId.split('-')[2] + '-' + visitId.split('-')[3] : '');
+    const custCode = (v && v.customerCode) || '';
+    const custTitle = (v && v.customerTitle) || '';
+
+    if (Array.isArray(appState.customRoutes)) {
+        appState.customRoutes.forEach(rt => {
+            if (!rt) return;
+            if (routeId && rt.id !== routeId) return;
+            if (Array.isArray(rt.items)) {
+                rt.items = rt.items.filter(it => {
+                    if (!it) return false;
+                    if (custCode && it.code === custCode) return false;
+                    if (custTitle && normalizeTR(it.title) === normalizeTR(custTitle)) return false;
+                    return true;
+                });
+            }
+            if (Array.isArray(rt.customerCodes) && custCode) {
+                rt.customerCodes = rt.customerCodes.filter(c => c !== custCode);
+            }
+        });
+        // İçi boş kalan otomatik/tekil rut planlarını da temizle
+        appState.customRoutes = appState.customRoutes.filter(rt => {
+            if (!rt) return false;
+            const hasItems = Array.isArray(rt.items) && rt.items.length > 0;
+            const hasCodes = Array.isArray(rt.customerCodes) && rt.customerCodes.length > 0;
+            if (!hasItems && !hasCodes) {
+                if (rt.id) registerDeletedRecordId(rt.id);
+                return false;
+            }
+            return true;
+        });
+    }
+
+    if (Array.isArray(appState.customers)) {
+        appState.customers.forEach(c => {
+            if (!c || !Array.isArray(c.visitHistory)) return;
+            if ((custCode && c.code === custCode) || (custTitle && normalizeTR(c.title) === normalizeTR(custTitle))) {
+                c.visitHistory = c.visitHistory.filter(h => {
+                    if (!h) return false;
+                    if (visitId && h.id === visitId) return false;
+                    if (routeId && h.routeId === routeId) return false;
+                    return true;
+                });
+            }
+        });
+    }
+}
+
 function requestDeleteVisit(visitId) {
     const v = (appState.visits || []).find(x => x.id === visitId);
     if (!v) return;
 
     if (isOmerEren(currentUser)) {
         if (!confirm(`'${v.customerTitle}' ziyaret / görüşme kaydını silmek istediğinize emin misiniz? (Yönetici Yetkisi)`)) return;
-        registerDeletedRecordId(visitId);
-        appState.visits = (appState.visits || []).filter(x => x.id !== visitId);
+        purgeVisitEverywhere(v);
         addAuditLog("ZİYARET SİLME", `${v.customerTitle} kaydı Yönetici ÖMER EREN tarafından silindi.`, true);
         renderDashboard();
         renderActiveVisits();
+        if (typeof renderSavedCustomRoutesList === 'function') renderSavedCustomRoutesList();
+        if (typeof renderActiveRouteExecutionPanel === 'function') renderActiveRouteExecutionPanel();
+        if (typeof renderReportsTab === 'function') renderReportsTab();
         updateRouteAndReportsBadges();
         syncToServer();
-        showToast(`🗑️ '${v.customerTitle}' kaydı silindi.`, 'success');
+        showToast(`🗑️ '${v.customerTitle}' kaydı tüm ekranlardan ve raporlardan silindi.`, 'success');
         return;
     }
 
@@ -7111,10 +7170,27 @@ function editCustomRoutePlan(routeId) {
 async function deleteCustomRoutePlan(routeId) {
     const rt = (appState.customRoutes || []).find(r => r.id === routeId);
     if (!rt) return;
-    if (!confirm(`"${rt.name}" rut planını silmek istediğinize emin misiniz?`)) return;
+    if (!confirm(`"${rt.name}" rut planını ve bu rut planına bağlı rapor kayıtlarını silmek istediğinize emin misiniz?`)) return;
 
     registerDeletedRecordId(routeId);
     appState.customRoutes = (appState.customRoutes || []).filter(r => r.id !== routeId);
+
+    // Bu ruta bağlı tüm ziyaret ve bildirim kayıtlarını da temizle (Raporlarda yetim kayıt kalmasın)
+    if (Array.isArray(appState.visits)) {
+        appState.visits.forEach(v => {
+            if (v && (v.routeId === routeId || (v.id && v.id.includes(routeId)) || (rt.name && v.routeName === rt.name))) {
+                if (v.id) registerDeletedRecordId(v.id);
+            }
+        });
+        appState.visits = appState.visits.filter(v => !v || !(v.routeId === routeId || (v.id && v.id.includes(routeId)) || (rt.name && v.routeName === rt.name)));
+    }
+    if (Array.isArray(appState.customers)) {
+        appState.customers.forEach(c => {
+            if (c && Array.isArray(c.visitHistory)) {
+                c.visitHistory = c.visitHistory.filter(h => !h || !(h.routeId === routeId || (h.id && String(h.id).includes(routeId))));
+            }
+        });
+    }
     if (Array.isArray(appState.routeNotifications)) {
         appState.routeNotifications.forEach(n => {
             if (n && n.routeId === routeId && n.id) registerDeletedRecordId(n.id);
@@ -7128,10 +7204,12 @@ async function deleteCustomRoutePlan(routeId) {
     syncCustomRoutesToCustomers();
     renderSavedCustomRoutesList();
     renderActiveRouteExecutionPanel();
+    if (typeof renderActiveVisits === 'function') renderActiveVisits();
+    if (typeof renderReportsTab === 'function') renderReportsTab();
     updateRouteAndReportsBadges();
 
-    addAuditLog('RUT SİLME', `"${rt.name}" rut planı silindi.`, true);
-    showToast(`"${rt.name}" rut planı silindi.`, 'info');
+    addAuditLog('RUT SİLME', `"${rt.name}" rut planı ve bağlı rapor kayıtları silindi.`, true);
+    showToast(`"${rt.name}" rut planı ve rapor kayıtları silindi.`, 'info');
     await syncToServer();
 }
 
@@ -8767,6 +8845,7 @@ function collectAllRouteReportRows() {
         if (v.routeId && seenKeys.has(key)) return;
         const isNotVis = v.visitStatus === 'NOT_VISITED' || String(v.result || '').toLowerCase().includes('edilemedi');
         rows.push({
+            visitId: v.id || '',
             routeId: v.routeId || '',
             routeName: v.routeName || 'Genel Saha Ziyareti',
             routeText: `${v.city || '-'} / ${v.district || '-'}`,
@@ -8797,6 +8876,81 @@ function collectAllRouteReportRows() {
 
     return rows;
 }
+
+async function deleteReportRowRecord(routeId, itemIdx, visitId, code, title) {
+    const label = title || code || 'Ziyaret Kaydı';
+    if (!confirm(`"${label}" rapor kaydını silmek istediğinize emin misiniz?`)) return;
+
+    // 1. Eğer bir rut planı satırıysa ruttan çıkar; rutta başka kayıt kalmadıysa rutu da sil
+    if (routeId && Array.isArray(appState.customRoutes)) {
+        const rt = appState.customRoutes.find(r => r && r.id === routeId);
+        if (rt) {
+            ensureRouteItemsNormalized(rt);
+            if (itemIdx >= 0 && itemIdx < rt.items.length) {
+                const removed = rt.items.splice(itemIdx, 1)[0];
+                if (removed && removed.code && Array.isArray(rt.customerCodes)) {
+                    rt.customerCodes = rt.customerCodes.filter(c => c !== removed.code);
+                }
+            } else if (code) {
+                rt.items = (rt.items || []).filter(it => it && it.code !== code);
+                rt.customerCodes = (rt.customerCodes || []).filter(c => c !== code);
+            }
+            if (!rt.items || rt.items.length === 0) {
+                registerDeletedRecordId(rt.id);
+                appState.customRoutes = appState.customRoutes.filter(r => r && r.id !== routeId);
+            } else {
+                rt.updatedAt = formatNowTR();
+            }
+        }
+    }
+
+    // 2. Eşleşen ziyaret kayıtlarını (appState.visits) sil
+    if (Array.isArray(appState.visits)) {
+        appState.visits.forEach(v => {
+            if (!v) return;
+            const matchById = visitId && v.id === visitId;
+            const matchByRouteAndCode = routeId && v.routeId === routeId && ((code && v.customerCode === code) || (title && normalizeTR(v.customerTitle) === normalizeTR(title)));
+            const matchByCodeAndTitle = !routeId && ((code && v.customerCode === code) || (title && normalizeTR(v.customerTitle) === normalizeTR(title)));
+            if (matchById || matchByRouteAndCode || matchByCodeAndTitle) {
+                if (v.id) registerDeletedRecordId(v.id);
+            }
+        });
+        appState.visits = appState.visits.filter(v => {
+            if (!v) return false;
+            const matchById = visitId && v.id === visitId;
+            const matchByRouteAndCode = routeId && v.routeId === routeId && ((code && v.customerCode === code) || (title && normalizeTR(v.customerTitle) === normalizeTR(title)));
+            const matchByCodeAndTitle = !routeId && ((code && v.customerCode === code) || (title && normalizeTR(v.customerTitle) === normalizeTR(title)));
+            return !(matchById || matchByRouteAndCode || matchByCodeAndTitle);
+        });
+    }
+
+    // 3. Müşterinin visitHistory dizisinden de temizle
+    if (Array.isArray(appState.customers)) {
+        appState.customers.forEach(c => {
+            if (!c || !Array.isArray(c.visitHistory)) return;
+            if ((code && c.code === code) || (title && normalizeTR(c.title) === normalizeTR(title))) {
+                c.visitHistory = c.visitHistory.filter(h => {
+                    if (!h) return false;
+                    if (visitId && h.id === visitId) return false;
+                    if (routeId && h.routeId === routeId) return false;
+                    return true;
+                });
+            }
+        });
+    }
+
+    syncCustomRoutesToCustomers();
+    saveStateLocally();
+    renderDashboard();
+    if (typeof renderActiveVisits === 'function') renderActiveVisits();
+    if (typeof renderSavedCustomRoutesList === 'function') renderSavedCustomRoutesList();
+    if (typeof renderActiveRouteExecutionPanel === 'function') renderActiveRouteExecutionPanel();
+    renderReportsTab();
+    updateRouteAndReportsBadges();
+    await syncToServer();
+    showToast(`🗑️ "${label}" kaydı raporlardan ve sistemden silindi.`, 'success');
+}
+window.deleteReportRowRecord = deleteReportRowRecord;
 
 function handleReportCityFilterChange() {
     const citySel = document.getElementById('rep-filter-city');
@@ -9007,12 +9161,17 @@ function renderReportsTab() {
                     <td>${stBadge}</td>
                     <td>${escapeHtml(r.visitDate || '-')} ${escapeHtml(r.visitTime || '')}</td>
                     <td style="max-width:270px; white-space:normal; font-size:0.74rem;">${detailText}</td>
-                    <td style="text-align:right;">
-                        ${!r.isManual || r.convertedCustomerCode ? `
-                            <button type="button" class="btn btn-secondary btn-sm" style="padding:0.22rem 0.5rem; font-size:0.7rem;" onclick="openCustomerDetailModal('${safeCode}')">
-                                <i class="fa-solid fa-id-card" style="color:#38bdf8;"></i> Müşteri Kartı
+                    <td style="text-align:right; white-space:nowrap;">
+                        <div style="display:inline-flex; gap:0.3rem; align-items:center;">
+                            ${!r.isManual || r.convertedCustomerCode ? `
+                                <button type="button" class="btn btn-secondary btn-sm" style="padding:0.22rem 0.5rem; font-size:0.7rem;" onclick="openCustomerDetailModal('${safeCode}')">
+                                    <i class="fa-solid fa-id-card" style="color:#38bdf8;"></i> Müşteri Kartı
+                                </button>
+                            ` : ''}
+                            <button type="button" class="btn btn-danger btn-sm" style="padding:0.22rem 0.5rem; font-size:0.7rem;" onclick="deleteReportRowRecord('${escapeHtml(r.routeId || '').replace(/'/g, "\\'")}', ${Number(r.itemIdx ?? -1)}, '${escapeHtml(r.visitId || '').replace(/'/g, "\\'")}', '${safeCode}', '${escapeHtml(r.title || '').replace(/'/g, "\\'")}')" title="Bu Rapor Kaydını Sil">
+                                <i class="fa-solid fa-trash"></i> Sil
                             </button>
-                        ` : ''}
+                        </div>
                     </td>
                 </tr>
             `;
@@ -11633,6 +11792,6 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     // Service Worker Kaydı (Sonsuz yenileme döngüsü yaratmadan sessiz çalışır)
     if ('serviceWorker' in navigator) {
-        navigator.serviceWorker.register('sw.js?v=1.7.6').catch(() => {});
+        navigator.serviceWorker.register('sw.js?v=1.7.7').catch(() => {});
     }
 });

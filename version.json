@@ -1,7 +1,7 @@
 {
-  "version": "1.7.6",
-  "build": 176,
-  "releasedAt": "2026-10-25 22:56:00",
-  "releaseNotes": "Geri tuşunun yanına tek tıkla uygulamayı ve canlı verileri yenileyen Yenile tuşu eklendi",
+  "version": "1.7.7",
+  "build": 177,
+  "releasedAt": "2026-10-25 23:14:13",
+  "releaseNotes": "Raporlar tablosuna doğrudan Sil butonu eklendi ve silinen ziyaret/rut kayıtlarının raporlarda kalması önlendi",
   "author": "Ömer Eren & DİZSAN"
 }
