@@ -8,12 +8,14 @@
             box-sizing: border-box !important;
             cursor: text !important;
             position: relative;
+            padding-right: 6px !important;
         }
         .auto-date-subinput {
             border: none !important;
             background: transparent !important;
             color: inherit !important;
             font-size: inherit !important;
+            font-weight: inherit !important;
             font-family: inherit !important;
             outline: none !important;
             padding: 0 !important;
@@ -22,7 +24,10 @@
             height: 100% !important;
         }
         .auto-date-subinput::placeholder {
-            color: rgba(255, 255, 255, 0.25) !important;
+            color: rgba(255, 255, 255, 0.35) !important;
+        }
+        body[data-theme="light"] .auto-date-subinput::placeholder {
+            color: rgba(15, 23, 42, 0.4) !important;
         }
         .auto-date-subinput-day, .auto-date-subinput-month {
             width: 24px !important;
@@ -31,59 +36,68 @@
             width: 46px !important;
         }
         .auto-date-separator {
-            opacity: 0.4 !important;
+            opacity: 0.55 !important;
             margin: 0 1px !important;
             user-select: none !important;
+            font-weight: 700 !important;
         }
         .auto-date-icon {
             margin-left: auto !important;
-            width: 16px;
-            height: 16px;
-            cursor: pointer;
-            opacity: 0.5;
-            transition: opacity 0.2s, transform 0.2s;
-            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%23ffffff' stroke-width='2'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' d='M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 012.25-2.25h13.5A2.25 2.25 0 0121 7.5v11.25m-18 0A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75m-18 0v-7.5A2.25 2.25 0 015.25 9h13.5A2.25 2.25 0 0121 11.25v7.5m-9-6h.008v.008H12v-.008zM12 15h.008v.008H12V15zm0 2.25h.008v.008H12v-.008zM9.75 15h.008v.008H9.75V15zm0 2.25h.008v.008H9.75v-.008zM7.5 15h.008v.008H7.5V15zm0 2.25h.008v.008H7.5v-.008zm6.75-4.5h.008v.008h-.008v-.008zm0 2.25h.008v.008h-.008V15zm0 2.25h.008v.008h-.008v-.008zm2.25-4.5h.008v.008H16.5v-.008zm0 2.25h.008v.008H16.5V15z' /%3E%3C/svg%3E");
-            background-size: contain;
-            background-repeat: no-repeat;
+            width: 26px !important;
+            height: 26px !important;
+            min-width: 26px !important;
+            border-radius: 6px !important;
+            cursor: pointer !important;
+            opacity: 1 !important;
+            display: inline-flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            background-color: rgba(56, 189, 248, 0.16) !important;
+            border: 1px solid rgba(56, 189, 248, 0.42) !important;
+            transition: all 0.18s ease !important;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%2338bdf8' stroke-width='2.2'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' d='M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 012.25-2.25h13.5A2.25 2.25 0 0121 7.5v11.25m-18 0A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75m-18 0v-7.5A2.25 2.25 0 015.25 9h13.5A2.25 2.25 0 0121 11.25v7.5m-9-6h.008v.008H12v-.008zM12 15h.008v.008H12V15zm0 2.25h.008v.008H12v-.008zM9.75 15h.008v.008H9.75V15zm0 2.25h.008v.008H9.75v-.008zM7.5 15h.008v.008H7.5V15zm0 2.25h.008v.008H7.5v-.008zm6.75-4.5h.008v.008h-.008v-.008zm0 2.25h.008v.008h-.008V15zm0 2.25h.008v.008h-.008v-.008zm2.25-4.5h.008v.008H16.5v-.008zm0 2.25h.008v.008H16.5V15z' /%3E%3C/svg%3E") !important;
+            background-size: 16px 16px !important;
+            background-position: center !important;
+            background-repeat: no-repeat !important;
+            flex-shrink: 0 !important;
         }
         .auto-date-icon:hover {
-            opacity: 1;
-            transform: scale(1.1);
+            background-color: rgba(56, 189, 248, 0.3) !important;
+            border-color: #38bdf8 !important;
+            transform: scale(1.07);
+            box-shadow: 0 0 10px rgba(56, 189, 248, 0.35);
         }
         .auto-calendar-popup {
-            position: absolute;
-            top: 100%;
-            left: 0;
-            z-index: 100000;
-            margin-top: 0.5rem;
-            padding: 1.2rem;
-            background: rgba(20, 20, 25, 0.95);
+            position: fixed;
+            z-index: 999999;
+            padding: 1rem;
+            background: rgba(15, 23, 42, 0.98);
             backdrop-filter: blur(16px);
             -webkit-backdrop-filter: blur(16px);
-            border: 1px solid rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(56, 189, 248, 0.4);
             border-radius: 12px;
-            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.6);
+            box-shadow: 0 14px 44px rgba(0, 0, 0, 0.72);
             color: #f3f4f6;
             font-family: inherit;
             width: 280px;
             user-select: none;
             box-sizing: border-box;
-            animation: autoCalendarFade 0.2s ease-out;
+            animation: autoCalendarFade 0.16s ease-out;
         }
         @keyframes autoCalendarFade {
-            from { opacity: 0; transform: translateY(-8px); }
+            from { opacity: 0; transform: translateY(-6px); }
             to { opacity: 1; transform: translateY(0); }
         }
         .auto-calendar-header {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-bottom: 1rem;
+            margin-bottom: 0.75rem;
         }
         .auto-calendar-nav-btn {
-            background: rgba(255, 255, 255, 0.05);
-            border: 1px solid rgba(255, 255, 255, 0.08);
-            color: #ffffff;
+            background: rgba(56, 189, 248, 0.12);
+            border: 1px solid rgba(56, 189, 248, 0.3);
+            color: #38bdf8;
             cursor: pointer;
             width: 28px;
             height: 28px;
@@ -96,17 +110,18 @@
             transition: background 0.2s, border-color 0.2s;
         }
         .auto-calendar-nav-btn:hover {
-            background: rgba(255, 255, 255, 0.15);
-            border-color: rgba(255, 255, 255, 0.2);
+            background: rgba(56, 189, 248, 0.28);
+            border-color: #38bdf8;
+            color: #ffffff;
         }
         .auto-calendar-weekdays {
             display: grid;
             grid-template-columns: repeat(7, 1fr);
             text-align: center;
             font-size: 0.72rem;
-            color: #9ca3af;
-            margin-bottom: 0.6rem;
-            font-weight: 600;
+            color: #93c5fd;
+            margin-bottom: 0.5rem;
+            font-weight: 700;
             text-transform: uppercase;
         }
         .auto-calendar-days {
@@ -122,23 +137,24 @@
             font-size: 0.82rem;
             border-radius: 8px;
             cursor: pointer;
-            transition: all 0.2s;
+            transition: all 0.16s;
             color: #e5e7eb;
+            font-weight: 600;
         }
         .auto-calendar-day:hover:not(.empty) {
-            background: rgba(255, 255, 255, 0.12);
+            background: rgba(56, 189, 248, 0.22);
             color: #ffffff;
         }
         .auto-calendar-day.active {
-            background: #3b82f6 !important;
+            background: #0284c7 !important;
             color: #ffffff !important;
-            font-weight: 700;
-            box-shadow: 0 0 10px rgba(59, 130, 246, 0.5);
+            font-weight: 800;
+            box-shadow: 0 0 10px rgba(2, 132, 199, 0.55);
         }
         .auto-calendar-day.today {
-            border: 1px solid #3b82f6;
-            color: #3b82f6;
-            font-weight: 600;
+            border: 1px solid #f59e0b;
+            color: #fbbf24;
+            font-weight: 800;
         }
         .auto-calendar-day.empty {
             cursor: default;
@@ -148,14 +164,49 @@
             gap: 0.3rem;
         }
         .auto-calendar-select {
-            background: #1f2937;
-            border: 1px solid rgba(255, 255, 255, 0.1);
+            background: #1e293b;
+            border: 1px solid rgba(56, 189, 248, 0.3);
             color: #ffffff;
             font-size: 0.8rem;
-            border-radius: 4px;
-            padding: 0.1rem 0.3rem;
+            font-weight: 700;
+            border-radius: 6px;
+            padding: 0.18rem 0.35rem;
             outline: none;
             cursor: pointer;
+        }
+        .auto-calendar-footer {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 0.4rem;
+            margin-top: 0.7rem;
+            padding-top: 0.55rem;
+            border-top: 1px solid rgba(148, 163, 184, 0.18);
+        }
+        .auto-calendar-footer-btn {
+            flex: 1;
+            padding: 0.3rem 0.5rem;
+            border-radius: 6px;
+            font-size: 0.73rem;
+            font-weight: 800;
+            cursor: pointer;
+            border: 1px solid rgba(56, 189, 248, 0.35);
+            background: rgba(56, 189, 248, 0.14);
+            color: #38bdf8;
+            transition: all 0.16s;
+        }
+        .auto-calendar-footer-btn:hover {
+            background: rgba(56, 189, 248, 0.28);
+            color: #ffffff;
+        }
+        .auto-calendar-footer-btn.clear {
+            border-color: rgba(248, 113, 113, 0.35);
+            background: rgba(248, 113, 113, 0.12);
+            color: #f87171;
+        }
+        .auto-calendar-footer-btn.clear:hover {
+            background: rgba(248, 113, 113, 0.25);
+            color: #ffffff;
         }
     `;
     document.head.appendChild(style);
@@ -167,7 +218,8 @@
 
     const weekdayNames = ["Pt", "Sa", "Ça", "Pe", "Cu", "Ct", "Pz"];
 
-    // Traverses prototype chain to safely find a property descriptor
+    const DATE_INPUT_SELECTOR = 'input[type="date"], input[placeholder*="GG.AA.YYYY"], input[data-auto-date="true"]';
+
     function getPropDescriptor(obj, prop) {
         let proto = obj;
         while (proto) {
@@ -178,13 +230,23 @@
         return null;
     }
 
+    function parseAnyDateParts(val) {
+        if (!val) return null;
+        const s = String(val).trim();
+        let m = s.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+        if (m) return { yyyy: m[1], mm: m[2], dd: m[3] };
+        m = s.match(/^(\d{2})[./-](\d{2})[./-](\d{4})$/);
+        if (m) return { dd: m[1], mm: m[2], yyyy: m[3] };
+        return null;
+    }
+
     function setupAutoDateInput(originalInput) {
-        if (originalInput.dataset.autoDateSetup) return;
-        
-        // Safety check: parentNode must exist to perform replacement
+        if (!originalInput || originalInput.dataset.autoDateSetup) return;
         if (!originalInput.parentNode) return;
-        
+        if (originalInput.classList && originalInput.classList.contains('auto-date-subinput')) return;
+
         originalInput.dataset.autoDateSetup = 'true';
+        const useTRFormat = originalInput.type !== 'date' || originalInput.dataset.dateFormat === 'tr';
 
         // Hide original input
         originalInput.style.display = 'none';
@@ -234,9 +296,10 @@
         sep2.className = 'auto-date-separator';
         sep2.textContent = '.';
 
-        // Add calendar icon
+        // Add calendar icon button on the right side
         const icon = document.createElement('span');
         icon.className = 'auto-date-icon';
+        icon.title = 'Takvimden Tarih Seç';
 
         // Append child elements
         container.appendChild(dayInput);
@@ -246,13 +309,12 @@
         container.appendChild(yearInput);
         container.appendChild(icon);
 
-        // Focus styling
         const originalBorderColor = container.style.borderColor || 'rgba(255, 255, 255, 0.1)';
         const originalBoxShadow = container.style.boxShadow || 'none';
 
         function onFocus() {
-            container.style.borderColor = '#3b82f6';
-            container.style.boxShadow = '0 0 0 2px rgba(59, 130, 246, 0.25)';
+            container.style.borderColor = '#38bdf8';
+            container.style.boxShadow = '0 0 0 2px rgba(56, 189, 248, 0.25)';
         }
 
         function onBlur() {
@@ -268,7 +330,6 @@
             inp.addEventListener('focus', onFocus);
             inp.addEventListener('blur', onBlur);
             
-            // Restrict input to digits
             inp.addEventListener('keydown', (e) => {
                 if (e.key === 'Tab' || e.key === 'Enter' || e.key === 'ArrowLeft' || e.key === 'ArrowRight' || e.key === 'Backspace' || e.key === 'Delete' || e.metaKey || e.ctrlKey) {
                     return;
@@ -278,7 +339,6 @@
                     return;
                 }
                 
-                // Smart key routing to prevent dropped characters when typing fast
                 const isFull = inp.value.length >= inp.maxLength && inp.selectionStart === inp.selectionEnd;
                 if (isFull) {
                     let nextInp = null;
@@ -306,8 +366,11 @@
             }
         });
 
-        // Sync value from display inputs to hidden original input
         const desc = getPropDescriptor(HTMLInputElement.prototype, 'value');
+
+        function formatTargetValue(dd, mm, yyyy) {
+            return useTRFormat ? `${dd}.${mm}.${yyyy}` : `${yyyy}-${mm}-${dd}`;
+        }
 
         function updateHiddenValue() {
             const d = dayInput.value.padStart(2, '0');
@@ -315,7 +378,7 @@
             const y = yearInput.value;
 
             if (dayInput.value && monthInput.value && y && y.length === 4) {
-                const val = `${y}-${m}-${d}`;
+                const val = formatTargetValue(d, m, y);
                 try {
                     if (desc && desc.get && desc.get.call(originalInput) !== val) {
                         if (desc.set) {
@@ -346,13 +409,12 @@
             }
         }
 
-        // Sync value from hidden input back to display fields
         function updateCustomFieldsFromHidden(val) {
-            if (val && /^\d{4}-\d{2}-\d{2}$/.test(val)) {
-                const parts = val.split('-');
-                dayInput.value = parts[2];
-                monthInput.value = parts[1];
-                yearInput.value = parts[0];
+            const parsed = parseAnyDateParts(val);
+            if (parsed) {
+                dayInput.value = parsed.dd;
+                monthInput.value = parsed.mm;
+                yearInput.value = parsed.yyyy;
             } else {
                 dayInput.value = '';
                 monthInput.value = '';
@@ -360,7 +422,6 @@
             }
         }
 
-        // Hijack getter/setter of the original hidden input
         if (desc && typeof desc.set === 'function') {
             try {
                 Object.defineProperty(originalInput, 'value', {
@@ -368,19 +429,19 @@
                         return desc.get.call(this);
                     },
                     set: function(val) {
-                        desc.set.call(this, val);
-                        updateCustomFieldsFromHidden(val);
+                        const parsed = parseAnyDateParts(val);
+                        const normalizedVal = parsed ? formatTargetValue(parsed.dd, parsed.mm, parsed.yyyy) : (val || '');
+                        desc.set.call(this, normalizedVal);
+                        updateCustomFieldsFromHidden(normalizedVal);
                     },
                     configurable: true
                 });
-                // Initialize display values if original has a value
                 updateCustomFieldsFromHidden(desc.get.call(originalInput));
             } catch (err) {
                 console.warn('Error hijacking input value descriptor:', err);
             }
         }
 
-        // Also add change and input event listeners on original input as a fallback sync mechanism
         originalInput.addEventListener('change', () => {
             updateCustomFieldsFromHidden(originalInput.value);
         });
@@ -388,10 +449,8 @@
             updateCustomFieldsFromHidden(originalInput.value);
         });
 
-        // Keyboard flow logic with automatic smart jumping (synchronous, no setTimeout delays)
         dayInput.addEventListener('input', () => {
             const val = dayInput.value;
-            // Smart auto-advance: if first digit is 4, 5, 6, 7, 8, 9, it's a single digit day
             if (val.length === 1 && /^[4-9]$/.test(val)) {
                 dayInput.value = '0' + val;
                 monthInput.focus();
@@ -422,7 +481,6 @@
 
         monthInput.addEventListener('input', () => {
             const val = monthInput.value;
-            // Smart auto-advance: if first digit is 2, 3, 4, 5, 6, 7, 8, 9, it's a single digit month
             if (val.length === 1 && /^[2-9]$/.test(val)) {
                 monthInput.value = '0' + val;
                 yearInput.focus();
@@ -463,15 +521,14 @@
         yearInput.addEventListener('input', () => {
             updateHiddenValue();
             if (yearInput.value.length === 4) {
-                // Auto advance to next focusable element on the page
                 const focusables = Array.from(document.querySelectorAll('input:not([style*="display: none"]):not([type="hidden"]), select, textarea, button'));
                 const index = focusables.indexOf(yearInput);
                 if (index > -1 && index < focusables.length - 1) {
                     let nextIdx = index + 1;
                     while (nextIdx < focusables.length) {
                         const nextEl = focusables[nextIdx];
-                        const style = window.getComputedStyle(nextEl);
-                        if (nextEl.tabIndex !== -1 && !nextEl.disabled && style.display !== 'none' && style.visibility !== 'hidden') {
+                        const st = window.getComputedStyle(nextEl);
+                        if (nextEl.tabIndex !== -1 && !nextEl.disabled && st.display !== 'none' && st.visibility !== 'hidden') {
                             nextEl.focus();
                             if (typeof nextEl.select === 'function') {
                                 nextEl.select();
@@ -496,11 +553,12 @@
             }
         });
 
-        // Setup custom calendar dropdown
+        // Setup custom calendar dropdown on clicking the right-side calendar icon
         icon.addEventListener('click', (e) => {
+            e.preventDefault();
             e.stopPropagation();
             closeAllCalendars();
-            openCalendar(originalInput, container, updateCustomFieldsFromHidden);
+            openCalendar(originalInput, container, updateCustomFieldsFromHidden, formatTargetValue);
         });
     }
 
@@ -514,8 +572,27 @@
     }
 
     document.addEventListener('click', closeAllCalendars);
+    window.addEventListener('scroll', closeAllCalendars, true);
+    window.addEventListener('resize', closeAllCalendars);
 
-    function openCalendar(originalInput, container, updateCallback) {
+    function applyPickedDateValue(originalInput, formattedVal, updateCallback) {
+        const desc = getPropDescriptor(HTMLInputElement.prototype, 'value');
+        try {
+            if (desc && desc.set) {
+                originalInput.value = formattedVal;
+            } else {
+                originalInput.value = formattedVal;
+                updateCallback(formattedVal);
+            }
+            updateCallback(formattedVal);
+            originalInput.dispatchEvent(new Event('input', { bubbles: true }));
+            originalInput.dispatchEvent(new Event('change', { bubbles: true }));
+        } catch (err) {
+            updateCallback(formattedVal);
+        }
+    }
+
+    function openCalendar(originalInput, container, updateCallback, formatTargetValue) {
         let currentYear = new Date().getFullYear();
         let currentMonth = new Date().getMonth();
         let currentDay = new Date().getDate();
@@ -528,11 +605,11 @@
             val = originalInput.value;
         }
         
-        if (val && /^\d{4}-\d{2}-\d{2}$/.test(val)) {
-            const parts = val.split('-');
-            currentYear = parseInt(parts[0]);
-            currentMonth = parseInt(parts[1]) - 1;
-            currentDay = parseInt(parts[2]);
+        const parsed = parseAnyDateParts(val);
+        if (parsed) {
+            currentYear = parseInt(parsed.yyyy, 10);
+            currentMonth = parseInt(parsed.mm, 10) - 1;
+            currentDay = parseInt(parsed.dd, 10);
         }
 
         let selectMonth = currentMonth;
@@ -549,6 +626,7 @@
             header.className = 'auto-calendar-header';
 
             const navPrev = document.createElement('button');
+            navPrev.type = 'button';
             navPrev.className = 'auto-calendar-nav-btn';
             navPrev.innerHTML = '&#9664;';
             navPrev.addEventListener('click', () => {
@@ -573,7 +651,7 @@
                 monthSel.appendChild(opt);
             });
             monthSel.addEventListener('change', (e) => {
-                selectMonth = parseInt(e.target.value);
+                selectMonth = parseInt(e.target.value, 10);
                 renderMonth();
             });
 
@@ -587,7 +665,7 @@
                 yearSel.appendChild(opt);
             }
             yearSel.addEventListener('change', (e) => {
-                selectYear = parseInt(e.target.value);
+                selectYear = parseInt(e.target.value, 10);
                 renderMonth();
             });
 
@@ -595,6 +673,7 @@
             selectors.appendChild(yearSel);
 
             const navNext = document.createElement('button');
+            navNext.type = 'button';
             navNext.className = 'auto-calendar-nav-btn';
             navNext.innerHTML = '&#9654;';
             navNext.addEventListener('click', () => {
@@ -623,7 +702,7 @@
             const gridDays = document.createElement('div');
             gridDays.className = 'auto-calendar-days';
 
-            const firstDayIndex = (new Date(selectYear, selectMonth, 1).getDay() + 6) % 7; // Monday-based index
+            const firstDayIndex = (new Date(selectYear, selectMonth, 1).getDay() + 6) % 7;
             const daysInMonth = new Date(selectYear, selectMonth + 1, 0).getDate();
 
             for (let i = 0; i < firstDayIndex; i++) {
@@ -649,22 +728,9 @@
                 dayEl.addEventListener('click', () => {
                     const dd = String(d).padStart(2, '0');
                     const mm = String(selectMonth + 1).padStart(2, '0');
-                    const yyyy = selectYear;
-                    
-                    try {
-                        if (desc && desc.set) {
-                            originalInput.value = `${yyyy}-${mm}-${dd}`;
-                        } else {
-                            originalInput.value = `${yyyy}-${mm}-${dd}`;
-                            updateCallback(`${yyyy}-${mm}-${dd}`);
-                        }
-                        originalInput.dispatchEvent(new Event('input', { bubbles: true }));
-                        originalInput.dispatchEvent(new Event('change', { bubbles: true }));
-                    } catch (err) {
-                        console.warn('Error setting date from calendar picker:', err);
-                        // Fallback manual sync
-                        updateCallback(`${yyyy}-${mm}-${dd}`);
-                    }
+                    const yyyy = String(selectYear);
+                    const formattedVal = formatTargetValue(dd, mm, yyyy);
+                    applyPickedDateValue(originalInput, formattedVal, updateCallback);
                     closeAllCalendars();
                 });
 
@@ -672,25 +738,82 @@
             }
 
             popup.appendChild(gridDays);
+
+            const footer = document.createElement('div');
+            footer.className = 'auto-calendar-footer';
+
+            const todayBtn = document.createElement('button');
+            todayBtn.type = 'button';
+            todayBtn.className = 'auto-calendar-footer-btn';
+            todayBtn.textContent = '📅 Bugün';
+            todayBtn.addEventListener('click', () => {
+                const now = new Date();
+                const dd = String(now.getDate()).padStart(2, '0');
+                const mm = String(now.getMonth() + 1).padStart(2, '0');
+                const yyyy = String(now.getFullYear());
+                const formattedVal = formatTargetValue(dd, mm, yyyy);
+                applyPickedDateValue(originalInput, formattedVal, updateCallback);
+                closeAllCalendars();
+            });
+
+            const clearBtn = document.createElement('button');
+            clearBtn.type = 'button';
+            clearBtn.className = 'auto-calendar-footer-btn clear';
+            clearBtn.textContent = '✕ Temizle';
+            clearBtn.addEventListener('click', () => {
+                applyPickedDateValue(originalInput, '', updateCallback);
+                closeAllCalendars();
+            });
+
+            footer.appendChild(todayBtn);
+            footer.appendChild(clearBtn);
+            popup.appendChild(footer);
         }
 
         renderMonth();
-        container.appendChild(popup);
+        document.body.appendChild(popup);
+
+        // Position fixed relative to container so no parent overflow:hidden clips it
+        const rect = container.getBoundingClientRect();
+        const popupWidth = 280;
+        const popupHeight = popup.offsetHeight || 310;
+        let topPos = rect.bottom + 6;
+        let leftPos = rect.left;
+
+        if (topPos + popupHeight > window.innerHeight - 8 && rect.top - popupHeight - 6 > 8) {
+            topPos = rect.top - popupHeight - 6;
+        }
+        if (leftPos + popupWidth > window.innerWidth - 8) {
+            leftPos = Math.max(8, window.innerWidth - popupWidth - 8);
+        }
+        popup.style.top = `${Math.max(8, topPos)}px`;
+        popup.style.left = `${Math.max(8, leftPos)}px`;
+
         activePopup = popup;
     }
 
+    function upgradeAllAutoDateInputs(rootNode) {
+        const root = rootNode && rootNode.querySelectorAll ? rootNode : document;
+        root.querySelectorAll(DATE_INPUT_SELECTOR).forEach(setupAutoDateInput);
+    }
+
+    window.AutoDateHelper = {
+        upgradeAll: upgradeAllAutoDateInputs,
+        setupInput: setupAutoDateInput
+    };
+
     function initializeAllAutoDateInputs() {
-        document.querySelectorAll('input[type="date"]').forEach(setupAutoDateInput);
+        upgradeAllAutoDateInputs(document);
 
         const observer = new MutationObserver(mutations => {
             mutations.forEach(mutation => {
                 mutation.addedNodes.forEach(node => {
                     if (node.nodeType === Node.ELEMENT_NODE) {
-                        if (node.matches && node.matches('input[type="date"]')) {
+                        if (node.matches && node.matches(DATE_INPUT_SELECTOR)) {
                             setupAutoDateInput(node);
                         }
                         if (node.querySelectorAll) {
-                            node.querySelectorAll('input[type="date"]').forEach(setupAutoDateInput);
+                            node.querySelectorAll(DATE_INPUT_SELECTOR).forEach(setupAutoDateInput);
                         }
                     }
                 });
