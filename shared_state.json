@@ -181039,7 +181039,7 @@
       "platform": "Android / Mobil"
     }
   ],
-  "updatedAt": "2026-10-25T20:23:54.103565Z",
+  "updatedAt": "2026-10-25T20:34:39.370249Z",
   "stateRevision": 289,
   "cities": [
     "Adana",
@@ -181210,7 +181210,7 @@
     "scannedPeriods": []
   },
   "routeNotifications": [],
-  "appVersion": "1.7.8",
-  "versionUpdatedAt": "2026-10-25 23:23:54",
-  "versionReleaseNotes": "Güvenlik Denetimi & Sıkılaştırma: Zorunlu e-posta bağlantılı tek kullanımlık şifre sıfırlama linki, e-posta sızıntısı koruması, şifrelenmiş Beni Hatırla, 5 deneme Brute-Force koruması ve tüm personel için Yönetici Ömer Eren silme onay kalkanı devreye alındı."
+  "appVersion": "1.7.9",
+  "versionUpdatedAt": "2026-10-25 23:34:39",
+  "versionReleaseNotes": "D-Pro Tek Oturum (SSO) Geçişi: D-Pro platformuna şifreyle girildikten sonra sandviç menüden Dizsan Ziyaret ve diğer uygulamalara geçişte ikinci kez şifre sorma ekranı kaldırıldı."
 }

@@ -12,7 +12,7 @@
  */
 
 const INITIAL_APP_VERSION = "v1.3.0";
-const CURRENT_APP_VERSION = "1.7.8";
+const CURRENT_APP_VERSION = "1.7.9";
 let hasShownUpdateNotice = false;
 const VAPID_PUBLIC_KEY = "BJIJfCBiDwya3clZOWS08EDxfuN18xtfJGTX0n_apWBTEW7-kO_FGKNy5VDRvUsMgc46IP5oxLlIHqgrDo-JTkE";
 const STORAGE_KEY_STATE = "dizsan_ziyaret_shared_state_v1";
@@ -128,6 +128,7 @@ const OFFICIAL_PERSONNEL_LIST = OFFICIAL_PERSONNEL_RAW.map(u => ({
     ...u,
     email: resolveUserEmail(u)
 }));
+const DEFAULT_USERS = OFFICIAL_PERSONNEL_LIST;
 
 function migrateOfficialUserEmails(usersArray) {
     if (!Array.isArray(usersArray)) return OFFICIAL_PERSONNEL_LIST.map(u => ({ ...u }));
@@ -12005,21 +12006,50 @@ document.addEventListener('DOMContentLoaded', async () => {
         });
     }
 
+    const userPool = (Array.isArray(appState.users) && appState.users.length > 0) ? appState.users : OFFICIAL_PERSONNEL_LIST;
     const saved = localStorage.getItem(STORAGE_KEY_SESSION) || sessionStorage.getItem(STORAGE_KEY_SESSION);
     if (saved) {
         try {
             const p = JSON.parse(saved);
-            const userPool = (Array.isArray(appState.users) && appState.users.length > 0) ? appState.users : DEFAULT_USERS;
-            const matched = userPool.find(u => normalizeTR(u.name) === normalizeTR(p.name) || normalizeTR(u.username) === normalizeTR(p.username));
+            const matched = userPool.find(u => cleanTR(u.name) === cleanTR(p.name) || cleanTR(u.username) === cleanTR(p.username));
             if (matched) currentUser = matched;
         } catch (e) {}
     }
 
-    // D-Pro birleşik platform içinde gömülü çalışırken D-Pro'da Ömer Eren oturumu açıksa tek oturum (SSO) ile başlat
-    const dproActiveUser = (localStorage.getItem('dizsan_dpro_active_session_v1') || sessionStorage.getItem('dizsan_dpro_active_session_v1') || '').toLowerCase();
-    if (!currentUser && isDproEmbedded && (dproActiveUser === 'ömer' || dproActiveUser === 'omer') && Array.isArray(appState.users) && appState.users.length > 0) {
-        currentUser = appState.users.find(u => normalizeTR(u.username).includes('omer')) || appState.users[0];
-        localStorage.setItem(STORAGE_KEY_SESSION, JSON.stringify(currentUser));
+    // D-Pro birleşik platformuna şifreyle girildiyse veya D-Pro içinden geçiş yapıldıysa tekrar şifre istemeden tek oturum (SSO) ile başlat
+    if (!currentUser) {
+        let dproCandidate = '';
+        try {
+            const urlParams = new URLSearchParams(window.location.search || '');
+            dproCandidate = urlParams.get('dproUser') || '';
+        } catch (e) {}
+        if (!dproCandidate) {
+            try {
+                if (window.parent && window.parent !== window && window.parent.DProSDK && typeof window.parent.DProSDK.getCurrentUser === 'function') {
+                    const pUser = window.parent.DProSDK.getCurrentUser();
+                    if (pUser && (pUser.username || pUser.name)) dproCandidate = pUser.username || pUser.name;
+                }
+            } catch (e) {}
+        }
+        if (!dproCandidate) {
+            dproCandidate = localStorage.getItem('dizsan_dpro_active_session_v1') || sessionStorage.getItem('dizsan_dpro_active_session_v1') || '';
+        }
+        if (dproCandidate) {
+            const normCand = cleanTR(dproCandidate);
+            const matchedDpro = userPool.find(u =>
+                cleanTR(u.username) === normCand ||
+                cleanTR(u.name) === normCand ||
+                ((normCand === 'omer' || normCand.includes('omer eren')) && isOmerEren(u))
+            );
+            if (matchedDpro) {
+                currentUser = matchedDpro;
+                try { localStorage.setItem(STORAGE_KEY_SESSION, JSON.stringify(currentUser)); } catch (e) {}
+            }
+        }
+        if (!currentUser && isDproEmbedded) {
+            currentUser = userPool.find(u => isOmerEren(u)) || userPool[0];
+            try { localStorage.setItem(STORAGE_KEY_SESSION, JSON.stringify(currentUser)); } catch (e) {}
+        }
     }
 
     applyAuthenticatedUser();
@@ -12141,6 +12171,6 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     // Service Worker Kaydı (Sonsuz yenileme döngüsü yaratmadan sessiz çalışır)
     if ('serviceWorker' in navigator) {
-        navigator.serviceWorker.register('sw.js?v=1.7.8').catch(() => {});
+        navigator.serviceWorker.register('sw.js?v=1.7.9').catch(() => {});
     }
 });

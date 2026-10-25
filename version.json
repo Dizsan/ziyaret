@@ -1,7 +1,7 @@
 {
-  "version": "1.7.8",
-  "build": 178,
-  "releasedAt": "2026-10-25 23:23:54",
-  "releaseNotes": "Güvenlik Denetimi & Sıkılaştırma: Zorunlu e-posta bağlantılı tek kullanımlık şifre sıfırlama linki, e-posta sızıntısı koruması, şifrelenmiş Beni Hatırla, 5 deneme Brute-Force koruması ve tüm personel için Yönetici Ömer Eren silme onay kalkanı devreye alındı.",
+  "version": "1.7.9",
+  "build": 179,
+  "releasedAt": "2026-10-25 23:34:39",
+  "releaseNotes": "D-Pro Tek Oturum (SSO) Geçişi: D-Pro platformuna şifreyle girildikten sonra sandviç menüden Dizsan Ziyaret ve diğer uygulamalara geçişte ikinci kez şifre sorma ekranı kaldırıldı.",
   "author": "Ömer Eren & DİZSAN"
 }
