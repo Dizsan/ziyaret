@@ -1,5 +1,5 @@
 // DİZSAN Müşteri Ziyaret & Saha Takip Service Worker (v1.4.2)
-const CACHE_NAME = "dizsan-ziyaret-vv1.8.2: 3-Depo GitHub Canlı Yedekleme, Otomatik Cihaz Senkronizasyonu ve Tek Tıkla Tam Sistem Kurtarma Altyapısı";
+const CACHE_NAME = 'dizsan-ziyaret-v1.8.3';
 const ASSETS = [
   './',
   './index.html',

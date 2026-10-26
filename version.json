@@ -1,7 +1,9 @@
 {
-  "version": "v1.8.1",
-  "build": 1792963944,
-  "releasedAt": "2026-10-26 00:32:24",
-  "releaseNotes": "Kredi Ödemeleri Takip Mobil PWA ve Canlı GitHub Senkronizasyonu (vv1.8.2: 3-Depo GitHub Canlı Yedekleme, Otomatik Cihaz Senkronizasyonu ve Tek Tıkla Tam Sistem Kurtarma Altyapısı)",
+  "appId": "ziyaret",
+  "appName": "Dizsan Müşteri Ziyaret & Saha Takip",
+  "version": "1.8.3",
+  "build": 183,
+  "releasedAt": "2026-10-26 22:19:19",
+  "releaseNotes": "1998-2026 Tüm SQL Yedekleri (001..426) ve Kuruluş Arşivi Tam Kapsam Güncellemesi (5.889 Müşteri)",
   "author": "Ömer Eren & DİZSAN"
 }
