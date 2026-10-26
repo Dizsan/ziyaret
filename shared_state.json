@@ -116451,6 +116451,17 @@
           ]
         },
         {
+          "tarih": "01.09.2025",
+          "fatura_no": "DSE2025000000991",
+          "islem": "05AAG385 İE NO:İE01284 SATIŞ FATURASI",
+          "tutar": 82589.51,
+          "km": 0,
+          "odeme_tipi": "AÇIK HESAP",
+          "plaka": "05AAG385",
+          "sofor": "MEHMET GÜÇYETMEZ",
+          "kalemler": []
+        },
+        {
           "tarih": "04.08.2025",
           "fatura_no": "DSA2025000000151",
           "islem": "05ABV999 İE NO:1190 SATIŞ FATURASI",
@@ -193085,10 +193096,10 @@
       "totalRevenue": 500,
       "totalOperations": 1,
       "firstDate": "12.10.2024",
-      "lastDate": "12.10.2024",
-      "churnDuration": "2.0 Yıl (744 gün)",
-      "balance": 0.0,
-      "balanceStatus": "Sıfır",
+      "lastDate": "26.10.2026",
+      "churnDuration": "0.0 Yıl (0 gün)",
+      "balance": 10750.14,
+      "balanceStatus": "Borçlu",
       "peakMonth": "Ekim",
       "priority": "P2 - Churn",
       "recoveryScore": 85,
@@ -193097,6 +193108,17 @@
       "visitNotes": "",
       "dataAudit": "",
       "serviceHistory": [
+        {
+          "tarih": "26.10.2026",
+          "fatura_no": "DSE2026000000983",
+          "islem": "29AAZ511 İE NO:1747 SATIŞ FATURASI",
+          "tutar": 10750.14,
+          "km": 0,
+          "odeme_tipi": "AÇIK HESAP",
+          "plaka": "29AAZ511",
+          "sofor": "SUAT ÇELİK",
+          "kalemler": []
+        },
         {
           "tarih": "12.10.2024",
           "fatura_no": "TFTF2024000332",
@@ -202156,6 +202178,17 @@
           "km": 0,
           "odeme_tipi": "AÇIK HESAP",
           "plaka": "52LP724",
+          "sofor": "-",
+          "kalemler": []
+        },
+        {
+          "tarih": "22.09.2020",
+          "fatura_no": "DSO2020000000718",
+          "islem": "52AAS368 PLAKALI ARACIN HASAR FATURASIDIR",
+          "tutar": 3849.4,
+          "km": 0,
+          "odeme_tipi": "AÇIK HESAP",
+          "plaka": "52AAS368",
           "sofor": "-",
           "kalemler": []
         },
@@ -310060,6 +310093,149 @@
           "kalemler": []
         },
         {
+          "tarih": "08.08.2018",
+          "fatura_no": "DSO2018000000989",
+          "islem": "41VL635 SATIŞ FATURASI",
+          "tutar": 159.95,
+          "km": 0,
+          "odeme_tipi": "AÇIK HESAP",
+          "plaka": "41VL635",
+          "sofor": "-",
+          "kalemler": []
+        },
+        {
+          "tarih": "07.08.2018",
+          "fatura_no": "DSO2018000000985",
+          "islem": "41VL635 SATIŞ FATURASI",
+          "tutar": 842.51,
+          "km": 0,
+          "odeme_tipi": "AÇIK HESAP",
+          "plaka": "41VL635",
+          "sofor": "-",
+          "kalemler": []
+        },
+        {
+          "tarih": "01.08.2018",
+          "fatura_no": "DSO2018000000956",
+          "islem": "41VL635 SATIŞ FATURASI",
+          "tutar": 546.39,
+          "km": 0,
+          "odeme_tipi": "AÇIK HESAP",
+          "plaka": "41VL635",
+          "sofor": "-",
+          "kalemler": []
+        },
+        {
+          "tarih": "18.07.2018",
+          "fatura_no": "DSO2018000000900",
+          "islem": "41YN124 SATIŞ FATURASI",
+          "tutar": 3043.37,
+          "km": 0,
+          "odeme_tipi": "AÇIK HESAP",
+          "plaka": "41YN124",
+          "sofor": "-",
+          "kalemler": []
+        },
+        {
+          "tarih": "27.06.2018",
+          "fatura_no": "DSO2018000000825",
+          "islem": "41YK147 SATIŞ FATURASI",
+          "tutar": 65.2,
+          "km": 0,
+          "odeme_tipi": "AÇIK HESAP",
+          "plaka": "41YK147",
+          "sofor": "-",
+          "kalemler": []
+        },
+        {
+          "tarih": "28.04.2018",
+          "fatura_no": "DSO2018000000540",
+          "islem": "41VL634 SATIŞ FATURASI",
+          "tutar": 824.82,
+          "km": 0,
+          "odeme_tipi": "AÇIK HESAP",
+          "plaka": "41VL634",
+          "sofor": "-",
+          "kalemler": []
+        },
+        {
+          "tarih": "02.04.2018",
+          "fatura_no": "DSO2018000000405",
+          "islem": "41VC386 SATIŞ FATURASI",
+          "tutar": 1506.64,
+          "km": 0,
+          "odeme_tipi": "AÇIK HESAP",
+          "plaka": "41VC386",
+          "sofor": "-",
+          "kalemler": []
+        },
+        {
+          "tarih": "21.03.2018",
+          "fatura_no": "DSO2018000000358",
+          "islem": "41VL630 SATIŞ FATURASI",
+          "tutar": 369.34,
+          "km": 0,
+          "odeme_tipi": "AÇIK HESAP",
+          "plaka": "41VL630",
+          "sofor": "-",
+          "kalemler": []
+        },
+        {
+          "tarih": "15.03.2018",
+          "fatura_no": "DSO2018000000335",
+          "islem": "41UP135 SATIŞ FATURASI",
+          "tutar": 776.16,
+          "km": 0,
+          "odeme_tipi": "AÇIK HESAP",
+          "plaka": "41UP135",
+          "sofor": "-",
+          "kalemler": []
+        },
+        {
+          "tarih": "14.03.2018",
+          "fatura_no": "DSO2018000000326",
+          "islem": "41YN124 SATIŞ FATURASI",
+          "tutar": 725.72,
+          "km": 0,
+          "odeme_tipi": "AÇIK HESAP",
+          "plaka": "41YN124",
+          "sofor": "-",
+          "kalemler": []
+        },
+        {
+          "tarih": "05.02.2018",
+          "fatura_no": "DSO2018000000156",
+          "islem": "41VL634 SATIŞ FATURASI",
+          "tutar": 328.04,
+          "km": 0,
+          "odeme_tipi": "AÇIK HESAP",
+          "plaka": "41VL634",
+          "sofor": "-",
+          "kalemler": []
+        },
+        {
+          "tarih": "29.01.2018",
+          "fatura_no": "DSO2018000000118",
+          "islem": "41YH815 SATIŞ FATURASI",
+          "tutar": 6276.62,
+          "km": 0,
+          "odeme_tipi": "AÇIK HESAP",
+          "plaka": "41YH815",
+          "sofor": "-",
+          "kalemler": []
+        },
+        {
+          "tarih": "23.09.2017",
+          "fatura_no": "DSO2017000001457",
+          "islem": "41YN124 SATIŞ FATURASI",
+          "tutar": 959.94,
+          "km": 0,
+          "odeme_tipi": "AÇIK HESAP",
+          "plaka": "41YN124",
+          "sofor": "-",
+          "kalemler": []
+        },
+        {
           "tarih": "24.07.2017",
           "fatura_no": "DSO2017000001153",
           "islem": "41TP126 SATIŞ FATURASI",
@@ -310067,6 +310243,39 @@
           "km": 0,
           "odeme_tipi": "AÇIK HESAP",
           "plaka": "41TP126",
+          "sofor": "-",
+          "kalemler": []
+        },
+        {
+          "tarih": "04.07.2017",
+          "fatura_no": "DSO2017000001053",
+          "islem": "41YN124 FASDAT GIDA ONARIM FATURASI",
+          "tutar": 688.27,
+          "km": 0,
+          "odeme_tipi": "AÇIK HESAP",
+          "plaka": "41YN124",
+          "sofor": "-",
+          "kalemler": []
+        },
+        {
+          "tarih": "02.06.2017",
+          "fatura_no": "DS02017000000866",
+          "islem": "41VL634 SATIŞ FATURASI",
+          "tutar": 2122.44,
+          "km": 0,
+          "odeme_tipi": "AÇIK HESAP",
+          "plaka": "41VL634",
+          "sofor": "-",
+          "kalemler": []
+        },
+        {
+          "tarih": "08.05.2017",
+          "fatura_no": "DS02017000000728",
+          "islem": "41TE912 SATIŞ FATURASI",
+          "tutar": 2446.44,
+          "km": 0,
+          "odeme_tipi": "AÇIK HESAP",
+          "plaka": "41TE912",
           "sofor": "-",
           "kalemler": []
         },
@@ -317202,8 +317411,8 @@
       "platform": "Android / Mobil"
     }
   ],
-  "updatedAt": "2026-10-26T13:37:31Z",
-  "stateRevision": 290,
+  "updatedAt": "2026-10-26T15:19:29Z",
+  "stateRevision": 291,
   "cities": [
     "Adana",
     "Adıyaman",
@@ -317354,8 +317563,8 @@
   },
   "customRoutePersonnelPool": [],
   "logoMetadata": {
-    "queryTimestamp": "2026-10-26T16:37:31+03:00",
-    "queryDateFormatted": "26.10.2026 16:37",
+    "queryTimestamp": "2026-10-26T18:19:29+03:00",
+    "queryDateFormatted": "26.10.2026 18:19",
     "latestInvoiceDate": "26.10.2026",
     "latestInvoiceMoment": "26.10.2026 23:59:59",
     "totalCariRecords": 1990,
