@@ -1,7 +1,7 @@
 /**
  * ==========================================================================
  * DİZSAN KURUMSAL MÜŞTERİ ZİYARET, SAHA VE GÖRÜŞME SİSTEMİ - v1.0.0
- * - 120 Kodlu Kayıp Müşteri Ziyaret Planı (1.990 Müşteri & 434 İlçe Stratejisi)
+ * - 120 Kodlu Kayıp Müşteri Ziyaret Planı (5.889 Müşteri & 434 İlçe Stratejisi)
  * - Güncel Saha Ziyareti & Telefon Görüşmesi Kayıt Motoru (Fotoğraf/Belge Ekli)
  * - Yapay Zeka Destekli Akıllı Tekleştirme & Churn Kurtarma Analizörü
  * - 1 Gün Önce ve Aynı Gün Çift Aşamalı Hatırlatıcı & VAPID Web Push Motoru
@@ -869,7 +869,7 @@ async function loadInitialData() {
     if (raw) {
         try {
             const parsed = JSON.parse(raw);
-            if (parsed && Array.isArray(parsed.customers) && parsed.customers.length > 0) {
+            if (parsed && Array.isArray(parsed.customers) && parsed.customers.length >= 5000) {
                 parsed.users = migrateOfficialUserEmails(parsed.users);
                 appState = { ...appState, ...parsed };
                 if (!Array.isArray(appState.customRoutes)) appState.customRoutes = [];
@@ -1081,7 +1081,7 @@ async function fetchLiveGitHubData(isInitial = false) {
                 const res = await fetch(src, { cache: 'no-store' });
                 if (res.ok) {
                     const parsed = await res.json();
-                    if (parsed && Array.isArray(parsed.customers) && parsed.customers.length > 0) {
+                    if (parsed && Array.isArray(parsed.customers) && parsed.customers.length >= 5000) {
                         liveData = parsed;
                         break;
                     }
@@ -2291,7 +2291,7 @@ function switchTab(tabId) {
 
     const pageTitleMap = {
         'dashboard-tab': '<i class="fa-solid fa-chart-pie" style="color:var(--dizsan-light);"></i> Genel Bakış &amp; Kokpit',
-        'customer-search-tab': '<i class="fa-solid fa-magnifying-glass" style="color:#38bdf8;"></i> Müşteri &amp; Cari Ara (1.990 Kayıt)',
+        'customer-search-tab': `<i class="fa-solid fa-magnifying-glass" style="color:#38bdf8;"></i> Müşteri &amp; Cari Ara (${((appState.customers || []).length || 5889).toLocaleString('tr-TR')} Kayıt)`,
         'route-plan-tab': '<i class="fa-solid fa-route" style="color:#fbbf24;"></i> Yeni Rut Planla &amp; Saha Ziyaret Listesi',
         'cari-ekstre-tab': '<i class="fa-solid fa-file-invoice-dollar" style="color:#38bdf8;"></i> D-Pro Cari &amp; Logo Ekstre (Borç / Alacak / Fatura Detayı)',
         'active-tab': '<i class="fa-solid fa-car-side" style="color:var(--dizsan-light);"></i> Saha Görüşmeleri &amp; Görevler',
@@ -2406,7 +2406,7 @@ function renderDashboard() {
     const tasks = appState.tasks || [];
 
     const totalCust = customers.length;
-    // P1 Acil Churn grubu (1.990 ile aynı olmaması için gerçek P1 öncelikli portföy)
+    // P1 Acil Churn grubu (5.889 ile aynı olmaması için gerçek P1 öncelikli portföy)
     const p1CustList = customers.filter(c => (c.priority || '').startsWith('P1'));
     const churnCust = p1CustList.length;
     const churnPct = totalCust > 0 ? ((churnCust / totalCust) * 100).toFixed(1) : '0.0';
