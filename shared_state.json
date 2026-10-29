@@ -1030544,7 +1030544,7 @@
       "platform": "Android / Mobil"
     }
   ],
-  "updatedAt": "2026-10-26T19:19:19.553Z",
+  "updatedAt": "2026-10-29T00:14:26.274900Z",
   "stateRevision": 309,
   "cities": [
     "Çorum",
@@ -1030798,12 +1030798,12 @@
       "createdBy": "ÖMER EREN"
     }
   ],
-  "appVersion": "1.8.3",
+  "appVersion": "1.8.4",
   "latestVersion": {
     "version": "1.8.3",
     "releaseNotes": "1998-2026 Tüm SQL Yedekleri (001..426) ve Kuruluş Arşivi Tam Kapsam Güncellemesi (5.889 Müşteri)",
     "releasedAt": "2026-10-26 22:19:19"
   },
-  "versionUpdatedAt": "2026-10-26 22:19:19",
-  "versionReleaseNotes": "1998-2026 Tüm SQL Yedekleri (001..426) ve Kuruluş Arşivi Tam Kapsam Güncellemesi (5.889 Müşteri)"
+  "versionUpdatedAt": "2026-10-29 03:14:26",
+  "versionReleaseNotes": "Kredi Ödemeleri Takip Mobil PWA ve Canlı GitHub Senkronizasyonu (v1.8.4)"
 }

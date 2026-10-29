@@ -1,5 +1,5 @@
 // DİZSAN Müşteri Ziyaret & Saha Takip Service Worker (v1.4.2)
-const CACHE_NAME = 'dizsan-ziyaret-v1.8.3';
+const CACHE_NAME = "dizsan-ziyaret-v1.8.4";
 const ASSETS = [
   './',
   './index.html',
