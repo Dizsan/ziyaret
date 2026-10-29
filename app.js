@@ -1253,7 +1253,7 @@ async function syncToServer() {
 
     // Yerel portal sunucusu (/api/ziyaret-state) açıksa diske anında kaydet
     try {
-        if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
+        if (!window.location.hostname.endsWith('github.io')) {
             fetch('/api/ziyaret-state', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -1327,6 +1327,16 @@ function mergeRecordListsById(remoteArr, localArr, idKey = 'id', preferRemoteOrd
 }
 
 async function fetchLiveCloudSyncState() {
+    const candidates = [];
+    if (!window.location.hostname.endsWith('github.io')) {
+        try {
+            const localLiveRes = await fetch(`live_sync_state.json?t=${Date.now()}`, { cache: 'no-store' });
+            if (localLiveRes.ok) {
+                const localLiveJson = await localLiveRes.json();
+                if (localLiveJson && typeof localLiveJson === 'object') candidates.push(localLiveJson);
+            }
+        } catch (e) {}
+    }
     try {
         const token = getCloudAuthToken();
         const res = await fetch(`${CLOUD_API_URL}?t=${Date.now()}`, {
@@ -1337,15 +1347,24 @@ async function fetchLiveCloudSyncState() {
             const meta = await res.json();
             if (meta && meta.sha) lastKnownCloudSha = meta.sha;
             if (meta && meta.content) {
-                return JSON.parse(decodeUTF8Base64(meta.content));
+                candidates.push(JSON.parse(decodeUTF8Base64(meta.content)));
             }
         }
     } catch (e) {}
-    try {
-        const rawRes = await fetch(`https://raw.githubusercontent.com/Dizsan/ziyaret/main/live_sync_state.json?t=${Date.now()}`, { cache: 'no-store' });
-        if (rawRes.ok) return await rawRes.json();
-    } catch (e) {}
-    return null;
+    if (candidates.length === 0) {
+        try {
+            const rawRes = await fetch(`https://raw.githubusercontent.com/Dizsan/ziyaret/main/live_sync_state.json?t=${Date.now()}`, { cache: 'no-store' });
+            if (rawRes.ok) candidates.push(await rawRes.json());
+        } catch (e) {}
+    }
+    if (candidates.length === 0) return null;
+    candidates.sort((a, b) => {
+        const tB = new Date((b && b.updatedAt) || 0).getTime() || 0;
+        const tA = new Date((a && a.updatedAt) || 0).getTime() || 0;
+        if (tB !== tA) return tB - tA;
+        return (Number(b && b.stateRevision) || 0) - (Number(a && a.stateRevision) || 0);
+    });
+    return candidates[0];
 }
 
 function applyLiveCloudSyncToAppState(cloudSync, isInitial = false) {

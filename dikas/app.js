@@ -828,7 +828,7 @@ async function syncStateToServer() {
 
     let localServerOk = false;
     try {
-        if (window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1") {
+        if (!window.location.hostname.endsWith("github.io")) {
             const res = await fetch("/api/dikas-state", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
@@ -861,7 +861,7 @@ async function fetchLatestCloudStateCandidate() {
     const candidates = [];
 
     // 1. Yerel Portal Sunucusu (/api/dikas-state)
-    if (window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1") {
+    if (!window.location.hostname.endsWith("github.io")) {
         try {
             const res = await fetch("/api/dikas-state?t=" + Date.now(), { cache: "no-store" });
             if (res.ok) {
@@ -930,7 +930,7 @@ async function loadStateFromStorageAndServer() {
         if (remoteScore >= localScore) {
             appState = { ...buildInitialState(), ...remoteBest.data };
             saveStateLocally();
-            if (window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1") {
+            if (!window.location.hostname.endsWith("github.io")) {
                 fetch("/api/dikas-state", {
                     method: "POST",
                     headers: { "Content-Type": "application/json" },
@@ -984,7 +984,7 @@ async function pollCloudState(isManual = false) {
             synchronizeInstrumentsWithObligations();
             refreshOverdueStatuses();
             saveStateLocally();
-            if (window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1") {
+            if (!window.location.hostname.endsWith("github.io")) {
                 fetch("/api/dikas-state", {
                     method: "POST",
                     headers: { "Content-Type": "application/json" },
