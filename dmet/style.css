@@ -797,7 +797,7 @@ body {
     font-size: 0.78rem;
     color: var(--text-secondary);
     display: -webkit-box;
-    -webkit-line-clamp: 2;
+    -webkit-line-clamp: unset;
     -webkit-box-orient: vertical;
     overflow: hidden;
 }
@@ -1044,4 +1044,37 @@ body {
     .btn {
         min-height: 42px;
     }
+}
+
+/* === DIZSAN 100% RESPONSIVE & ANTI-TRUNCATION MEDIA QUERIES === */
+@media (max-width: 1024px) {
+  html, body {
+    max-width: 100% !important;
+    overflow-x: hidden !important;
+  }
+  .container, .main-container, .app-container, .content-wrapper, .page-container, .dashboard-container {
+    max-width: 100% !important;
+    box-sizing: border-box !important;
+  }
+  h1, h2, h3, h4, h5, h6, p, span, td, th, label, a, div {
+    text-overflow: clip !important;
+    overflow-wrap: anywhere !important;
+    word-break: break-word !important;
+  }
+}
+
+@media (max-width: 767px) {
+  html, body {
+    max-width: 100% !important;
+    overflow-x: hidden !important;
+  }
+  .container, .main-container, .app-container, .content-wrapper, .page-container, .dashboard-container, .card, .modal-content, .panel {
+    max-width: 100% !important;
+    box-sizing: border-box !important;
+  }
+  .table-responsive, .table-container, .table-wrapper {
+    width: 100% !important;
+    overflow-x: auto !important;
+    -webkit-overflow-scrolling: touch !important;
+  }
 }

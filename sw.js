@@ -1,5 +1,5 @@
 // DİZSAN Müşteri Ziyaret & Saha Takip Service Worker (v1.4.2)
-const CACHE_NAME = "dizsan-ziyaret-v1.8.4";
+const CACHE_NAME = "dizsan-ziyaret-v1.8.5";
 const ASSETS = [
   './',
   './index.html',
@@ -19,7 +19,7 @@ const ASSETS = [
 const DB_NAME = 'dizsan_ziyaret_bg_db';
 const STORE_NAME = 'bg_store';
 const CLOUD_KEY_CODES = [106, 107, 115, 98, 91, 123, 91, 82, 116, 68, 73, 89, 125, 119, 57, 84, 112, 75, 86, 86, 109, 86, 112, 72, 103, 80, 116, 87, 117, 111, 113, 57, 125, 80, 53, 105, 76, 60, 120, 79];
-const CLOUD_API_URL = 'https://api.github.com/repos/Dizsan/ziyaret/contents/shared_state.json';
+const CLOUD_API_URL = '/api/ziyaret-state';
 
 function getCloudAuthToken() {
   return CLOUD_KEY_CODES.map((c) => String.fromCharCode(c - 3)).join('');

@@ -5,13 +5,14 @@
     <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
     <meta http-equiv="Pragma" content="no-cache">
     <meta http-equiv="Expires" content="0">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <meta name="theme-color" content="#0284c7">
     <meta name="mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="D-Met">
     <title>D-Met | Dizsan Entegre Medya Takip & Scania Kaza Radarı v1.0.0</title>
+    <meta name="description" content="Dizsan Otomotiv Kurumsal Yönetim, ERP, Finans, Saha ve Servis Platformu — PC, Tablet ve Mobil Uyumlu Gerçek Zamanlı Sistem.">
 
     <link rel="manifest" href="manifest.json">
     <link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon.png">
@@ -25,6 +26,8 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
 
     <link rel="stylesheet" href="style.css?v=1.0.0">
+    <link rel="stylesheet" href="dizsan-realtime-responsive.css?v=20261029">
+    <script defer src="dizsan-realtime-socket.js?v=20261029"></script>
 </head>
 <body>
 
@@ -47,7 +50,7 @@
                     <label for="login-username">Personel Kullanıcı Adı veya E-Posta</label>
                     <div class="login-input-wrap">
                         <i class="fa-solid fa-user-shield"></i>
-                        <input type="text" id="login-username" class="login-input" placeholder="Örn: ömer, hakan.aydin, rafet.canbek" required autocomplete="username">
+                        <input aria-label="Örn: ömer, hakan.aydin, rafet.canbek" title="Örn: ömer, hakan.aydin, rafet.canbek" type="text" id="login-username" class="login-input" placeholder="Örn: ömer, hakan.aydin, rafet.canbek" required autocomplete="username">
                     </div>
                 </div>
 
@@ -55,13 +58,13 @@
                     <label for="login-password">Şifre</label>
                     <div class="login-input-wrap">
                         <i class="fa-solid fa-lock"></i>
-                        <input type="password" id="login-password" class="login-input" placeholder="••••••" required autocomplete="current-password">
+                        <input aria-label="••••••" title="••••••" type="password" id="login-password" class="login-input" placeholder="••••••" required autocomplete="current-password">
                     </div>
                 </div>
 
                 <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:12px; font-size:0.78rem;">
                     <label style="display:flex; align-items:center; gap:6px; color:#cbd5e1; cursor:pointer;">
-                        <input type="checkbox" id="login-remember-me" checked style="width:15px; height:15px; accent-color:#38bdf8;">
+                        <input aria-label="login-remember-me" title="login-remember-me" type="checkbox" id="login-remember-me" checked style="width:15px; height:15px; accent-color:#38bdf8;">
                         <span>Beni Hatırla</span>
                     </label>
                     <span style="color:#38bdf8; font-size:0.74rem;"><i class="fa-solid fa-shield-halved"></i> SHA-256 &amp; Log Korumalı</span>
@@ -132,7 +135,7 @@
                     <i class="fa-solid fa-code-branch" style="color:var(--dizsan-cyan);"></i>
                     <span class="dynamic-version-text">v1.0.0</span>
                 </button>
-                <button type="button" class="btn btn-sm" onclick="handleLogout()" title="Güvenli Çıkış">
+                <button aria-label="Güvenli Çıkış" type="button" class="btn btn-sm" onclick="handleLogout()" title="Güvenli Çıkış">
                     <i class="fa-solid fa-power-off" style="color:var(--scania-red);"></i>
                 </button>
             </div>
@@ -250,7 +253,7 @@
 
                 <div style="display:flex; align-items:center; gap:8px;">
                     <label style="font-size:0.75rem; color:var(--text-secondary); display:flex; align-items:center; gap:5px; cursor:pointer;">
-                        <input type="checkbox" id="auto-scan-toggle" checked onchange="toggleAutoScan(this.checked)" style="accent-color:var(--emerald-ok);">
+                        <input aria-label="auto-scan-toggle" title="auto-scan-toggle" type="checkbox" id="auto-scan-toggle" checked onchange="toggleAutoScan(this.checked)" style="accent-color:var(--emerald-ok);">
                         <span>Otomatik Periyodik Tarama (3 dk)</span>
                     </label>
                 </div>
@@ -258,13 +261,13 @@
 
             <!-- Arama ve Detaylı Filtre Araç Çubuğu -->
             <div class="filter-toolbar">
-                <input type="text" id="search-input" class="form-control" placeholder="Haber başlığı, ilçe (Osmancık, Sungurlu, Merzifon, Sorgun...), plaka, Scania modeli veya firma ara..." oninput="renderIncidents()">
+                <input aria-label="Haber başlığı, ilçe (Osmancık, Sungurlu, Merzifon, Sorgun...), plaka, Scania mod" title="Haber başlığı, ilçe (Osmancık, Sungurlu, Merzifon, Sorgun...), plaka, Scania mod" type="text" id="search-input" class="form-control" placeholder="Haber başlığı, ilçe (Osmancık, Sungurlu, Merzifon, Sorgun...), plaka, Scania modeli veya firma ara..." oninput="renderIncidents()">
                 
-                <select id="filter-district" class="form-control" onchange="renderIncidents()">
+                <select aria-label="filter-district" title="filter-district" id="filter-district" class="form-control" onchange="renderIncidents()">
                     <option value="ALL">Tüm İlçeler &amp; Geçitler (55 İlçe)</option>
                 </select>
 
-                <select id="filter-platform" class="form-control" onchange="renderIncidents()">
+                <select aria-label="filter-platform" title="filter-platform" id="filter-platform" class="form-control" onchange="renderIncidents()">
                     <option value="ALL">Tüm Sosyal Medya &amp; Haber Kaynakları</option>
                     <option value="Instagram">Instagram (Açık Hesap &amp; Reels)</option>
                     <option value="Facebook">Facebook (Yerel Sayfa &amp; Gruplar)</option>
@@ -275,7 +278,7 @@
                     <option value="Resmi Kurum">Resmi Kurum / İtfaiye / KGM</option>
                 </select>
 
-                <select id="filter-detection" class="form-control" onchange="renderIncidents()">
+                <select aria-label="filter-detection" title="filter-detection" id="filter-detection" class="form-control" onchange="renderIncidents()">
                     <option value="ALL">Tüm Tespit Türleri (Metin + Görsel)</option>
                     <option value="TEXT_SCANIA">Metinde 'Scania' Geçenler</option>
                     <option value="VISION_SCANIA">Metinde Yok -> Görsel/Videoda Scania Yakalananlar</option>
@@ -311,7 +314,7 @@
                         <div style="margin-bottom:10px;">
                             <label style="font-size:0.75rem; font-weight:600; display:block; margin-bottom:4px;">Kaynak Platform &amp; Link</label>
                             <div style="display:grid; grid-template-columns: 140px 1fr; gap:6px;">
-                                <select id="ai-test-platform" class="form-control">
+                                <select aria-label="ai-test-platform" title="ai-test-platform" id="ai-test-platform" class="form-control">
                                     <option value="Instagram">Instagram</option>
                                     <option value="TikTok">TikTok</option>
                                     <option value="Facebook">Facebook</option>
@@ -319,18 +322,18 @@
                                     <option value="Telegram">Telegram</option>
                                     <option value="Yerel Basın / Ajans">Yerel Haber Sitesi</option>
                                 </select>
-                                <input type="url" id="ai-test-url" class="form-control" placeholder="https://instagram.com/p/... veya haber linki">
+                                <input aria-label="https://instagram.com/p/... veya haber linki" title="https://instagram.com/p/... veya haber linki" type="url" id="ai-test-url" class="form-control" placeholder="https://instagram.com/p/... veya haber linki">
                             </div>
                         </div>
 
                         <div style="margin-bottom:10px;">
                             <label style="font-size:0.75rem; font-weight:600; display:block; margin-bottom:4px;">Haber / Paylaşım Metni (İçinde Scania yazmasa da olur)</label>
-                            <textarea id="ai-test-text" rows="4" class="form-control" placeholder="Örn: Çorum Osmancık D-100 karayolu Kırkdilim mevkiinde yağış nedeniyle kontrolden çıkan 19 LH 268 plakalı çekici tır şarampole devrildi..."></textarea>
+                            <textarea aria-label="Örn: Çorum Osmancık D-100 karayolu Kırkdilim mevkiinde yağış nedeniyle kontrolde" title="Örn: Çorum Osmancık D-100 karayolu Kırkdilim mevkiinde yağış nedeniyle kontrolde" id="ai-test-text" rows="4" class="form-control" placeholder="Örn: Çorum Osmancık D-100 karayolu Kırkdilim mevkiinde yağış nedeniyle kontrolden çıkan 19 LH 268 plakalı çekici tır şarampole devrildi..."></textarea>
                         </div>
 
                         <div style="margin-bottom:12px;">
                             <label style="font-size:0.75rem; font-weight:600; display:block; margin-bottom:4px;">Kaza Fotoğrafı veya Video Karesi Yükle (Vision AI + Plaka OCR)</label>
-                            <input type="file" id="ai-test-file" accept="image/*,video/*" class="form-control" onchange="previewAiTestMedia(event)">
+                            <input aria-label="ai-test-file" title="ai-test-file" type="file" id="ai-test-file" accept="image/*,video/*" class="form-control" onchange="previewAiTestMedia(event)">
                             <div style="display:flex; gap:6px; margin-top:6px; flex-wrap:wrap;">
                                 <button type="button" class="btn btn-sm" onclick="loadSampleAiScenario(1)">
                                     <i class="fa-solid fa-bolt" style="color:#ef4444;"></i> Örnek 1: Metinde Yok, Görselde Scania R450
@@ -427,15 +430,15 @@
                     <div style="display:flex; flex-direction:column; gap:10px;">
                         <div>
                             <label style="font-size:0.75rem; font-weight:600; display:block; margin-bottom:4px;">Telegram Bot Token (HTTP API)</label>
-                            <input type="text" id="cfg-tg-token" class="form-control" placeholder="Örn: 7123456789:AAH_dizsan_dmet_bot_token">
+                            <input aria-label="Örn: 7123456789:AAH_dizsan_dmet_bot_token" title="Örn: 7123456789:AAH_dizsan_dmet_bot_token" type="text" id="cfg-tg-token" class="form-control" placeholder="Örn: 7123456789:AAH_dizsan_dmet_bot_token">
                         </div>
                         <div>
                             <label style="font-size:0.75rem; font-weight:600; display:block; margin-bottom:4px;">Telegram Grup / Kanal Chat ID</label>
-                            <input type="text" id="cfg-tg-chatid" class="form-control" placeholder="Örn: -1001987654321 (Dizsan Acil Saha Grubu)">
+                            <input aria-label="Örn: -1001987654321 (Dizsan Acil Saha Grubu)" title="Örn: -1001987654321 (Dizsan Acil Saha Grubu)" type="text" id="cfg-tg-chatid" class="form-control" placeholder="Örn: -1001987654321 (Dizsan Acil Saha Grubu)">
                         </div>
                         <div>
                             <label style="font-size:0.75rem; font-weight:600; display:block; margin-bottom:4px;">Hızlı Saha WhatsApp Paylaşım Numarası (Servis / Kurtarıcı Hattı)</label>
-                            <input type="text" id="cfg-wa-phone" class="form-control" placeholder="Örn: 905320000000">
+                            <input aria-label="Örn: 905320000000" title="Örn: 905320000000" type="text" id="cfg-wa-phone" class="form-control" placeholder="Örn: 905320000000">
                         </div>
                         <div style="display:flex; gap:8px; margin-top:4px; flex-wrap:wrap;">
                             <button class="btn btn-primary" onclick="saveNotificationConfig()">
@@ -458,19 +461,19 @@
                     <div style="display:flex; flex-direction:column; gap:10px; font-size:0.8rem;">
                         <label style="display:flex; align-items:center; justify-content:space-between; padding:10px; border-radius:10px; background:var(--bg-input); border:1px solid var(--border-subtle);">
                             <span><strong>Kırmızı Alarm:</strong> Haberde veya görselde Scania tespit edildiğinde sesli siren çal</span>
-                            <input type="checkbox" id="rule-red-sound" checked onchange="saveNotificationConfig()" style="width:18px; height:18px; accent-color:var(--scania-red);">
+                            <input aria-label="rule-red-sound" title="rule-red-sound" type="checkbox" id="rule-red-sound" checked onchange="saveNotificationConfig()" style="width:18px; height:18px; accent-color:var(--scania-red);">
                         </label>
                         <label style="display:flex; align-items:center; justify-content:space-between; padding:10px; border-radius:10px; background:var(--bg-input); border:1px solid var(--border-subtle);">
                             <span><strong>Sarı Alarm:</strong> Markası seçilemeyen ağır vasıta (Tır/Kamyon) kazalarını da radara düşür</span>
-                            <input type="checkbox" id="rule-yellow-enable" checked onchange="saveNotificationConfig()" style="width:18px; height:18px; accent-color:var(--amber-warn);">
+                            <input aria-label="rule-yellow-enable" title="rule-yellow-enable" type="checkbox" id="rule-yellow-enable" checked onchange="saveNotificationConfig()" style="width:18px; height:18px; accent-color:var(--amber-warn);">
                         </label>
                         <label style="display:flex; align-items:center; justify-content:space-between; padding:10px; border-radius:10px; background:var(--bg-input); border:1px solid var(--border-subtle);">
                             <span><strong>Logo ERP &amp; D-Pro Eşleştirme:</strong> Okunan plakayı otomatik müşteri veritabanında sorgula</span>
-                            <input type="checkbox" id="rule-erp-lookup" checked onchange="saveNotificationConfig()" style="width:18px; height:18px; accent-color:var(--emerald-ok);">
+                            <input aria-label="rule-erp-lookup" title="rule-erp-lookup" type="checkbox" id="rule-erp-lookup" checked onchange="saveNotificationConfig()" style="width:18px; height:18px; accent-color:var(--emerald-ok);">
                         </label>
                         <label style="display:flex; align-items:center; justify-content:space-between; padding:10px; border-radius:10px; background:var(--bg-input); border:1px solid var(--border-subtle);">
                             <span><strong>Mükerrer Haber Tekilleştirme:</strong> Aynı kazayı farklı sitelerden tek kartta birleştir</span>
-                            <input type="checkbox" id="rule-dedup" checked onchange="saveNotificationConfig()" style="width:18px; height:18px; accent-color:var(--dizsan-cyan);">
+                            <input aria-label="rule-dedup" title="rule-dedup" type="checkbox" id="rule-dedup" checked onchange="saveNotificationConfig()" style="width:18px; height:18px; accent-color:var(--dizsan-cyan);">
                         </label>
                     </div>
                 </div>
@@ -534,7 +537,7 @@
         <div class="modal-box">
             <div class="modal-header">
                 <h3 id="modal-inc-title"><i class="fa-solid fa-triangle-exclamation" style="color:var(--scania-red);"></i> Kaza Haberi &amp; Scania AI Raporu</h3>
-                <button class="modal-close" onclick="closeIncidentModal()">&times;</button>
+                <button aria-label="Buton closeIncidentModal" class="modal-close" onclick="closeIncidentModal()">&times;</button>
             </div>
             <div class="modal-body" id="modal-inc-body"></div>
             <div class="modal-footer" id="modal-inc-footer"></div>
@@ -548,14 +551,14 @@
         <div class="modal-box" style="max-width:600px;">
             <div class="modal-header">
                 <h3><i class="fa-solid fa-truck-medical" style="color:var(--emerald-ok);"></i> Yeni Saha Kaza İhbarı / Sosyal Medya Haberi Ekle</h3>
-                <button class="modal-close" onclick="closeManualReportModal()">&times;</button>
+                <button aria-label="Buton closeManualReportModal" class="modal-close" onclick="closeManualReportModal()">&times;</button>
             </div>
             <form onsubmit="submitManualReport(event)">
                 <div class="modal-body" style="display:flex; flex-direction:column; gap:10px;">
                     <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px;">
                         <div>
                             <label style="font-size:0.75rem; font-weight:600;">İl *</label>
-                            <select id="man-province" class="form-control" required onchange="populateManualDistricts()">
+                            <select aria-label="man-province" title="man-province" id="man-province" class="form-control" required onchange="populateManualDistricts()">
                                 <option value="Çorum">Çorum</option>
                                 <option value="Çankırı">Çankırı</option>
                                 <option value="Amasya">Amasya</option>
@@ -565,14 +568,14 @@
                         </div>
                         <div>
                             <label style="font-size:0.75rem; font-weight:600;">İlçe / Karayolu Geçidi *</label>
-                            <select id="man-district" class="form-control" required></select>
+                            <select aria-label="man-district" title="man-district" id="man-district" class="form-control" required></select>
                         </div>
                     </div>
 
                     <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px;">
                         <div>
                             <label style="font-size:0.75rem; font-weight:600;">Kaynak Platform *</label>
-                            <select id="man-platform" class="form-control">
+                            <select aria-label="man-platform" title="man-platform" id="man-platform" class="form-control">
                                 <option value="Instagram">Instagram</option>
                                 <option value="Facebook">Facebook</option>
                                 <option value="TikTok">TikTok</option>
@@ -584,34 +587,34 @@
                         </div>
                         <div>
                             <label style="font-size:0.75rem; font-weight:600;">Olay Tarihi (GG.AA.YYYY) *</label>
-                            <input type="date" id="man-date" class="form-control" required>
+                            <input aria-label="man-date" title="man-date" type="date" id="man-date" class="form-control" required>
                         </div>
                     </div>
 
                     <div>
                         <label style="font-size:0.75rem; font-weight:600;">Haber Başlığı *</label>
-                        <input type="text" id="man-title" class="form-control" placeholder="Örn: Sungurlu-Çorum yolunda Scania çekici kazası" required>
+                        <input aria-label="Örn: Sungurlu-Çorum yolunda Scania çekici kazası" title="Örn: Sungurlu-Çorum yolunda Scania çekici kazası" type="text" id="man-title" class="form-control" placeholder="Örn: Sungurlu-Çorum yolunda Scania çekici kazası" required>
                     </div>
 
                     <div>
                         <label style="font-size:0.75rem; font-weight:600;">Haberin Tam Metni / Açıklama *</label>
-                        <textarea id="man-content" rows="4" class="form-control" placeholder="Haber içeriğini buraya yapıştırın..." required></textarea>
+                        <textarea aria-label="Haber içeriğini buraya yapıştırın..." title="Haber içeriğini buraya yapıştırın..." id="man-content" rows="4" class="form-control" placeholder="Haber içeriğini buraya yapıştırın..." required></textarea>
                     </div>
 
                     <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px;">
                         <div>
                             <label style="font-size:0.75rem; font-weight:600;">Tespit Edilen Plaka (Varsa)</label>
-                            <input type="text" id="man-plate" class="form-control" placeholder="Örn: 19 LH 268">
+                            <input aria-label="Örn: 19 LH 268" title="Örn: 19 LH 268" type="text" id="man-plate" class="form-control" placeholder="Örn: 19 LH 268">
                         </div>
                         <div>
                             <label style="font-size:0.75rem; font-weight:600;">Tahmini Scania Modeli &amp; Hasar</label>
-                            <input type="text" id="man-model" class="form-control" placeholder="Örn: Scania R450 - Ön Kabin Hasarlı">
+                            <input aria-label="Örn: Scania R450 - Ön Kabin Hasarlı" title="Örn: Scania R450 - Ön Kabin Hasarlı" type="text" id="man-model" class="form-control" placeholder="Örn: Scania R450 - Ön Kabin Hasarlı">
                         </div>
                     </div>
 
                     <div>
                         <label style="font-size:0.75rem; font-weight:600;">Haber Kaynak Linki (URL)</label>
-                        <input type="url" id="man-url" class="form-control" placeholder="https://...">
+                        <input aria-label="https://..." title="https://..." type="url" id="man-url" class="form-control" placeholder="https://...">
                     </div>
                 </div>
                 <div class="modal-footer">
@@ -629,18 +632,18 @@
         <div class="modal-box" style="max-width:520px;">
             <div class="modal-header">
                 <h3><i class="fa-solid fa-globe" style="color:var(--dizsan-cyan);"></i> Yeni Sosyal Medya Hesabı veya Haber Sitesi Ekle</h3>
-                <button class="modal-close" onclick="closeAddSourceModal()">&times;</button>
+                <button aria-label="Buton closeAddSourceModal" class="modal-close" onclick="closeAddSourceModal()">&times;</button>
             </div>
             <form onsubmit="submitNewSource(event)">
                 <div class="modal-body" style="display:flex; flex-direction:column; gap:10px;">
                     <div>
                         <label style="font-size:0.75rem; font-weight:600;">Hesap / Sayfa / Site Adı *</label>
-                        <input type="text" id="src-name" class="form-control" placeholder="Örn: @corumtrafik19 veya Osmancık Haber" required>
+                        <input aria-label="Örn: @corumtrafik19 veya Osmancık Haber" title="Örn: @corumtrafik19 veya Osmancık Haber" type="text" id="src-name" class="form-control" placeholder="Örn: @corumtrafik19 veya Osmancık Haber" required>
                     </div>
                     <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px;">
                         <div>
                             <label style="font-size:0.75rem; font-weight:600;">Platform *</label>
-                            <select id="src-platform" class="form-control">
+                            <select aria-label="src-platform" title="src-platform" id="src-platform" class="form-control">
                                 <option value="Instagram">Instagram</option>
                                 <option value="Facebook">Facebook</option>
                                 <option value="TikTok">TikTok</option>
@@ -652,7 +655,7 @@
                         </div>
                         <div>
                             <label style="font-size:0.75rem; font-weight:600;">İl Kapsamı *</label>
-                            <select id="src-province" class="form-control">
+                            <select aria-label="src-province" title="src-province" id="src-province" class="form-control">
                                 <option value="Çorum">Çorum</option>
                                 <option value="Çankırı">Çankırı</option>
                                 <option value="Amasya">Amasya</option>
@@ -664,7 +667,7 @@
                     </div>
                     <div>
                         <label style="font-size:0.75rem; font-weight:600;">Halka Açık Profil / RSS / Sayfa Linki *</label>
-                        <input type="text" id="src-url" class="form-control" placeholder="https://instagram.com/... veya site adresi" required>
+                        <input aria-label="https://instagram.com/... veya site adresi" title="https://instagram.com/... veya site adresi" type="text" id="src-url" class="form-control" placeholder="https://instagram.com/... veya site adresi" required>
                     </div>
                 </div>
                 <div class="modal-footer">
@@ -682,7 +685,7 @@
         <div class="modal-box" style="max-width:600px;">
             <div class="modal-header">
                 <h3><i class="fa-solid fa-code-branch" style="color:var(--dizsan-cyan);"></i> D-Met Versiyon Yönetimi &amp; Güncelleme Merkezi</h3>
-                <button class="modal-close" onclick="closeVersionModal()">&times;</button>
+                <button aria-label="Buton closeVersionModal" class="modal-close" onclick="closeVersionModal()">&times;</button>
             </div>
             <div class="modal-body">
                 <div style="padding:12px; border-radius:12px; background:rgba(2,132,199,0.12); border:1px solid rgba(56,189,248,0.35); margin-bottom:14px; display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:10px;">
@@ -699,8 +702,8 @@
                 <div style="background:var(--bg-input); border:1px solid var(--border-subtle); border-radius:12px; padding:14px; margin-bottom:14px;">
                     <h4 style="font-size:0.86rem; margin-bottom:8px; color:var(--emerald-ok);"><i class="fa-solid fa-rocket"></i> Yeni Sürüm Yayınla (Canlı Versiyon Yükseltme)</h4>
                     <div style="display:grid; grid-template-columns: 140px 1fr; gap:8px; margin-bottom:8px;">
-                        <input type="text" id="new-version-code" class="form-control" placeholder="Örn: v1.1.0">
-                        <input type="text" id="new-version-notes" class="form-control" placeholder="Bu sürümde yapılan yenilikleri yazın...">
+                        <input aria-label="Örn: v1.1.0" title="Örn: v1.1.0" type="text" id="new-version-code" class="form-control" placeholder="Örn: v1.1.0">
+                        <input aria-label="Bu sürümde yapılan yenilikleri yazın..." title="Bu sürümde yapılan yenilikleri yazın..." type="text" id="new-version-notes" class="form-control" placeholder="Bu sürümde yapılan yenilikleri yazın...">
                     </div>
                     <button class="btn btn-success btn-sm" onclick="publishNewVersion()">
                         <i class="fa-solid fa-cloud-arrow-up"></i> Versiyonu Güncelle &amp; Tüm Cihazlara Bildir
@@ -720,7 +723,7 @@
         <div class="modal-box" style="max-width:540px;">
             <div class="modal-header">
                 <h3><i class="fa-solid fa-mobile-screen-button" style="color:var(--dizsan-cyan);"></i> iOS, Android ve Windows Kurulum Rehberi</h3>
-                <button class="modal-close" onclick="closeInstallModal()">&times;</button>
+                <button aria-label="Buton closeInstallModal" class="modal-close" onclick="closeInstallModal()">&times;</button>
             </div>
             <div class="modal-body" style="display:flex; flex-direction:column; gap:12px; font-size:0.82rem;">
                 <div style="padding:12px; border-radius:10px; background:var(--bg-input); border:1px solid var(--border-subtle);">

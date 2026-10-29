@@ -467,17 +467,13 @@ body {
     font-size: 0.85rem;
     font-weight: 700;
     color: #fff;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
+    text-overflow: clip; white-space: normal; overflow-wrap: anywhere; word-break: break-word;
 }
 
 .user-role {
     font-size: 0.72rem;
     color: var(--text-sec);
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
+    text-overflow: clip; white-space: normal; overflow-wrap: anywhere; word-break: break-word;
 }
 
 .btn-icon {
@@ -734,7 +730,7 @@ body {
     width: 100%;
     padding-left: 2rem;
     padding-right: 2.8rem;
-    text-overflow: ellipsis;
+    text-overflow: clip; white-space: normal; overflow-wrap: anywhere; word-break: break-word;
     background: rgba(15, 23, 42, 0.95);
     border: 1px solid var(--border-color);
 }
@@ -1484,9 +1480,7 @@ body {
 
     .page-title {
         font-size: 0.88rem !important;
-        white-space: nowrap;
-        overflow: hidden;
-        text-overflow: ellipsis;
+        text-overflow: clip; white-space: normal; overflow-wrap: anywhere; word-break: break-word;
         margin: 0;
         line-height: 1.2;
     }
@@ -1497,9 +1491,7 @@ body {
     }
 
     .page-title span {
-        white-space: nowrap;
-        overflow: hidden;
-        text-overflow: ellipsis;
+        text-overflow: clip; white-space: normal; overflow-wrap: anywhere; word-break: break-word;
     }
 
     .navbar-right {
@@ -1620,9 +1612,7 @@ body {
     .modal-header h3 {
         font-size: 0.98rem !important;
         max-width: calc(100% - 45px);
-        white-space: nowrap;
-        overflow: hidden;
-        text-overflow: ellipsis;
+        text-overflow: clip; white-space: normal; overflow-wrap: anywhere; word-break: break-word;
         margin: 0;
     }
 
@@ -2114,5 +2104,35 @@ body {
     border-radius: 8px;
 }
 
+/* === DIZSAN 100% RESPONSIVE & ANTI-TRUNCATION MEDIA QUERIES === */
+@media (max-width: 1024px) {
+  html, body {
+    max-width: 100% !important;
+    overflow-x: hidden !important;
+  }
+  .container, .main-container, .app-container, .content-wrapper, .page-container, .dashboard-container {
+    max-width: 100% !important;
+    box-sizing: border-box !important;
+  }
+  h1, h2, h3, h4, h5, h6, p, span, td, th, label, a, div {
+    text-overflow: clip !important;
+    overflow-wrap: anywhere !important;
+    word-break: break-word !important;
+  }
+}
 
-
+@media (max-width: 767px) {
+  html, body {
+    max-width: 100% !important;
+    overflow-x: hidden !important;
+  }
+  .container, .main-container, .app-container, .content-wrapper, .page-container, .dashboard-container, .card, .modal-content, .panel {
+    max-width: 100% !important;
+    box-sizing: border-box !important;
+  }
+  .table-responsive, .table-container, .table-wrapper {
+    width: 100% !important;
+    overflow-x: auto !important;
+    -webkit-overflow-scrolling: touch !important;
+  }
+}

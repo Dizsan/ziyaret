@@ -1,11 +1,11 @@
 {
   "appId": "dikas-finans",
   "appName": "DiKas – Dizsan Finans, Nakit Akışı ve Ödeme Takip Sistemi",
-  "version": "1.0.6",
-  "build": 106,
-  "releasedAt": "2026-10-19 02:00:00",
-  "updatedAt": "19.10.2026 02:00",
+  "version": "1.0.7",
+  "build": 107,
+  "releasedAt": "2026-10-29 21:15:00",
+  "updatedAt": "29.10.2026 21:15",
   "author": "ÖMER EREN",
-  "releaseNotes": "DiKas v1.0.6: Mobil ve PC arası çift yönlü gerçek zamanlı GitHub Bulut Senkronizasyonu (shared_state.json), otomatik 20 sn arka plan veri eşitleme ve sıfır temas sürüm güncelleme motoru.",
-  "notes": "DiKas v1.0.6: Mobil ve PC arası çift yönlü gerçek zamanlı GitHub Bulut Senkronizasyonu (shared_state.json), otomatik 20 sn arka plan veri eşitleme ve sıfır temas sürüm güncelleme motoru."
+  "releaseNotes": "DiKas v1.0.7: Mobil sıfır kesilme (zero-truncation) &  Mobil ve PC arası çift yönlü gerçek zamanlı GitHub Bulut Senkronizasyonu (shared_state.json), otomatik 20 sn arka plan veri eşitleme ve sıfır temas sürüm güncelleme motoru.",
+  "notes": "DiKas v1.0.7: Mobil sıfır kesilme (zero-truncation) &  Mobil ve PC arası çift yönlü gerçek zamanlı GitHub Bulut Senkronizasyonu (shared_state.json), otomatik 20 sn arka plan veri eşitleme ve sıfır temas sürüm güncelleme motoru."
 }

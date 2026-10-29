@@ -15,7 +15,7 @@
  * ==========================================================================
  */
 
-const CURRENT_APP_VERSION = "1.0.6";
+const CURRENT_APP_VERSION = "1.0.7";
 window.CURRENT_APP_VERSION = CURRENT_APP_VERSION;
 
 const STORAGE_KEY_DIKAS_STATE = "dizsan_dikas_shared_state_v1";
@@ -698,8 +698,8 @@ window.addEventListener("unhandledrejection", (ev) => {
 
 // ==================== 6. VERİ SAKLAMA, YEREL SUNUCU VE GITHUB BULUT SENKRONİZASYONU ====================
 const DIKAS_CLOUD_KEY_CODES = [106, 108, 119, 107, 120, 101, 98, 115, 100, 119, 98, 52, 52, 70, 68, 87, 79, 73, 93, 92, 51, 108, 58, 72, 80, 118, 92, 121, 100, 71, 76, 86, 108, 98, 114, 124, 72, 124, 125, 106, 80, 105, 54, 125, 123, 53, 107, 122, 109, 109, 80, 87, 102, 107, 118, 82, 76, 73, 56, 86, 90, 60, 125, 113, 124, 56, 56, 111, 81, 102, 114, 116, 78, 72, 51, 70, 72, 81, 71, 79, 88, 71, 73, 70, 73, 112, 73, 101, 121, 77, 53, 113, 58];
-const DIKAS_CLOUD_API_DPRO = "https://api.github.com/repos/Dizsan/dpro/contents/apps/dikas/shared_state.json";
-const DIKAS_CLOUD_API_ZIYARET = "https://api.github.com/repos/Dizsan/ziyaret/contents/dikas/shared_state.json";
+const DIKAS_CLOUD_API_DPRO = "/api/dikas-state";
+const DIKAS_CLOUD_API_ZIYARET = "/api/dikas-state";
 
 let isCloudPutInFlight = false;
 let hasPendingCloudPut = false;
@@ -806,12 +806,13 @@ async function pushToSingleGitHubRepo(apiUrl, shaHolderKey, isRetry = false) {
 
 async function pushStateToGitHubCloud() {
     try {
-        const okDpro = await pushToSingleGitHubRepo(DIKAS_CLOUD_API_DPRO, "dpro", false);
-        pushToSingleGitHubRepo(DIKAS_CLOUD_API_ZIYARET, "ziyaret", false).catch(() => {});
-        if (okDpro) {
-            setSyncBadge("cloud_ok");
-        }
-        return okDpro;
+        const res = await fetch("/api/dikas-state", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(appState)
+        });
+        if (res.ok) setSyncBadge("cloud_ok");
+        return res.ok;
     } catch (e) {
         return false;
     }
@@ -1635,7 +1636,7 @@ function renderDashboardLists() {
             upPayEl.innerHTML = upcomingPayments.map(p => `
                 <div style="display:flex; align-items:center; justify-content:space-between; gap:8px; padding:8px 0; border-bottom:1px solid var(--border-subtle);">
                     <div style="min-width:0;">
-                        <div style="font-weight:700; font-size:0.8rem; color:var(--text-primary); white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${escapeHtml(p.title)}</div>
+                        <div style="font-weight:700; font-size:0.8rem; color:var(--text-primary); text-overflow: clip; white-space: normal; overflow-wrap: anywhere; word-break: break-word;">${escapeHtml(p.title)}</div>
                         <div style="font-size:0.71rem; color:var(--text-muted);">${formatDateToTR(p.dueDate)} &bull; ${escapeHtml(p.creditor)} (${escapeHtml(getCompanyName(p.companyId))})</div>
                     </div>
                     <div style="text-align:right; flex-shrink:0;">
@@ -1661,7 +1662,7 @@ function renderDashboardLists() {
             upColEl.innerHTML = upcomingCollections.map(c => `
                 <div style="display:flex; align-items:center; justify-content:space-between; gap:8px; padding:8px 0; border-bottom:1px solid var(--border-subtle);">
                     <div style="min-width:0;">
-                        <div style="font-weight:700; font-size:0.8rem; color:var(--text-primary); white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${escapeHtml(c.title)}</div>
+                        <div style="font-weight:700; font-size:0.8rem; color:var(--text-primary); text-overflow: clip; white-space: normal; overflow-wrap: anywhere; word-break: break-word;">${escapeHtml(c.title)}</div>
                         <div style="font-size:0.71rem; color:var(--text-muted);">${formatDateToTR(c.expectedDate)} &bull; ${escapeHtml(c.customer)} <span class="badge badge-info" style="font-size:0.62rem;">${c.certainty}</span></div>
                     </div>
                     <div style="text-align:right; flex-shrink:0;">
@@ -1711,7 +1712,7 @@ function renderDashboardLists() {
             ovListEl.innerHTML = overdueItems.map(item => `
                 <div style="display:flex; align-items:center; justify-content:space-between; gap:8px; padding:8px 0; border-bottom:1px solid var(--border-subtle);">
                     <div style="min-width:0;">
-                        <div style="font-weight:700; font-size:0.8rem; color:var(--rose-danger); white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">
+                        <div style="font-weight:700; font-size:0.8rem; color:var(--rose-danger); text-overflow: clip; white-space: normal; overflow-wrap: anywhere; word-break: break-word;">
                             [${item.type === "PAYMENT" ? "ÖDEME" : "TAHSİLAT"}] ${escapeHtml(item.title)}
                         </div>
                         <div style="font-size:0.71rem; color:var(--text-muted);">Vade: ${formatDateToTR(item.date)} &bull; ${escapeHtml(item.party)}</div>

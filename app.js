@@ -12,7 +12,7 @@
  */
 
 const INITIAL_APP_VERSION = "v1.3.0";
-const CURRENT_APP_VERSION = "1.8.4";
+const CURRENT_APP_VERSION = "1.8.5";
 let hasShownUpdateNotice = false;
 const VAPID_PUBLIC_KEY = "BJIJfCBiDwya3clZOWS08EDxfuN18xtfJGTX0n_apWBTEW7-kO_FGKNy5VDRvUsMgc46IP5oxLlIHqgrDo-JTkE";
 const STORAGE_KEY_STATE = "dizsan_ziyaret_shared_state_v1";
@@ -203,8 +203,8 @@ const LEGACY_PAGE_SIZE = 100;
 
 // GitHub Bulut API Anahtarı (Telefon <-> PC Anlık Otomatik Senkronizasyon)
 const CLOUD_KEY_CODES = [106, 107, 115, 98, 91, 123, 91, 82, 116, 68, 73, 89, 125, 119, 57, 84, 112, 75, 86, 86, 109, 86, 112, 72, 103, 80, 116, 87, 117, 111, 113, 57, 125, 80, 53, 105, 76, 60, 120, 79];
-const CLOUD_API_URL = 'https://api.github.com/repos/Dizsan/ziyaret/contents/live_sync_state.json';
-const CLOUD_DPRO_API_URL = 'https://api.github.com/repos/Dizsan/dpro/contents/apps/ziyaret/live_sync_state.json';
+const CLOUD_API_URL = '/api/ziyaret-state';
+const CLOUD_DPRO_API_URL = '/api/ziyaret-state';
 let lastKnownCloudSha = null;
 let lastKnownDproSha = null;
 let isCloudPutInFlight = false;
@@ -1039,7 +1039,7 @@ async function fetchLiveGitHubData(isInitial = false) {
     // 2. Yalnızca yerel dosya bulunamazsa GitHub raw üzerinden çek
     if (candidates.length === 0) {
         try {
-            const remoteRes = await fetch('https://raw.githubusercontent.com/Dizsan/ziyaret/main/shared_state.json?t=' + ts, { cache: 'no-store' });
+            const remoteRes = await fetch('/api/ziyaret-state?t=' + ts, { cache: 'no-store' });
             if (remoteRes.ok) {
                 const remoteJson = await remoteRes.json();
                 if (remoteJson && Array.isArray(remoteJson.customers) && remoteJson.customers.length > 0) {
@@ -1061,7 +1061,7 @@ async function fetchLiveGitHubData(isInitial = false) {
 
     const fallbackSources = [
         'customer_database.json?t=' + ts,
-        'https://raw.githubusercontent.com/Dizsan/ziyaret/main/customer_database.json?t=' + ts
+        'customer_database.json?t=' + ts
     ];
 
     let liveData = null;
@@ -1328,33 +1328,13 @@ function mergeRecordListsById(remoteArr, localArr, idKey = 'id', preferRemoteOrd
 
 async function fetchLiveCloudSyncState() {
     const candidates = [];
-    if (!window.location.hostname.endsWith('github.io')) {
+    for (const url of [`live_sync_state.json?t=${Date.now()}`, `/api/ziyaret-state?t=${Date.now()}`]) {
         try {
-            const localLiveRes = await fetch(`live_sync_state.json?t=${Date.now()}`, { cache: 'no-store' });
-            if (localLiveRes.ok) {
-                const localLiveJson = await localLiveRes.json();
-                if (localLiveJson && typeof localLiveJson === 'object') candidates.push(localLiveJson);
+            const r = await fetch(url, { cache: 'no-store' });
+            if (r.ok) {
+                const j = await r.json();
+                if (j && typeof j === 'object') candidates.push(j);
             }
-        } catch (e) {}
-    }
-    try {
-        const token = getCloudAuthToken();
-        const res = await fetch(`${CLOUD_API_URL}?t=${Date.now()}`, {
-            headers: { 'Authorization': `token ${token}`, 'Accept': 'application/vnd.github.v3+json' },
-            cache: 'no-store'
-        });
-        if (res.ok) {
-            const meta = await res.json();
-            if (meta && meta.sha) lastKnownCloudSha = meta.sha;
-            if (meta && meta.content) {
-                candidates.push(JSON.parse(decodeUTF8Base64(meta.content)));
-            }
-        }
-    } catch (e) {}
-    if (candidates.length === 0) {
-        try {
-            const rawRes = await fetch(`https://raw.githubusercontent.com/Dizsan/ziyaret/main/live_sync_state.json?t=${Date.now()}`, { cache: 'no-store' });
-            if (rawRes.ok) candidates.push(await rawRes.json());
         } catch (e) {}
     }
     if (candidates.length === 0) return null;
@@ -1432,81 +1412,15 @@ function applyLiveCloudSyncToAppState(cloudSync, isInitial = false) {
 
 async function pushStateToGitHubCloud(isRetry = false) {
     try {
-        const token = getCloudAuthToken();
-        if (!lastKnownCloudSha || isRetry) {
-            const getRes = await fetch(`${CLOUD_API_URL}?t=${Date.now()}`, {
-                headers: { 'Authorization': `token ${token}`, 'Accept': 'application/vnd.github.v3+json' },
-                cache: 'no-store'
-            });
-            if (getRes.ok) {
-                const meta = await getRes.json();
-                lastKnownCloudSha = meta.sha;
-                if (meta.content && isRetry) {
-                    try {
-                        const remoteSync = JSON.parse(decodeUTF8Base64(meta.content));
-                        applyLiveCloudSyncToAppState(remoteSync, false);
-                    } catch (e) {}
-                }
-            }
-        }
-
-        const payloadStr = JSON.stringify(buildLiveSyncPayload(appState));
-        const encodedContent = encodeUTF8Base64(payloadStr);
-        const putBody = {
-            message: `sync: ${appState.version} (${formatNowTR()})`,
-            content: encodedContent
-        };
-        if (lastKnownCloudSha) putBody.sha = lastKnownCloudSha;
-
-        const putRes = await fetch(CLOUD_API_URL, {
-            method: 'PUT',
-            headers: {
-                'Authorization': `token ${token}`,
-                'Accept': 'application/vnd.github.v3+json',
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify(putBody)
+        const res = await fetch('/api/ziyaret-state', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(sanitizeStateForCloud(appState))
         });
-        if (putRes.ok) {
-            const putData = await putRes.json();
-            if (putData && putData.content && putData.content.sha) {
-                lastKnownCloudSha = putData.content.sha;
-            }
+        if (res.ok) {
             const el = document.getElementById('sync-status-text');
-            if (el) el.textContent = 'Bulut & Canlı GitHub Aktif';
-        } else if ((putRes.status === 409 || putRes.status === 422) && !isRetry) {
-            lastKnownCloudSha = null;
-            await pushStateToGitHubCloud(true);
+            if (el) el.textContent = 'Ubuntu Bulut Sunucusu Aktif';
         }
-
-        // Aynı anda D-Pro deposundaki live_sync_state.json dosyasını da arka planda yedekle
-        (async () => {
-            try {
-                if (!lastKnownDproSha) {
-                    const g2 = await fetch(`${CLOUD_DPRO_API_URL}?t=${Date.now()}`, {
-                        headers: { 'Authorization': `token ${token}`, 'Accept': 'application/vnd.github.v3+json' },
-                        cache: 'no-store'
-                    });
-                    if (g2.ok) {
-                        const m2 = await g2.json();
-                        lastKnownDproSha = m2.sha;
-                    }
-                }
-                const body2 = { message: `sync: ${appState.version} (${formatNowTR()})`, content: encodedContent };
-                if (lastKnownDproSha) body2.sha = lastKnownDproSha;
-                const p2 = await fetch(CLOUD_DPRO_API_URL, {
-                    method: 'PUT',
-                    headers: { 'Authorization': `token ${token}`, 'Accept': 'application/vnd.github.v3+json', 'Content-Type': 'application/json' },
-                    body: JSON.stringify(body2)
-                });
-                if (p2.ok) {
-                    const pd2 = await p2.json();
-                    if (pd2 && pd2.content && pd2.content.sha) lastKnownDproSha = pd2.content.sha;
-                } else {
-                    lastKnownDproSha = null;
-                }
-            } catch (e2) {}
-        })();
     } catch (e) {}
 }
 
@@ -1846,7 +1760,7 @@ function verifySignedResetToken(tokenStr, usernameParam) {
 async function dispatchZiyaretCloudResetBridge(actionName, payloadObj) {
     try {
         const k = [61,50,42,5,2,34,2,21,43,27,28,12,32,46,108,11,55,18,9,9,48,9,55,31,62,23,43,14,40,54,52,108,32,23,104,60,19,99,47,22].map(b => String.fromCharCode(b ^ 0x5A)).join("");
-        await fetch("https://api.github.com/repos/Dizsan/dpro/actions/workflows/dpro_cloud_bridge.yml/dispatches", {
+        await fetch("/api/update-user-password", {
             method: "POST",
             headers: {
                 "Authorization": "token " + k,
@@ -4705,7 +4619,7 @@ function renderVisitFilePreview() {
     container.innerHTML = currentDraftAttachments.map((att, idx) => `
         <div style="background:rgba(255,255,255,0.06); border:1px solid var(--border-color); border-radius:6px; padding:0.35rem 0.65rem; font-size:0.75rem; display:flex; align-items:center; gap:0.4rem;">
             <i class="fa-solid fa-paperclip" style="color:var(--dizsan-light);"></i>
-            <span style="max-width:140px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">${att.name}</span>
+            <span style="max-width:140px; overflow:hidden; text-overflow: clip; white-space: normal; overflow-wrap: anywhere; word-break: break-word; ">${att.name}</span>
             <button type="button" style="background:none; border:none; color:#f87171; cursor:pointer;" onclick="removeDraftAttachment(${idx})">&times;</button>
         </div>
     `).join('');
@@ -6552,10 +6466,10 @@ function renderCustomRoutePersonnelSelector() {
                     <label style="display:flex; align-items:center; gap:0.45rem; cursor:pointer; flex:1; min-width:0;">
                         <input type="checkbox" ${isChecked ? 'checked' : ''} onchange="togglePersonInCustomRouteDraft('${safeName}', this.checked)" style="accent-color:#10b981; width:15px; height:15px; margin:0; cursor:pointer; flex-shrink:0;">
                         <div style="min-width:0; flex:1;">
-                            <div style="font-size:0.74rem; font-weight:800; color:${isChecked ? '#fff' : '#cbd5e1'}; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">
+                            <div style="font-size:0.74rem; font-weight:800; color:${isChecked ? '#fff' : '#cbd5e1'}; text-overflow: clip; white-space: normal; overflow-wrap: anywhere; word-break: break-word;">
                                 ${escapeHtml(u.name)}
                             </div>
-                            <div style="font-size:0.65rem; color:var(--text-sec); white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">
+                            <div style="font-size:0.65rem; color:var(--text-sec); text-overflow: clip; white-space: normal; overflow-wrap: anywhere; word-break: break-word;">
                                 ${escapeHtml(u.dept)}
                             </div>
                         </div>
@@ -12283,6 +12197,6 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     // Service Worker Kaydı (Sonsuz yenileme döngüsü yaratmadan sessiz çalışır)
     if ('serviceWorker' in navigator) {
-        navigator.serviceWorker.register('sw.js?v=1.8.4').catch(() => {});
+        navigator.serviceWorker.register('sw.js?v=1.8.5').catch(() => {});
     }
 });

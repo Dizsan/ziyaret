@@ -2,8 +2,9 @@
 <html lang="tr">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <title>DİZSAN Müşteri Ziyaret, Telefon &amp; Saha Takip Sistemi</title>
+    <meta name="description" content="Dizsan Otomotiv Kurumsal Yönetim, ERP, Finans, Saha ve Servis Platformu — PC, Tablet ve Mobil Uyumlu Gerçek Zamanlı Sistem.">
     
     <!-- PWA & Mobile Web App Meta Tags -->
     <meta name="theme-color" content="#0284c7">
@@ -498,17 +499,13 @@ body.dpro-embedded .login-overlay {
     font-size: 0.85rem;
     font-weight: 700;
     color: #fff;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
+    text-overflow: clip; white-space: normal; overflow-wrap: anywhere; word-break: break-word;
 }
 
 .user-role {
     font-size: 0.72rem;
     color: var(--text-sec);
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
+    text-overflow: clip; white-space: normal; overflow-wrap: anywhere; word-break: break-word;
 }
 
 .btn-icon {
@@ -853,7 +850,7 @@ body[data-theme="light"] .mobile-menu-btn {
     width: 100%;
     padding-left: 2rem;
     padding-right: 2.8rem;
-    text-overflow: ellipsis;
+    text-overflow: clip; white-space: normal; overflow-wrap: anywhere; word-break: break-word;
     background: rgba(15, 23, 42, 0.95);
     border: 1px solid var(--border-color);
 }
@@ -1615,9 +1612,7 @@ body[data-theme="light"] .mobile-menu-btn {
 
     .page-title {
         font-size: 0.88rem !important;
-        white-space: nowrap;
-        overflow: hidden;
-        text-overflow: ellipsis;
+        text-overflow: clip; white-space: normal; overflow-wrap: anywhere; word-break: break-word;
         margin: 0;
         line-height: 1.2;
     }
@@ -1628,9 +1623,7 @@ body[data-theme="light"] .mobile-menu-btn {
     }
 
     .page-title span {
-        white-space: nowrap;
-        overflow: hidden;
-        text-overflow: ellipsis;
+        text-overflow: clip; white-space: normal; overflow-wrap: anywhere; word-break: break-word;
     }
 
     .navbar-right {
@@ -1755,9 +1748,7 @@ body[data-theme="light"] .mobile-menu-btn {
         font-size: 0.92rem !important;
         flex: 1 1 auto;
         min-width: 0;
-        white-space: nowrap;
-        overflow: hidden;
-        text-overflow: ellipsis;
+        text-overflow: clip; white-space: normal; overflow-wrap: anywhere; word-break: break-word;
         margin: 0;
     }
 
@@ -3233,6 +3224,8 @@ body[data-theme="light"] .mobile-scroll-nudge-btn {
 }
 
 </style>
+    <link rel="stylesheet" href="dizsan-realtime-responsive.css?v=20261029">
+    <script defer src="dizsan-realtime-socket.js?v=20261029"></script>
 </head>
 <body>
 
@@ -3262,7 +3255,7 @@ body[data-theme="light"] .mobile-scroll-nudge-btn {
                     <label>Kullanıcı Adı veya Personel Adı *</label>
                     <div class="input-with-icon">
                         <i class="fa-solid fa-user"></i>
-                        <input type="text" id="login-username" class="form-control" placeholder="Örn: ömer veya hakan.aydin" required>
+                        <input aria-label="Örn: ömer veya hakan.aydin" title="Örn: ömer veya hakan.aydin" type="text" id="login-username" class="form-control" placeholder="Örn: ömer veya hakan.aydin" required>
                     </div>
                 </div>
 
@@ -3270,13 +3263,13 @@ body[data-theme="light"] .mobile-scroll-nudge-btn {
                     <label>Giriş Şifresi *</label>
                     <div class="input-with-icon">
                         <i class="fa-solid fa-lock"></i>
-                        <input type="password" id="login-password" class="form-control" placeholder="••••••" required>
+                        <input aria-label="••••••" title="••••••" type="password" id="login-password" class="form-control" placeholder="••••••" required>
                     </div>
                 </div>
 
                 <div class="login-actions">
                     <label class="checkbox-label">
-                        <input type="checkbox" id="login-remember-me" checked>
+                        <input aria-label="login-remember-me" title="login-remember-me" type="checkbox" id="login-remember-me" checked>
                         <span>Beni Hatırla</span>
                     </label>
                     <a class="forgot-link" onclick="openForgotPasswordModal()">Şifremi Unuttum?</a>
@@ -3399,7 +3392,7 @@ body[data-theme="light"] .mobile-scroll-nudge-btn {
                         </div>
                     </div>
                     <div style="display:flex; align-items:center; gap:0.25rem;">
-                        <button type="button" class="btn-icon" title="Güvenli Çıkış" onclick="handleLogout()">
+                        <button aria-label="Güvenli Çıkış" type="button" class="btn-icon" title="Güvenli Çıkış" onclick="handleLogout()">
                             <i class="fa-solid fa-power-off"></i>
                         </button>
                     </div>
@@ -3419,7 +3412,7 @@ body[data-theme="light"] .mobile-scroll-nudge-btn {
                     <button type="button" class="dizsan-global-refresh-btn" id="dizsan-global-refresh-btn" onclick="refreshApplicationNow(this)" title="Uygulamayı Yenile">
                         <i class="fa-solid fa-arrows-rotate"></i> <span>Yenile</span>
                     </button>
-                    <button class="mobile-menu-btn" onclick="toggleMobileSidebar()" title="Menü">
+                    <button aria-label="Menü" class="mobile-menu-btn" onclick="toggleMobileSidebar()" title="Menü">
                         <i class="fa-solid fa-bars"></i>
                     </button>
                     <h1 id="page-title" class="page-title" style="font-size:0.95rem; margin-left:0.25rem;">
@@ -3429,7 +3422,7 @@ body[data-theme="light"] .mobile-scroll-nudge-btn {
 
                 <div class="navbar-right" style="display:none !important;">
                     <button type="button" class="btn btn-secondary btn-sm app-version-chip" id="app-version-badge" onclick="openVersionModal()" title="Sürüm ve Cihaz Güncelleme Merkezi">
-                        <i class="fa-solid fa-code-branch" style="color:#38bdf8;"></i> <span id="app-current-version-text">v1.8.4</span>
+                        <i class="fa-solid fa-code-branch" style="color:#38bdf8;"></i> <span id="app-current-version-text">v1.8.5</span>
                     </button>
 
                     <button type="button" class="btn btn-secondary btn-sm" onclick="forceRefreshFromGitHub()" id="btn-navbar-refresh" title="Logo ERP Canlı Verilerini Yenile (Son Fatura: 20.08.2026)">
@@ -3450,7 +3443,7 @@ body[data-theme="light"] .mobile-scroll-nudge-btn {
                         <button type="button" class="btn btn-primary btn-sm" onclick="openInstallGuideModal()">
                             <i class="fa-solid fa-download"></i> Hemen Kur
                         </button>
-                        <button type="button" class="pwa-close-btn" onclick="dismissPwaBanner()">&times;</button>
+                        <button aria-label="Buton dismissPwaBanner" type="button" class="pwa-close-btn" onclick="dismissPwaBanner()">&times;</button>
                     </div>
                 </div>
             </div>
@@ -3495,8 +3488,8 @@ body[data-theme="light"] .mobile-scroll-nudge-btn {
                         <div class="global-search-top-row">
                             <div class="global-search-input-wrap">
                                 <i class="fa-solid fa-magnifying-glass search-lead-icon"></i>
-                                <input type="text" id="global-customer-search-input" class="global-search-input" placeholder="Müşteri adı, şoför/yetkili, 120 kod veya plaka yazın..." onkeydown="if(event.key==='Enter'){event.preventDefault(); executeCustomerSearch('EXACT');}" oninput="onCustomerSearchInputChange(this.value)" autocomplete="off">
-                                <button type="button" id="global-customer-search-clear" class="global-search-clear-btn" onclick="clearGlobalCustomerSearch()" title="Aramayı Temizle">
+                                <input aria-label="Müşteri adı, şoför/yetkili, 120 kod veya plaka yazın..." title="Müşteri adı, şoför/yetkili, 120 kod veya plaka yazın..." type="text" id="global-customer-search-input" class="global-search-input" placeholder="Müşteri adı, şoför/yetkili, 120 kod veya plaka yazın..." onkeydown="if(event.key==='Enter'){event.preventDefault(); executeCustomerSearch('EXACT');}" oninput="onCustomerSearchInputChange(this.value)" autocomplete="off">
+                                <button aria-label="Aramayı Temizle" type="button" id="global-customer-search-clear" class="global-search-clear-btn" onclick="clearGlobalCustomerSearch()" title="Aramayı Temizle">
                                     <i class="fa-solid fa-xmark"></i>
                                 </button>
                             </div>
@@ -3699,18 +3692,18 @@ body[data-theme="light"] .mobile-scroll-nudge-btn {
                             </button>
                             <div class="search-box">
                                 <i class="fa-solid fa-magnifying-glass"></i>
-                                <input type="text" id="ekstre-search" class="filter-input" placeholder="Cari kodu, cari adı, adres, il, ilçe veya plaka ara..." oninput="cariEkstrePage=1; renderCariEkstreTable()">
+                                <input aria-label="Cari kodu, cari adı, adres, il, ilçe veya plaka ara..." title="Cari kodu, cari adı, adres, il, ilçe veya plaka ara..." type="text" id="ekstre-search" class="filter-input" placeholder="Cari kodu, cari adı, adres, il, ilçe veya plaka ara..." oninput="cariEkstrePage=1; renderCariEkstreTable()">
                             </div>
 
-                            <select id="ekstre-filter-city" class="filter-input" onchange="handleEkstreCityFilterChange()">
+                            <select aria-label="ekstre-filter-city" title="ekstre-filter-city" id="ekstre-filter-city" class="filter-input" onchange="handleEkstreCityFilterChange()">
                                 <option value="">📍 Tüm İller</option>
                             </select>
 
-                            <select id="ekstre-filter-district" class="filter-input" onchange="currentCariEkstrePage=1; renderCariEkstreTable(true)">
+                            <select aria-label="ekstre-filter-district" title="ekstre-filter-district" id="ekstre-filter-district" class="filter-input" onchange="currentCariEkstrePage=1; renderCariEkstreTable(true)">
                                 <option value="">🏘️ Tüm İlçeler</option>
                             </select>
 
-                            <select id="ekstre-filter-ba" class="filter-input" onchange="cariEkstrePage=1; renderCariEkstreTable()">
+                            <select aria-label="ekstre-filter-ba" title="ekstre-filter-ba" id="ekstre-filter-ba" class="filter-input" onchange="cariEkstrePage=1; renderCariEkstreTable()">
                                 <option value="">Tüm Bakiye Türleri (B / A)</option>
                                 <option value="(B)">(B) Borçlu Cariler</option>
                                 <option value="(A)">(A) Alacaklı Cariler</option>
@@ -3718,7 +3711,7 @@ body[data-theme="light"] .mobile-scroll-nudge-btn {
                                 <option value="HAS_INVOICE">Fatura Kalem Detayı Olanlar (1.725)</option>
                             </select>
 
-                            <select id="ekstre-filter-priority" class="filter-input" onchange="cariEkstrePage=1; renderCariEkstreTable()">
+                            <select aria-label="ekstre-filter-priority" title="ekstre-filter-priority" id="ekstre-filter-priority" class="filter-input" onchange="cariEkstrePage=1; renderCariEkstreTable()">
                                 <option value="">Tüm Öncelik &amp; Portföy Grupları</option>
                                 <option value="P1">P1 - Tüm Acil Churn &amp; VIP</option>
                                 <option value="P1 - VIP Kritik Filo">P1 - VIP Kritik Filo (Ciro ≥ 1M ₺)</option>
@@ -3728,7 +3721,7 @@ body[data-theme="light"] .mobile-scroll-nudge-btn {
                                 <option value="P3">P3 - Kazanılan &amp; Aktif Portföy</option>
                             </select>
 
-                            <select id="ekstre-sort" class="filter-input" onchange="cariEkstrePage=1; renderCariEkstreTable()">
+                            <select aria-label="ekstre-sort" title="ekstre-sort" id="ekstre-sort" class="filter-input" onchange="cariEkstrePage=1; renderCariEkstreTable()">
                                 <option value="BALANCE_DESC">Bakiye Büyüklüğüne Göre (Azalan)</option>
                                 <option value="REVENUE_DESC">Tarihsel Ciroya Göre (Azalan)</option>
                                 <option value="DEBIT_DESC">Borç Tutarlarına Göre (Azalan)</option>
@@ -3818,20 +3811,20 @@ body[data-theme="light"] .mobile-scroll-nudge-btn {
                     <!-- PLANLAMA KARTI -->
                     <div class="table-card" style="margin-bottom:1rem; border:1px solid rgba(56,189,248,0.32);">
                         <div style="padding:0.95rem 1.15rem;">
-                            <input type="hidden" id="custom-rut-edit-id" value="">
-                            <input type="hidden" id="custom-rut-route-text" value="">
-                            <input type="hidden" id="custom-rut-plan-status" value="Planlandı">
+                            <input aria-label="custom-rut-edit-id" title="custom-rut-edit-id" type="hidden" id="custom-rut-edit-id" value="">
+                            <input aria-label="custom-rut-route-text" title="custom-rut-route-text" type="hidden" id="custom-rut-route-text" value="">
+                            <input aria-label="custom-rut-plan-status" title="custom-rut-plan-status" type="hidden" id="custom-rut-plan-status" value="Planlandı">
 
                             <!-- Üst Satır: Tarih, Görevli Personel, Plan Adı ve Plan Notu (Tek Satır Dengeli Akış) -->
                             <div class="rut-top-form-grid" style="display:grid; grid-template-columns:155px 155px minmax(240px, 1.3fr) minmax(200px, 1fr) minmax(200px, 1fr); gap:0.65rem; margin-bottom:0.85rem; align-items:end;">
                                 <div>
                                     <label style="display:block; font-size:0.72rem; font-weight:700; color:var(--text-sec); margin-bottom:0.25rem;">Planlanan Tarih *</label>
-                                    <input type="text" id="custom-rut-date" class="filter-input" style="width:100%; font-weight:700;" placeholder="GG.AA.YYYY">
+                                    <input aria-label="GG.AA.YYYY" title="GG.AA.YYYY" type="text" id="custom-rut-date" class="filter-input" style="width:100%; font-weight:700;" placeholder="GG.AA.YYYY">
                                 </div>
 
                                 <div>
                                     <label style="display:block; font-size:0.72rem; font-weight:700; color:var(--text-sec); margin-bottom:0.25rem;">Bitiş Tarihi (Opsiyonel)</label>
-                                    <input type="text" id="custom-rut-end-date" class="filter-input" style="width:100%;" placeholder="GG.AA.YYYY">
+                                    <input aria-label="GG.AA.YYYY" title="GG.AA.YYYY" type="text" id="custom-rut-end-date" class="filter-input" style="width:100%;" placeholder="GG.AA.YYYY">
                                 </div>
 
                                 <div style="position:relative;" id="custom-rut-personnel-wrapper">
@@ -3839,7 +3832,7 @@ body[data-theme="light"] .mobile-scroll-nudge-btn {
                                         <span>Görevli Personel *</span>
                                         <span style="font-size:0.65rem; color:#38bdf8; font-weight:600;">Sorumlu / Yardımcı</span>
                                     </label>
-                                    <input type="hidden" id="custom-rut-assignee" value="">
+                                    <input aria-label="custom-rut-assignee" title="custom-rut-assignee" type="hidden" id="custom-rut-assignee" value="">
                                     <div id="custom-rut-assignee-trigger" onclick="toggleCustomRoutePersonnelDropdown(event)" class="filter-input" style="width:100%; min-height:38px; font-weight:700; cursor:pointer; display:flex; justify-content:space-between; align-items:center; gap:0.4rem; padding:0.28rem 0.6rem; background:rgba(15,23,42,0.85);">
                                         <div id="custom-rut-assignee-display" style="display:flex; flex-wrap:wrap; gap:0.28rem; align-items:center; font-size:0.74rem; color:#f8fafc;">
                                             Personel Seçin...
@@ -3857,8 +3850,8 @@ body[data-theme="light"] .mobile-scroll-nudge-btn {
                                         </div>
 
                                         <div style="display:flex; gap:0.35rem; margin-bottom:0.5rem; flex-wrap:wrap;">
-                                            <input type="text" id="custom-rut-new-person-name" class="filter-input" style="flex:1; min-width:125px; font-size:0.72rem; padding:0.24rem 0.5rem; height:28px;" placeholder="Yeni personel / yardımcı adı..." onkeydown="if(event.key==='Enter'){event.preventDefault();addNewPersonnelToRoutePool();}">
-                                            <select id="custom-rut-new-person-role" class="filter-input" style="font-size:0.7rem; padding:0.2rem 0.4rem; height:28px; width:auto;">
+                                            <input aria-label="Yeni personel / yardımcı adı..." title="Yeni personel / yardımcı adı..." type="text" id="custom-rut-new-person-name" class="filter-input" style="flex:1; min-width:125px; font-size:0.72rem; padding:0.24rem 0.5rem; height:28px;" placeholder="Yeni personel / yardımcı adı..." onkeydown="if(event.key==='Enter'){event.preventDefault();addNewPersonnelToRoutePool();}">
+                                            <select aria-label="custom-rut-new-person-role" title="custom-rut-new-person-role" id="custom-rut-new-person-role" class="filter-input" style="font-size:0.7rem; padding:0.2rem 0.4rem; height:28px; width:auto;">
                                                 <option value="Yardımcı">Yardımcı</option>
                                                 <option value="Sorumlu">Sorumlu</option>
                                             </select>
@@ -3871,12 +3864,12 @@ body[data-theme="light"] .mobile-scroll-nudge-btn {
 
                                 <div>
                                     <label style="display:block; font-size:0.72rem; font-weight:700; color:var(--text-sec); margin-bottom:0.25rem;">Plan / Güzergâh Adı *</label>
-                                    <input type="text" id="custom-rut-name" class="filter-input" style="width:100%; font-weight:700;" placeholder="Örn: Çorum - Sungurlu Rutu">
+                                    <input aria-label="Örn: Çorum - Sungurlu Rutu" title="Örn: Çorum - Sungurlu Rutu" type="text" id="custom-rut-name" class="filter-input" style="width:100%; font-weight:700;" placeholder="Örn: Çorum - Sungurlu Rutu">
                                 </div>
 
                                 <div>
                                     <label style="display:block; font-size:0.72rem; font-weight:700; color:var(--text-sec); margin-bottom:0.25rem;">Plan Açıklaması (Opsiyonel)</label>
-                                    <input type="text" id="custom-rut-notes" class="filter-input" style="width:100%;" placeholder="Ziyaret hedefi veya kısa not...">
+                                    <input aria-label="Ziyaret hedefi veya kısa not..." title="Ziyaret hedefi veya kısa not..." type="text" id="custom-rut-notes" class="filter-input" style="width:100%;" placeholder="Ziyaret hedefi veya kısa not...">
                                 </div>
                             </div>
 
@@ -3893,13 +3886,13 @@ body[data-theme="light"] .mobile-scroll-nudge-btn {
                                         <div style="display:grid; grid-template-columns:1fr 1fr; gap:0.5rem; margin-bottom:0.55rem;">
                                             <div>
                                                 <label style="display:block; font-size:0.69rem; font-weight:600; color:var(--text-sec); margin-bottom:0.2rem;">İl Seçimi</label>
-                                                <select id="custom-rut-city-select" class="filter-input" style="width:100%;" onchange="handleCustomRouteCityChange()">
+                                                <select aria-label="custom-rut-city-select" title="custom-rut-city-select" id="custom-rut-city-select" class="filter-input" style="width:100%;" onchange="handleCustomRouteCityChange()">
                                                     <option value="">İl Seçin...</option>
                                                 </select>
                                             </div>
                                             <div>
                                                 <label style="display:block; font-size:0.69rem; font-weight:600; color:var(--text-sec); margin-bottom:0.2rem;">İlçe Seçimi</label>
-                                                <select id="custom-rut-district-select" class="filter-input" style="width:100%;" onchange="handleCustomRouteDistrictChange()">
+                                                <select aria-label="custom-rut-district-select" title="custom-rut-district-select" id="custom-rut-district-select" class="filter-input" style="width:100%;" onchange="handleCustomRouteDistrictChange()">
                                                     <option value="">İlçe Seçin...</option>
                                                 </select>
                                             </div>
@@ -3942,7 +3935,7 @@ body[data-theme="light"] .mobile-scroll-nudge-btn {
                                         </div>
                                     </div>
 
-                                    <input type="text" id="custom-rut-cust-search" class="filter-input" style="width:100%; margin-bottom:0.45rem; font-size:0.75rem;" placeholder="Müşteri unvanı, cari kod veya adres ara..." oninput="renderCustomRouteCustomerPicker()">
+                                    <input aria-label="Müşteri unvanı, cari kod veya adres ara..." title="Müşteri unvanı, cari kod veya adres ara..." type="text" id="custom-rut-cust-search" class="filter-input" style="width:100%; margin-bottom:0.45rem; font-size:0.75rem;" placeholder="Müşteri unvanı, cari kod veya adres ara..." oninput="renderCustomRouteCustomerPicker()">
 
                                     <div id="custom-rut-cust-results" style="flex:1; min-height:165px; max-height:205px; overflow-y:auto; border:1px solid rgba(148,163,184,0.18); border-radius:8px; padding:0.35rem; background:rgba(2,6,23,0.5); margin-bottom:0.5rem;"></div>
 
@@ -3986,31 +3979,31 @@ body[data-theme="light"] .mobile-scroll-nudge-btn {
                                     <div class="rut-manual-entry-grid" style="display:grid; grid-template-columns:repeat(auto-fit, minmax(145px, 1fr)); gap:0.45rem; align-items:end;">
                                         <div style="grid-column:span 2; min-width:180px;">
                                             <label style="display:block; font-size:0.68rem; font-weight:600; color:var(--text-sec); margin-bottom:0.15rem;">Firma / İşletme Adı *</label>
-                                            <input type="text" id="manual-rut-cust-title" class="filter-input" style="width:100%;" placeholder="Örn: Özcan Lojistik">
+                                            <input aria-label="Örn: Özcan Lojistik" title="Örn: Özcan Lojistik" type="text" id="manual-rut-cust-title" class="filter-input" style="width:100%;" placeholder="Örn: Özcan Lojistik">
                                         </div>
                                         <div>
                                             <label style="display:block; font-size:0.68rem; font-weight:600; color:var(--text-sec); margin-bottom:0.15rem;">İl *</label>
-                                            <input type="text" id="manual-rut-cust-city" class="filter-input" style="width:100%;" placeholder="Örn: Çorum">
+                                            <input aria-label="Örn: Çorum" title="Örn: Çorum" type="text" id="manual-rut-cust-city" class="filter-input" style="width:100%;" placeholder="Örn: Çorum">
                                         </div>
                                         <div>
                                             <label style="display:block; font-size:0.68rem; font-weight:600; color:var(--text-sec); margin-bottom:0.15rem;">İlçe *</label>
-                                            <input type="text" id="manual-rut-cust-district" class="filter-input" style="width:100%;" placeholder="Örn: Sungurlu">
+                                            <input aria-label="Örn: Sungurlu" title="Örn: Sungurlu" type="text" id="manual-rut-cust-district" class="filter-input" style="width:100%;" placeholder="Örn: Sungurlu">
                                         </div>
                                         <div>
                                             <label style="display:block; font-size:0.68rem; font-weight:600; color:var(--text-sec); margin-bottom:0.15rem;">Görüşülen Kişi</label>
-                                            <input type="text" id="manual-rut-cust-auth" class="filter-input" style="width:100%;" placeholder="Örn: Mehmet Bey">
+                                            <input aria-label="Örn: Mehmet Bey" title="Örn: Mehmet Bey" type="text" id="manual-rut-cust-auth" class="filter-input" style="width:100%;" placeholder="Örn: Mehmet Bey">
                                         </div>
                                         <div>
                                             <label style="display:block; font-size:0.68rem; font-weight:600; color:var(--text-sec); margin-bottom:0.15rem;">Telefon</label>
-                                            <input type="text" id="manual-rut-cust-phone" class="filter-input" style="width:100%;" placeholder="05XX XXX XX XX">
+                                            <input aria-label="05XX XXX XX XX" title="05XX XXX XX XX" type="text" id="manual-rut-cust-phone" class="filter-input" style="width:100%;" placeholder="05XX XXX XX XX">
                                         </div>
                                         <div>
                                             <label style="display:block; font-size:0.68rem; font-weight:600; color:var(--text-sec); margin-bottom:0.15rem;">Adres</label>
-                                            <input type="text" id="manual-rut-cust-address" class="filter-input" style="width:100%;" placeholder="Sanayi / Mahalle">
+                                            <input aria-label="Sanayi / Mahalle" title="Sanayi / Mahalle" type="text" id="manual-rut-cust-address" class="filter-input" style="width:100%;" placeholder="Sanayi / Mahalle">
                                         </div>
                                         <div>
                                             <label style="display:block; font-size:0.68rem; font-weight:600; color:var(--text-sec); margin-bottom:0.15rem;">Ziyaret Amacı</label>
-                                            <select id="manual-rut-cust-purpose" class="filter-input" style="width:100%;">
+                                            <select aria-label="manual-rut-cust-purpose" title="manual-rut-cust-purpose" id="manual-rut-cust-purpose" class="filter-input" style="width:100%;">
                                                 <option value="Tanışma Ziyareti">Tanışma Ziyareti</option>
                                                 <option value="Yeni Müşteri Kazanımı">Yeni Müşteri Kazanımı</option>
                                                 <option value="Filo & Servis Tanıtımı">Filo &amp; Servis Tanıtımı</option>
@@ -4019,10 +4012,10 @@ body[data-theme="light"] .mobile-scroll-nudge-btn {
                                         </div>
                                         <div style="grid-column:span 2;">
                                             <label style="display:block; font-size:0.68rem; font-weight:600; color:var(--text-sec); margin-bottom:0.15rem;">Kısa Not</label>
-                                            <input type="text" id="manual-rut-cust-notes" class="filter-input" style="width:100%;" placeholder="Açıklama...">
+                                            <input aria-label="Açıklama..." title="Açıklama..." type="text" id="manual-rut-cust-notes" class="filter-input" style="width:100%;" placeholder="Açıklama...">
                                         </div>
-                                        <input type="hidden" id="manual-rut-cust-date" value="">
-                                        <select id="manual-rut-cust-personnel" style="display:none;"></select>
+                                        <input aria-label="manual-rut-cust-date" title="manual-rut-cust-date" type="hidden" id="manual-rut-cust-date" value="">
+                                        <select aria-label="manual-rut-cust-personnel" title="manual-rut-cust-personnel" id="manual-rut-cust-personnel" style="display:none;"></select>
                                         <div>
                                             <button type="button" class="btn btn-primary btn-sm" onclick="addManualPlaceToRouteDraft()" style="width:100%; justify-content:center; padding:0.42rem 0.65rem; font-weight:700;">
                                                 + Listeye Ekle
@@ -4044,14 +4037,14 @@ body[data-theme="light"] .mobile-scroll-nudge-btn {
                                 <span>Kaydedilmiş Rut Planları (<span id="saved-custom-routes-count">0</span>)</span>
                             </div>
                             <div style="display:flex; gap:0.4rem; flex-wrap:wrap; align-items:center;">
-                                <input type="text" id="saved-rut-filter-date" class="filter-input" style="width:130px; padding:0.25rem 0.45rem; font-size:0.72rem;" placeholder="GG.AA.YYYY" oninput="renderSavedCustomRoutesList()" onchange="renderSavedCustomRoutesList()">
-                                <select id="saved-rut-filter-personnel" class="filter-input" style="padding:0.25rem 0.45rem; font-size:0.72rem;" onchange="renderSavedCustomRoutesList()">
+                                <input aria-label="GG.AA.YYYY" title="GG.AA.YYYY" type="text" id="saved-rut-filter-date" class="filter-input" style="width:130px; padding:0.25rem 0.45rem; font-size:0.72rem;" placeholder="GG.AA.YYYY" oninput="renderSavedCustomRoutesList()" onchange="renderSavedCustomRoutesList()">
+                                <select aria-label="saved-rut-filter-personnel" title="saved-rut-filter-personnel" id="saved-rut-filter-personnel" class="filter-input" style="padding:0.25rem 0.45rem; font-size:0.72rem;" onchange="renderSavedCustomRoutesList()">
                                     <option value="">Tüm Personeller</option>
                                 </select>
-                                <select id="saved-rut-filter-city" class="filter-input" style="padding:0.25rem 0.45rem; font-size:0.72rem;" onchange="renderSavedCustomRoutesList()">
+                                <select aria-label="saved-rut-filter-city" title="saved-rut-filter-city" id="saved-rut-filter-city" class="filter-input" style="padding:0.25rem 0.45rem; font-size:0.72rem;" onchange="renderSavedCustomRoutesList()">
                                     <option value="">Tüm İl / İlçeler</option>
                                 </select>
-                                <select id="saved-rut-filter-status" class="filter-input" style="padding:0.25rem 0.45rem; font-size:0.72rem;" onchange="renderSavedCustomRoutesList()">
+                                <select aria-label="saved-rut-filter-status" title="saved-rut-filter-status" id="saved-rut-filter-status" class="filter-input" style="padding:0.25rem 0.45rem; font-size:0.72rem;" onchange="renderSavedCustomRoutesList()">
                                     <option value="">Tüm Durumlar</option>
                                     <option value="Planlandı">Planlandı</option>
                                     <option value="Devam Ediyor">Devam Ediyor</option>
@@ -4095,12 +4088,12 @@ body[data-theme="light"] .mobile-scroll-nudge-btn {
                             </button>
                             <div class="search-box">
                                 <i class="fa-solid fa-magnifying-glass"></i>
-                                <input type="text" id="legacy-search" class="filter-input" placeholder="Müşteri ünvanı, cari kod, yetkili, telefon veya plaka ara..." oninput="renderLegacyCustomers()">
+                                <input aria-label="Müşteri ünvanı, cari kod, yetkili, telefon veya plaka ara..." title="Müşteri ünvanı, cari kod, yetkili, telefon veya plaka ara..." type="text" id="legacy-search" class="filter-input" placeholder="Müşteri ünvanı, cari kod, yetkili, telefon veya plaka ara..." oninput="renderLegacyCustomers()">
                             </div>
 
                             <div class="city-filter-wrapper">
                                 <i class="fa-solid fa-location-dot city-icon"></i>
-                                <input type="text" 
+                                <input aria-label="Şehir yaz / seç..." title="Şehir yaz / seç..." type="text" 
                                        id="legacy-filter-city" 
                                        class="filter-input" 
                                        placeholder="Şehir yaz / seç..." 
@@ -4115,7 +4108,7 @@ body[data-theme="light"] .mobile-scroll-nudge-btn {
                                     <!-- Dinamik olarak JS tarafından doldurulur -->
                                 </datalist>
                                 <div class="city-action-btns">
-                                    <button type="button" 
+                                    <button aria-label="Şehri Temizle" type="button" 
                                             id="legacy-city-clear-btn" 
                                             class="city-action-btn" 
                                             onclick="clearCityFilter(event)" 
@@ -4123,7 +4116,7 @@ body[data-theme="light"] .mobile-scroll-nudge-btn {
                                             title="Şehri Temizle">
                                         <i class="fa-solid fa-xmark"></i>
                                     </button>
-                                    <button type="button" 
+                                    <button aria-label="Tüm Şehirleri Göster / Seç" type="button" 
                                             id="legacy-city-dropdown-btn" 
                                             class="city-action-btn" 
                                             onclick="toggleCityDropdown(event)" 
@@ -4136,15 +4129,15 @@ body[data-theme="light"] .mobile-scroll-nudge-btn {
                                 </div>
                             </div>
 
-                            <select id="legacy-filter-district" class="filter-input" onchange="renderLegacyCustomers()">
+                            <select aria-label="legacy-filter-district" title="legacy-filter-district" id="legacy-filter-district" class="filter-input" onchange="renderLegacyCustomers()">
                                 <option value="">📍 Tüm İlçeler</option>
                             </select>
 
-                            <select id="legacy-filter-rut" class="filter-input" onchange="renderLegacyCustomers()">
+                            <select aria-label="legacy-filter-rut" title="legacy-filter-rut" id="legacy-filter-rut" class="filter-input" onchange="renderLegacyCustomers()">
                                 <option value="">🚗 Tüm Rutlar (Kayıtlı Rutlarım)</option>
                             </select>
 
-                            <select id="legacy-filter-priority" class="filter-input" onchange="renderLegacyCustomers()">
+                            <select aria-label="legacy-filter-priority" title="legacy-filter-priority" id="legacy-filter-priority" class="filter-input" onchange="renderLegacyCustomers()">
                                 <option value="">🎯 Tüm Öncelikler</option>
                                 <option value="P1 - VIP Kritik Filo">P1 - VIP Kritik Filo</option>
                                 <option value="P1 - Acil Churn">P1 - Acil Churn</option>
@@ -4153,7 +4146,7 @@ body[data-theme="light"] .mobile-scroll-nudge-btn {
                                 <option value="P3">P3 Rut Ziyareti</option>
                             </select>
 
-                            <select id="legacy-filter-balance" class="filter-input" onchange="renderLegacyCustomers()">
+                            <select aria-label="legacy-filter-balance" title="legacy-filter-balance" id="legacy-filter-balance" class="filter-input" onchange="renderLegacyCustomers()">
                                 <option value="">💰 Bakiye Durumu</option>
                                 <option value="Borçlu">Borçlu Olanlar</option>
                                 <option value="Alacaklı">Alacaklı Olanlar</option>
@@ -4256,13 +4249,13 @@ body[data-theme="light"] .mobile-scroll-nudge-btn {
                     <!-- Filtreler -->
                     <div class="filter-bar" style="margin-bottom:1rem;">
                         <div class="filter-group">
-                            <input type="text" id="active-search" class="filter-input" placeholder="Müşteri, yetkili, not veya personel ara..." oninput="renderActiveVisits()">
-                            <select id="active-filter-type" class="filter-input" onchange="renderActiveVisits()">
+                            <input aria-label="Müşteri, yetkili, not veya personel ara..." title="Müşteri, yetkili, not veya personel ara..." type="text" id="active-search" class="filter-input" placeholder="Müşteri, yetkili, not veya personel ara..." oninput="renderActiveVisits()">
+                            <select aria-label="active-filter-type" title="active-filter-type" id="active-filter-type" class="filter-input" onchange="renderActiveVisits()">
                                 <option value="">Tüm Türler (Ziyaret &amp; Telefon)</option>
                                 <option value="ZİYARET">🚗 Saha Ziyareti</option>
                                 <option value="TELEFON">📞 Telefon Görüşmesi</option>
                             </select>
-                            <select id="active-filter-result" class="filter-input" onchange="renderActiveVisits()">
+                            <select aria-label="active-filter-result" title="active-filter-result" id="active-filter-result" class="filter-input" onchange="renderActiveVisits()">
                                 <option value="">Tüm Sonuçlar</option>
                                 <option value="Olumlu">🤝 Olumlu / Servise Davet Edildi</option>
                                 <option value="Teklif Verildi">📑 Fiyat Teklifi Verildi</option>
@@ -4300,18 +4293,18 @@ body[data-theme="light"] .mobile-scroll-nudge-btn {
                         <div class="filter-group">
                             <div class="search-box">
                                 <i class="fa-solid fa-magnifying-glass"></i>
-                                <input type="text" id="strategy-search" class="filter-input" placeholder="İl, ilçe veya rut ara..." oninput="renderDistrictStrategies()">
+                                <input aria-label="İl, ilçe veya rut ara..." title="İl, ilçe veya rut ara..." type="text" id="strategy-search" class="filter-input" placeholder="İl, ilçe veya rut ara..." oninput="renderDistrictStrategies()">
                             </div>
 
-                            <select id="strategy-filter-city" class="filter-input" onchange="handleStrategyCityChange()">
+                            <select aria-label="strategy-filter-city" title="strategy-filter-city" id="strategy-filter-city" class="filter-input" onchange="handleStrategyCityChange()">
                                 <option value="">📍 Tüm İller (76 İl)</option>
                             </select>
 
-                            <select id="strategy-filter-district" class="filter-input" onchange="renderDistrictStrategies()">
+                            <select aria-label="strategy-filter-district" title="strategy-filter-district" id="strategy-filter-district" class="filter-input" onchange="renderDistrictStrategies()">
                                 <option value="">🏘️ Tüm İlçeler (364 İlçe)</option>
                             </select>
 
-                            <select id="strategy-filter-rut" class="filter-input" onchange="renderDistrictStrategies()">
+                            <select aria-label="strategy-filter-rut" title="strategy-filter-rut" id="strategy-filter-rut" class="filter-input" onchange="renderDistrictStrategies()">
                                 <option value="">🚗 Tüm Rutlar (Kayıtlı Rutlarım)</option>
                             </select>
 
@@ -4480,33 +4473,33 @@ body[data-theme="light"] .mobile-scroll-nudge-btn {
                         <div class="filter-group">
                             <div class="search-box" style="min-width:195px;">
                                 <i class="fa-solid fa-magnifying-glass"></i>
-                                <input type="text" id="rep-filter-search" class="filter-input" placeholder="Müşteri, rut, il/ilçe, personel, açıklama ara..." oninput="renderReportsTab()">
+                                <input aria-label="Müşteri, rut, il/ilçe, personel, açıklama ara..." title="Müşteri, rut, il/ilçe, personel, açıklama ara..." type="text" id="rep-filter-search" class="filter-input" placeholder="Müşteri, rut, il/ilçe, personel, açıklama ara..." oninput="renderReportsTab()">
                             </div>
 
-                            <input type="text" id="rep-filter-date-from" class="filter-input" style="width:122px;" placeholder="Başlangıç GG.AA.YYYY" oninput="renderReportsTab()" onchange="renderReportsTab()">
-                            <input type="text" id="rep-filter-date-to" class="filter-input" style="width:122px;" placeholder="Bitiş GG.AA.YYYY" oninput="renderReportsTab()" onchange="renderReportsTab()">
+                            <input aria-label="Başlangıç GG.AA.YYYY" title="Başlangıç GG.AA.YYYY" type="text" id="rep-filter-date-from" class="filter-input" style="width:122px;" placeholder="Başlangıç GG.AA.YYYY" oninput="renderReportsTab()" onchange="renderReportsTab()">
+                            <input aria-label="Bitiş GG.AA.YYYY" title="Bitiş GG.AA.YYYY" type="text" id="rep-filter-date-to" class="filter-input" style="width:122px;" placeholder="Bitiş GG.AA.YYYY" oninput="renderReportsTab()" onchange="renderReportsTab()">
 
-                            <select id="rep-filter-personnel" class="filter-input" onchange="renderReportsTab()">
+                            <select aria-label="rep-filter-personnel" title="rep-filter-personnel" id="rep-filter-personnel" class="filter-input" onchange="renderReportsTab()">
                                 <option value="">👤 Tüm Personeller</option>
                             </select>
 
-                            <select id="rep-filter-city" class="filter-input" onchange="handleReportCityFilterChange()">
+                            <select aria-label="rep-filter-city" title="rep-filter-city" id="rep-filter-city" class="filter-input" onchange="handleReportCityFilterChange()">
                                 <option value="">📍 Tüm İller</option>
                             </select>
 
-                            <select id="rep-filter-district" class="filter-input" onchange="renderReportsTab()">
+                            <select aria-label="rep-filter-district" title="rep-filter-district" id="rep-filter-district" class="filter-input" onchange="renderReportsTab()">
                                 <option value="">🏘️ Tüm İlçeler</option>
                             </select>
 
-                            <select id="rep-filter-customer" class="filter-input" style="max-width:190px;" onchange="renderReportsTab()">
+                            <select aria-label="rep-filter-customer" title="rep-filter-customer" id="rep-filter-customer" class="filter-input" style="max-width:190px;" onchange="renderReportsTab()">
                                 <option value="">🏢 Tüm Müşteriler</option>
                             </select>
 
-                            <select id="rep-filter-route" class="filter-input" onchange="renderReportsTab()">
+                            <select aria-label="rep-filter-route" title="rep-filter-route" id="rep-filter-route" class="filter-input" onchange="renderReportsTab()">
                                 <option value="">🚗 Tüm Rut Planları</option>
                             </select>
 
-                            <select id="rep-filter-status" class="filter-input" onchange="renderReportsTab()">
+                            <select aria-label="rep-filter-status" title="rep-filter-status" id="rep-filter-status" class="filter-input" onchange="renderReportsTab()">
                                 <option value="ALL">📊 Tüm Ziyaret Durumları</option>
                                 <option value="VISITED">✅ Ziyaret Edildi</option>
                                 <option value="NOT_VISITED">❌ Ziyaret Edilemedi</option>
@@ -4668,7 +4661,7 @@ body[data-theme="light"] .mobile-scroll-nudge-btn {
                             </div>
                             <div style="display:flex; gap:0.45rem; align-items:center; flex-wrap:wrap;">
                                 <label style="display:inline-flex; align-items:center; gap:0.35rem; font-size:0.75rem; font-weight:700; color:#fde68a; cursor:pointer; background:rgba(245,158,11,0.12); border:1px solid rgba(245,158,11,0.35); padding:0.28rem 0.65rem; border-radius:6px;">
-                                    <input type="checkbox" id="rep-only-unvisited-customers-cb" onchange="renderReportsTab()" style="accent-color:#f59e0b;">
+                                    <input aria-label="rep-only-unvisited-customers-cb" title="rep-only-unvisited-customers-cb" type="checkbox" id="rep-only-unvisited-customers-cb" onchange="renderReportsTab()" style="accent-color:#f59e0b;">
                                     <span>Seçilen Tarih Aralığında Hiç Ziyaret Edilmemiş Mevcut Müşterileri Göster</span>
                                 </label>
                                 <span id="rep-customer-report-badge" class="badge badge-secondary">0 Müşteri</span>
@@ -4763,25 +4756,25 @@ body[data-theme="light"] .mobile-scroll-nudge-btn {
                     <button type="button" class="btn btn-primary btn-sm" style="padding:0.35rem 0.7rem; font-size:0.78rem; font-weight:800; border-radius:8px; background:linear-gradient(135deg,#10b981,#059669); border:1px solid #34d399;" onclick="document.getElementById('visit-form').requestSubmit()">
                         <i class="fa-solid fa-check"></i> Kaydet
                     </button>
-                    <button type="button" class="modal-close" onclick="closeVisitModal()">&times;</button>
+                    <button aria-label="Buton closeVisitModal" type="button" class="modal-close" onclick="closeVisitModal()">&times;</button>
                 </div>
             </div>
             <form id="visit-form" onsubmit="saveVisitRecord(event)">
-                <input type="hidden" id="visit-id" value="">
-                <input type="hidden" id="visit-mode" value="NEW">
+                <input aria-label="visit-id" title="visit-id" type="hidden" id="visit-id" value="">
+                <input aria-label="visit-mode" title="visit-mode" type="hidden" id="visit-mode" value="NEW">
                 <div class="modal-body">
                     <!-- Üst İşlem ve Sonuç Seçicileri -->
                     <div class="grid-2-col" style="display:grid; grid-template-columns:1fr 1fr; gap:0.75rem; margin-bottom:0.85rem;">
                         <div class="form-group" style="margin-bottom:0;">
                             <label>Görüşme / İşlem Türü *</label>
-                            <select id="visit-type-select" class="form-control" onchange="updateVisitTravelCalculation()" required>
+                            <select aria-label="visit-type-select" title="visit-type-select" id="visit-type-select" class="form-control" onchange="updateVisitTravelCalculation()" required>
                                 <option value="ZİYARET">🚗 Yüz Yüze Saha Ziyareti</option>
                                 <option value="TELEFON">📞 Telefon Görüşmesi</option>
                             </select>
                         </div>
                         <div class="form-group" style="margin-bottom:0;">
                             <label>Görüşme Sonucu *</label>
-                            <select id="visit-result-select" class="form-control" onchange="handleVisitResultChange()" oninput="handleVisitResultChange()" onclick="handleVisitResultChange()" required>
+                            <select aria-label="visit-result-select" title="visit-result-select" id="visit-result-select" class="form-control" onchange="handleVisitResultChange()" oninput="handleVisitResultChange()" onclick="handleVisitResultChange()" required>
                                 <option value="Olumlu">🤝 Olumlu / Servise Davet Edildi</option>
                                 <option value="Teklif Verildi">📑 Fiyat Teklifi Verildi</option>
                                 <option value="Randevu Alındı">📅 Randevu Alındı</option>
@@ -4793,16 +4786,16 @@ body[data-theme="light"] .mobile-scroll-nudge-btn {
 
                     <!-- Mükerrer tarih kalabalığını önlemek için gizli tutulan alt menü alanları -->
                     <div id="visit-positive-submenu" style="display:none !important;">
-                        <select id="visit-positive-substatus"><option value="Takip Edilecek (Tekrar Aranacak)" selected>Takip</option></select>
+                        <select aria-label="visit-positive-substatus" title="visit-positive-substatus" id="visit-positive-substatus"><option value="Takip Edilecek (Tekrar Aranacak)" selected>Takip</option></select>
                         <div id="visit-submenu-datetime-wrap">
-                            <input type="date" id="visit-submenu-date">
-                            <input type="time" id="visit-submenu-time" value="10:00">
+                            <input aria-label="visit-submenu-date" title="visit-submenu-date" type="date" id="visit-submenu-date">
+                            <input aria-label="visit-submenu-time" title="visit-submenu-time" type="time" id="visit-submenu-time" value="10:00">
                         </div>
                     </div>
 
                     <div class="form-group">
                         <label>Müşteri / Cari Ünvanı *</label>
-                        <input type="text" id="visit-customer-title" class="form-control" placeholder="Müşteri ünvanı veya arşive kayıtlı cari adı..." list="customer-datalist" required>
+                        <input aria-label="Müşteri ünvanı veya arşive kayıtlı cari adı..." title="Müşteri ünvanı veya arşive kayıtlı cari adı..." type="text" id="visit-customer-title" class="form-control" placeholder="Müşteri ünvanı veya arşive kayıtlı cari adı..." list="customer-datalist" required>
                         <datalist id="customer-datalist"></datalist>
                     </div>
 
@@ -4818,26 +4811,26 @@ body[data-theme="light"] .mobile-scroll-nudge-btn {
                         <div class="grid-2-col" style="display:grid; grid-template-columns:1fr 1fr; gap:0.75rem; margin-bottom:0.75rem;">
                             <div class="form-group" style="margin-bottom:0;">
                                 <label>Görevlendirilen Personel *</label>
-                                <select id="visit-assigned-to" class="form-control" required></select>
+                                <select aria-label="visit-assigned-to" title="visit-assigned-to" id="visit-assigned-to" class="form-control" required></select>
                             </div>
                             <div class="form-group" style="margin-bottom:0;">
                                 <label>Görevi Veren / Atayan</label>
-                                <input type="text" id="visit-assigned-by" class="form-control" readonly style="opacity:0.85; background:rgba(0,0,0,0.25);">
+                                <input aria-label="visit-assigned-by" title="visit-assigned-by" type="text" id="visit-assigned-by" class="form-control" readonly style="opacity:0.85; background:rgba(0,0,0,0.25);">
                             </div>
                         </div>
 
                         <div class="date-time-grid" style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:0.75rem; margin-bottom:0.75rem;">
                             <div class="form-group" style="margin-bottom:0;">
                                 <label>Termin Tarihi *</label>
-                                <input type="date" id="visit-due-date" class="form-control" required>
+                                <input aria-label="visit-due-date" title="visit-due-date" type="date" id="visit-due-date" class="form-control" required>
                             </div>
                             <div class="form-group" style="margin-bottom:0;">
                                 <label>Termin Saati *</label>
-                                <input type="time" id="visit-due-time" class="form-control" value="10:00" required>
+                                <input aria-label="visit-due-time" title="visit-due-time" type="time" id="visit-due-time" class="form-control" value="10:00" required>
                             </div>
                             <div class="form-group" style="margin-bottom:0;">
                                 <label>Öncelik Derecesi</label>
-                                <select id="visit-priority" class="form-control">
+                                <select aria-label="visit-priority" title="visit-priority" id="visit-priority" class="form-control">
                                     <option value="Normal">🟢 Normal</option>
                                     <option value="Acil">🟡 Acil</option>
                                     <option value="Kritik">🔴 Kritik VIP</option>
@@ -4847,39 +4840,39 @@ body[data-theme="light"] .mobile-scroll-nudge-btn {
 
                         <div class="form-group" style="margin-bottom:0;">
                             <label>Görev Talimatı / Özel Açıklama</label>
-                            <textarea id="visit-task-instructions" class="form-control" rows="2" placeholder="Görevlendirilen personelin yapacağı görüşme konusu, teklif hazırlığı veya özel talimatlar..."></textarea>
+                            <textarea aria-label="Görevlendirilen personelin yapacağı görüşme konusu, teklif hazırlığı veya özel t" title="Görevlendirilen personelin yapacağı görüşme konusu, teklif hazırlığı veya özel t" id="visit-task-instructions" class="form-control" rows="2" placeholder="Görevlendirilen personelin yapacağı görüşme konusu, teklif hazırlığı veya özel talimatlar..."></textarea>
                         </div>
                     </div>
 
                     <div class="grid-2-col" style="display:grid; grid-template-columns:1fr 1fr; gap:0.75rem; margin-bottom:0.85rem;">
                         <div class="form-group" style="margin-bottom:0;">
                             <label>Görüşülen Yetkili / Şoför</label>
-                            <input type="text" id="visit-contact-person" class="form-control" placeholder="Yetkili adı soyadı...">
+                            <input aria-label="Yetkili adı soyadı..." title="Yetkili adı soyadı..." type="text" id="visit-contact-person" class="form-control" placeholder="Yetkili adı soyadı...">
                         </div>
                         <div class="form-group" style="margin-bottom:0;">
                             <label>İletişim Telefonu</label>
-                            <input type="text" id="visit-phone" class="form-control" placeholder="05xx xxx xx xx">
+                            <input aria-label="05xx xxx xx xx" title="05xx xxx xx xx" type="text" id="visit-phone" class="form-control" placeholder="05xx xxx xx xx">
                         </div>
                     </div>
 
                     <div class="grid-3-col" style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:0.75rem; margin-bottom:0.85rem;">
                         <div class="form-group" style="margin-bottom:0;">
                             <label>İl / İlçe</label>
-                            <input type="text" id="visit-location" class="form-control" placeholder="Örn: Çorum / Osmancık" oninput="updateVisitTravelCalculation()">
+                            <input aria-label="Örn: Çorum / Osmancık" title="Örn: Çorum / Osmancık" type="text" id="visit-location" class="form-control" placeholder="Örn: Çorum / Osmancık" oninput="updateVisitTravelCalculation()">
                         </div>
                         <div class="form-group" style="margin-bottom:0;">
                             <label>Plaka / Araç</label>
-                            <input type="text" id="visit-plate" class="form-control" placeholder="19 XX 000">
+                            <input aria-label="19 XX 000" title="19 XX 000" type="text" id="visit-plate" class="form-control" placeholder="19 XX 000">
                         </div>
                         <div class="form-group" style="margin-bottom:0;">
                             <label>Kayıt / Rapor Sahibi *</label>
-                            <select id="visit-personnel-select" class="form-control" required></select>
+                            <select aria-label="visit-personnel-select" title="visit-personnel-select" id="visit-personnel-select" class="form-control" required></select>
                         </div>
                     </div>
 
                     <div class="form-group">
                         <label>Görüşme Notları / Müşteri Talebi &amp; Detaylar *</label>
-                        <textarea id="visit-notes" class="form-control" rows="3" placeholder="Görüşme konusu, araç durumu, teklif detayları veya müşteri geri bildirimi..." required></textarea>
+                        <textarea aria-label="Görüşme konusu, araç durumu, teklif detayları veya müşteri geri bildirimi..." title="Görüşme konusu, araç durumu, teklif detayları veya müşteri geri bildirimi..." id="visit-notes" class="form-control" rows="3" placeholder="Görüşme konusu, araç durumu, teklif detayları veya müşteri geri bildirimi..." required></textarea>
                     </div>
 
                     <!-- Değişiklik Gerekçesi (Sadece Düzenleme Modunda Açılır) -->
@@ -4887,20 +4880,20 @@ body[data-theme="light"] .mobile-scroll-nudge-btn {
                         <label style="color:#fde68a; font-weight:700; display:block; margin-bottom:0.35rem;">
                             <i class="fa-solid fa-user-shield"></i> Yönetici Ömer Eren Onayı İçin Değişiklik Gerekçesi *
                         </label>
-                        <textarea id="visit-edit-reason" class="form-control" rows="2" placeholder="Bu kayıtta neden değişiklik yapıldığını yöneticiye iletilmek üzere açıklayınız..."></textarea>
+                        <textarea aria-label="Bu kayıtta neden değişiklik yapıldığını yöneticiye iletilmek üzere açıklayınız.." title="Bu kayıtta neden değişiklik yapıldığını yöneticiye iletilmek üzere açıklayınız.." id="visit-edit-reason" class="form-control" rows="2" placeholder="Bu kayıtta neden değişiklik yapıldığını yöneticiye iletilmek üzere açıklayınız..."></textarea>
                     </div>
 
                     <!-- Fotoğraf / Belge Ekleme Alanı -->
                     <div class="form-group">
                         <label><i class="fa-solid fa-camera"></i> Fotoğraf, Servis Formu veya Kartvizit Ekle (İsteğe Bağlı)</label>
-                        <input type="file" id="visit-file-input" class="form-control" accept="image/*,.pdf,.doc,.docx" multiple onchange="handleVisitFileUpload(event)">
+                        <input aria-label="visit-file-input" title="visit-file-input" type="file" id="visit-file-input" class="form-control" accept="image/*,.pdf,.doc,.docx" multiple onchange="handleVisitFileUpload(event)">
                         <div id="visit-file-preview" style="display:flex; gap:0.5rem; flex-wrap:wrap; margin-top:0.4rem;"></div>
                     </div>
 
                     <!-- Takip / Hatırlatıcı Görevi Oluşturma (Otomatik Açılan Kademeli Motor) -->
                     <div id="visit-task-container" style="background:rgba(245,158,11,0.08); border:1px solid rgba(245,158,11,0.3); border-radius:12px; padding:0.85rem; margin-top:0.6rem; transition:all 0.3s ease;">
                         <label class="checkbox-label" style="margin-bottom:0.4rem; display:flex; align-items:center; gap:0.5rem; cursor:pointer;">
-                            <input type="checkbox" id="visit-create-task-cb" onchange="toggleVisitTaskFields()">
+                            <input aria-label="visit-create-task-cb" title="visit-create-task-cb" type="checkbox" id="visit-create-task-cb" onchange="toggleVisitTaskFields()">
                             <strong id="visit-task-cb-label" style="color:#fde68a; font-size:0.88rem;"><i class="fa-solid fa-bell"></i> Bu görüşme için takip randevusu / hatırlatıcı görevi oluştur</strong>
                         </label>
                         
@@ -4926,17 +4919,17 @@ body[data-theme="light"] .mobile-scroll-nudge-btn {
                                         </div>
                                     </div>
                                 </div>
-                                <input type="hidden" id="visit-followup-type" value="TELEFON">
+                                <input aria-label="visit-followup-type" title="visit-followup-type" type="hidden" id="visit-followup-type" value="TELEFON">
                             </div>
 
                             <div class="date-time-grid" style="display:grid; grid-template-columns:1fr 1fr; gap:0.75rem;">
                                 <div>
                                     <label style="font-size:0.78rem; font-weight:600; color:#fde68a;">Randevu / Takip Tarihi *</label>
-                                    <input type="date" id="visit-task-date" class="form-control" onchange="handleVisitDateOrTimeChange()">
+                                    <input aria-label="visit-task-date" title="visit-task-date" type="date" id="visit-task-date" class="form-control" onchange="handleVisitDateOrTimeChange()">
                                 </div>
                                 <div>
                                     <label style="font-size:0.78rem; font-weight:600; color:#fde68a;">Randevu Saati *</label>
-                                    <input type="time" id="visit-task-time" class="form-control" value="10:00" onchange="handleVisitDateOrTimeChange()">
+                                    <input aria-label="visit-task-time" title="visit-task-time" type="time" id="visit-task-time" class="form-control" value="10:00" onchange="handleVisitDateOrTimeChange()">
                                 </div>
                             </div>
 
@@ -4974,11 +4967,11 @@ body[data-theme="light"] .mobile-scroll-nudge-btn {
         <div class="modal-box">
             <div class="modal-header">
                 <h3 id="arm-title"><i class="fa-solid fa-user-shield" style="color:#f59e0b;"></i> Yönetici (Ömer Eren) Onayı Gerekiyor</h3>
-                <button type="button" class="modal-close" onclick="closeApprovalRequestModal()">&times;</button>
+                <button aria-label="Buton closeApprovalRequestModal" type="button" class="modal-close" onclick="closeApprovalRequestModal()">&times;</button>
             </div>
             <form id="approval-request-form" onsubmit="handleApprovalRequestSubmit(event)">
-                <input type="hidden" id="arm-type">
-                <input type="hidden" id="arm-target-id">
+                <input aria-label="arm-type" title="arm-type" type="hidden" id="arm-type">
+                <input aria-label="arm-target-id" title="arm-target-id" type="hidden" id="arm-target-id">
                 <div class="modal-body">
                     <div style="background:rgba(245,158,11,0.12); border:1px solid rgba(245,158,11,0.4); border-radius:10px; padding:0.85rem; margin-bottom:1rem; color:#fde68a; font-size:0.85rem; line-height:1.45;">
                         <i class="fa-solid fa-triangle-exclamation" style="color:#f59e0b; margin-right:4px;"></i>
@@ -4986,11 +4979,11 @@ body[data-theme="light"] .mobile-scroll-nudge-btn {
                     </div>
                     <div class="form-group">
                         <label>İlgili Kayıt / Müşteri</label>
-                        <input type="text" id="arm-target-title" class="form-control" readonly style="opacity:0.85; background:rgba(0,0,0,0.25);">
+                        <input aria-label="arm-target-title" title="arm-target-title" type="text" id="arm-target-title" class="form-control" readonly style="opacity:0.85; background:rgba(0,0,0,0.25);">
                     </div>
                     <div class="form-group">
                         <label id="arm-reason-label">Gerekçe / Açıklama *</label>
-                        <textarea id="arm-reason" class="form-control" rows="3" placeholder="Bu işlem için gerekçenizi yazınız..." required></textarea>
+                        <textarea aria-label="Bu işlem için gerekçenizi yazınız..." title="Bu işlem için gerekçenizi yazınız..." id="arm-reason" class="form-control" rows="3" placeholder="Bu işlem için gerekçenizi yazınız..." required></textarea>
                     </div>
                 </div>
                 <div class="modal-footer">
@@ -5008,19 +5001,19 @@ body[data-theme="light"] .mobile-scroll-nudge-btn {
         <div class="modal-box">
             <div class="modal-header">
                 <h3><i class="fa-solid fa-clipboard-check" style="color:#10b981;"></i> Görevde İşlem Yap &amp; Raporla</h3>
-                <button type="button" class="modal-close" onclick="closeTaskActionModal()">&times;</button>
+                <button aria-label="Buton closeTaskActionModal" type="button" class="modal-close" onclick="closeTaskActionModal()">&times;</button>
             </div>
             <form id="task-action-form" onsubmit="handleTaskActionSubmit(event)">
-                <input type="hidden" id="ta-target-id">
-                <input type="hidden" id="ta-target-type" value="VISIT">
+                <input aria-label="ta-target-id" title="ta-target-id" type="hidden" id="ta-target-id">
+                <input aria-label="ta-target-type" title="ta-target-type" type="hidden" id="ta-target-type" value="VISIT">
                 <div class="modal-body">
                     <div class="form-group">
                         <label>İlgili Müşteri / Görev</label>
-                        <input type="text" id="ta-customer-title" class="form-control" readonly style="opacity:0.85; background:rgba(0,0,0,0.25);">
+                        <input aria-label="ta-customer-title" title="ta-customer-title" type="text" id="ta-customer-title" class="form-control" readonly style="opacity:0.85; background:rgba(0,0,0,0.25);">
                     </div>
                     <div class="form-group">
                         <label>İşlem Durumu *</label>
-                        <select id="ta-status" class="form-control" required>
+                        <select aria-label="ta-status" title="ta-status" id="ta-status" class="form-control" required>
                             <option value="İşlem Yapıldı">⚡ İşlem Yapıldı / Müşteriyle Görüşüldü</option>
                             <option value="Tamamlandı">✅ Görev Başarıyla Tamamlandı</option>
                             <option value="Ulaşılamadı">📵 Ulaşılamadı / Tekrar Denenecek</option>
@@ -5029,7 +5022,7 @@ body[data-theme="light"] .mobile-scroll-nudge-btn {
                     </div>
                     <div class="form-group">
                         <label>Yapılan İşlem / Görüşme Detayı *</label>
-                        <textarea id="ta-notes" class="form-control" rows="3" placeholder="Müşteriyle neler görüşüldü, ne karar alındı veya teklif sonucu..." required></textarea>
+                        <textarea aria-label="Müşteriyle neler görüşüldü, ne karar alındı veya teklif sonucu..." title="Müşteriyle neler görüşüldü, ne karar alındı veya teklif sonucu..." id="ta-notes" class="form-control" rows="3" placeholder="Müşteriyle neler görüşüldü, ne karar alındı veya teklif sonucu..." required></textarea>
                     </div>
                 </div>
                 <div class="modal-footer">
@@ -5047,7 +5040,7 @@ body[data-theme="light"] .mobile-scroll-nudge-btn {
         <div class="modal-box">
             <div class="modal-header">
                 <h3><i class="fa-solid fa-user-shield" style="color:#f59e0b;"></i> Ömer Eren Yönetici Onay Merkezi</h3>
-                <button type="button" class="modal-close" onclick="closeApprovalCenterModal()">&times;</button>
+                <button aria-label="Buton closeApprovalCenterModal" type="button" class="modal-close" onclick="closeApprovalCenterModal()">&times;</button>
             </div>
             <div class="modal-body">
                 <div id="modal-approval-list-container"></div>
@@ -5065,61 +5058,61 @@ body[data-theme="light"] .mobile-scroll-nudge-btn {
         <div class="modal-box">
             <div class="modal-header">
                 <h3><i class="fa-solid fa-user-plus" style="color:var(--dizsan-light);"></i> Bağımsız Müşteri / Cari Kartı Tanımla</h3>
-                <button class="modal-close" onclick="closeCustomerModal()">&times;</button>
+                <button aria-label="Buton closeCustomerModal" class="modal-close" onclick="closeCustomerModal()">&times;</button>
             </div>
             <form id="customer-form" onsubmit="saveNewCustomer(event)">
                 <div class="modal-body">
                     <div style="display:grid; grid-template-columns:1fr 2fr; gap:0.75rem; margin-bottom:0.85rem;">
                         <div class="form-group" style="margin-bottom:0;">
                             <label>Cari Kodu *</label>
-                            <input type="text" id="cust-code" class="form-control" placeholder="120.XX.XXX" required>
+                            <input aria-label="120.XX.XXX" title="120.XX.XXX" type="text" id="cust-code" class="form-control" placeholder="120.XX.XXX" required>
                         </div>
                         <div class="form-group" style="margin-bottom:0;">
                             <label>Müşteri / Cari Ünvanı *</label>
-                            <input type="text" id="cust-title" class="form-control" placeholder="Firma veya şahıs ünvanı..." required>
+                            <input aria-label="Firma veya şahıs ünvanı..." title="Firma veya şahıs ünvanı..." type="text" id="cust-title" class="form-control" placeholder="Firma veya şahıs ünvanı..." required>
                         </div>
                     </div>
 
                     <div style="display:grid; grid-template-columns:1fr 1fr; gap:0.75rem; margin-bottom:0.85rem;">
                         <div class="form-group" style="margin-bottom:0;">
                             <label>Yetkili Kişi</label>
-                            <input type="text" id="cust-auth" class="form-control" placeholder="Yetkili adı...">
+                            <input aria-label="Yetkili adı..." title="Yetkili adı..." type="text" id="cust-auth" class="form-control" placeholder="Yetkili adı...">
                         </div>
                         <div class="form-group" style="margin-bottom:0;">
                             <label>Telefon Numarası *</label>
-                            <input type="text" id="cust-phone" class="form-control" placeholder="05xx xxx xx xx" required>
+                            <input aria-label="05xx xxx xx xx" title="05xx xxx xx xx" type="text" id="cust-phone" class="form-control" placeholder="05xx xxx xx xx" required>
                         </div>
                     </div>
 
                     <div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:0.75rem; margin-bottom:0.85rem;">
                         <div class="form-group" style="margin-bottom:0;">
                             <label>İl *</label>
-                            <input type="text" id="cust-city" class="form-control" placeholder="Örn: Çorum" required>
+                            <input aria-label="Örn: Çorum" title="Örn: Çorum" type="text" id="cust-city" class="form-control" placeholder="Örn: Çorum" required>
                         </div>
                         <div class="form-group" style="margin-bottom:0;">
                             <label>İlçe *</label>
-                            <input type="text" id="cust-district" class="form-control" placeholder="Örn: Merkez" required>
+                            <input aria-label="Örn: Merkez" title="Örn: Merkez" type="text" id="cust-district" class="form-control" placeholder="Örn: Merkez" required>
                         </div>
                         <div class="form-group" style="margin-bottom:0;">
                             <label>Rut Adı / Kodu (İsteğe Bağlı)</label>
-                            <input type="text" id="cust-rut" class="form-control" placeholder="Örn: Çorum Rutu" value="">
+                            <input aria-label="Örn: Çorum Rutu" title="Örn: Çorum Rutu" type="text" id="cust-rut" class="form-control" placeholder="Örn: Çorum Rutu" value="">
                         </div>
                     </div>
 
                     <div style="display:grid; grid-template-columns:1fr 1fr; gap:0.75rem; margin-bottom:0.85rem;">
                         <div class="form-group" style="margin-bottom:0;">
                             <label>Plaka / Filo</label>
-                            <input type="text" id="cust-plates" class="form-control" placeholder="19 XX 000">
+                            <input aria-label="19 XX 000" title="19 XX 000" type="text" id="cust-plates" class="form-control" placeholder="19 XX 000">
                         </div>
                         <div class="form-group" style="margin-bottom:0;">
                             <label>Araç Modeli / Marka</label>
-                            <input type="text" id="cust-model" class="form-control" placeholder="Scania / Ağır Vasıta">
+                            <input aria-label="Scania / Ağır Vasıta" title="Scania / Ağır Vasıta" type="text" id="cust-model" class="form-control" placeholder="Scania / Ağır Vasıta">
                         </div>
                     </div>
 
                     <div class="form-group">
                         <label>Açık Adres / Garaj Lokasyonu</label>
-                        <textarea id="cust-address" class="form-control" rows="2" placeholder="Cadde, sokak, sanayi sitesi no..."></textarea>
+                        <textarea aria-label="Cadde, sokak, sanayi sitesi no..." title="Cadde, sokak, sanayi sitesi no..." id="cust-address" class="form-control" rows="2" placeholder="Cadde, sokak, sanayi sitesi no..."></textarea>
                     </div>
                 </div>
 
@@ -5138,51 +5131,51 @@ body[data-theme="light"] .mobile-scroll-nudge-btn {
         <div class="modal-box">
             <div class="modal-header">
                 <h3><i class="fa-solid fa-bell" style="color:#fbbf24;"></i> Yeni Ziyaret / Arama Görevi Ata</h3>
-                <button class="modal-close" onclick="closeTaskModal()">&times;</button>
+                <button aria-label="Buton closeTaskModal" class="modal-close" onclick="closeTaskModal()">&times;</button>
             </div>
             <form id="task-form" onsubmit="saveTaskRecord(event)">
                 <div class="modal-body">
                     <div class="form-group">
                         <label>Görev Başlığı / Amaç *</label>
-                        <input type="text" id="task-title" class="form-control" placeholder="Örn: Filo bakım teklifi için yüz yüze ziyaret..." required>
+                        <input aria-label="Örn: Filo bakım teklifi için yüz yüze ziyaret..." title="Örn: Filo bakım teklifi için yüz yüze ziyaret..." type="text" id="task-title" class="form-control" placeholder="Örn: Filo bakım teklifi için yüz yüze ziyaret..." required>
                     </div>
                     <div style="display:grid; grid-template-columns:1fr 1fr; gap:0.75rem; margin-bottom:0.85rem;">
                         <div class="form-group" style="margin-bottom:0;">
                             <label>Sorumlu Personel *</label>
-                            <select id="task-assignee" class="form-control" required></select>
+                            <select aria-label="task-assignee" title="task-assignee" id="task-assignee" class="form-control" required></select>
                         </div>
                         <div class="form-group" style="margin-bottom:0;">
                             <label>Bilgilendirilen Yönetici *</label>
-                            <select id="task-manager" class="form-control" required></select>
+                            <select aria-label="task-manager" title="task-manager" id="task-manager" class="form-control" required></select>
                         </div>
                     </div>
                     <div style="display:grid; grid-template-columns:1fr 1fr; gap:0.75rem; margin-bottom:0.85rem;">
                         <div class="form-group" style="margin-bottom:0;">
                             <label>İşlem Türü *</label>
-                            <select id="task-type-select" class="form-control" onchange="updateStandaloneTaskTravelCalc()" required>
+                            <select aria-label="task-type-select" title="task-type-select" id="task-type-select" class="form-control" onchange="updateStandaloneTaskTravelCalc()" required>
                                 <option value="ZİYARET">🚗 Yüz Yüze Saha Ziyareti</option>
                                 <option value="TELEFON">📞 Telefon Görüşmesi</option>
                             </select>
                         </div>
                         <div class="form-group" style="margin-bottom:0;">
                             <label>Hedef İl / İlçe (Mesafe Hesabı İçin)</label>
-                            <input type="text" id="task-location" class="form-control" placeholder="Örn: Çorum / Osmancık" oninput="updateStandaloneTaskTravelCalc()">
+                            <input aria-label="Örn: Çorum / Osmancık" title="Örn: Çorum / Osmancık" type="text" id="task-location" class="form-control" placeholder="Örn: Çorum / Osmancık" oninput="updateStandaloneTaskTravelCalc()">
                         </div>
                     </div>
                     <div style="display:grid; grid-template-columns:1fr 1fr; gap:0.75rem; margin-bottom:0.85rem;">
                         <div class="form-group" style="margin-bottom:0;">
                             <label>Termin Tarihi *</label>
-                            <input type="date" id="task-duedate" class="form-control" onchange="updateStandaloneTaskTravelCalc()" required>
+                            <input aria-label="task-duedate" title="task-duedate" type="date" id="task-duedate" class="form-control" onchange="updateStandaloneTaskTravelCalc()" required>
                         </div>
                         <div class="form-group" style="margin-bottom:0;">
                             <label>Randevu / Görüşme Saati *</label>
-                            <input type="time" id="task-duetime" class="form-control" value="09:30" onchange="updateStandaloneTaskTravelCalc()" required>
+                            <input aria-label="task-duetime" title="task-duetime" type="time" id="task-duetime" class="form-control" value="09:30" onchange="updateStandaloneTaskTravelCalc()" required>
                         </div>
                     </div>
                     <div id="task-travel-calc-box" class="travel-calc-box" style="margin-bottom:0.85rem;"></div>
                     <div class="form-group">
                         <label>İlgili Müşteri / Açıklama</label>
-                        <input type="text" id="task-desc" class="form-control" placeholder="Müşteri adı veya detay...">
+                        <input aria-label="Müşteri adı veya detay..." title="Müşteri adı veya detay..." type="text" id="task-desc" class="form-control" placeholder="Müşteri adı veya detay...">
                     </div>
                 </div>
                 <div class="modal-footer">
@@ -5200,7 +5193,7 @@ body[data-theme="light"] .mobile-scroll-nudge-btn {
         <div class="modal-box" style="max-width:760px;">
             <div class="modal-header">
                 <h3><i class="fa-solid fa-satellite-dish" style="color:#38bdf8;"></i> VAPID Web Push &amp; Kilit Ekranı Test Merkezi</h3>
-                <button class="modal-close" onclick="closePushTestCenterModal()">&times;</button>
+                <button aria-label="Buton closePushTestCenterModal" class="modal-close" onclick="closePushTestCenterModal()">&times;</button>
             </div>
             <div id="push-test-modal-body" class="modal-body" style="display:flex; flex-direction:column; gap:1rem;">
                 <!-- Dinamik doldurulur -->
@@ -5222,7 +5215,7 @@ body[data-theme="light"] .mobile-scroll-nudge-btn {
                     <h3 style="margin-bottom:2px;"><i class="fa-solid fa-mobile-screen-button" style="color:#38bdf8;"></i> Mobil Uygulama Olarak Yükleyin</h3>
                     <div style="font-size:0.75rem; color:var(--text-sec);">Tarayıcı çubukları olmadan %100 tam ekran mobil deneyim</div>
                 </div>
-                <button class="modal-close" onclick="closeInstallGuideModal()">&times;</button>
+                <button aria-label="Buton closeInstallGuideModal" class="modal-close" onclick="closeInstallGuideModal()">&times;</button>
             </div>
             <div class="modal-body">
                 <!-- Platform Tab Seçicisi -->
@@ -5327,7 +5320,7 @@ body[data-theme="light"] .mobile-scroll-nudge-btn {
         <div class="modal-box" style="max-width:500px;">
             <div class="modal-header">
                 <h3><i class="fa-solid fa-envelope-circle-check" style="color:#f59e0b;"></i> Şifremi Unuttum &amp; E-Posta Bağlantısı</h3>
-                <button class="modal-close" onclick="closeForgotPasswordModal()">&times;</button>
+                <button aria-label="Buton closeForgotPasswordModal" class="modal-close" onclick="closeForgotPasswordModal()">&times;</button>
             </div>
             <div class="modal-body">
                 <div id="forgot-step-1">
@@ -5338,11 +5331,11 @@ body[data-theme="light"] .mobile-scroll-nudge-btn {
                     <div id="forgot-step1-msg" style="display:none; padding:0.7rem 0.85rem; border-radius:8px; font-size:0.8rem; margin-bottom:0.85rem; line-height:1.45;"></div>
                     <div class="form-group">
                         <label>Kullanıcı Adı veya Personel Adı *</label>
-                        <input type="text" id="forgot-user-identifier" class="form-control" placeholder="Örn: hakan.aydin veya fatih.kiroglu" autocomplete="username">
+                        <input aria-label="Örn: hakan.aydin veya fatih.kiroglu" title="Örn: hakan.aydin veya fatih.kiroglu" type="text" id="forgot-user-identifier" class="form-control" placeholder="Örn: hakan.aydin veya fatih.kiroglu" autocomplete="username">
                     </div>
                     <div class="form-group">
                         <label>Kayıtlı Kurumsal E-Posta Adresiniz *</label>
-                        <input type="email" id="forgot-manual-email" class="form-control" placeholder="ornek@dizsan.com.tr (Kendiniz yazınız)" autocomplete="off">
+                        <input aria-label="ornek@dizsan.com.tr (Kendiniz yazınız)" title="ornek@dizsan.com.tr (Kendiniz yazınız)" type="email" id="forgot-manual-email" class="form-control" placeholder="ornek@dizsan.com.tr (Kendiniz yazınız)" autocomplete="off">
                     </div>
                     <button type="button" class="btn btn-primary btn-block" onclick="sendPasswordResetCode()">
                         <i class="fa-solid fa-paper-plane"></i> Şifre Yenileme Bağlantısı (Linki) Gönder
@@ -5353,14 +5346,14 @@ body[data-theme="light"] .mobile-scroll-nudge-btn {
                 <div id="forgot-step-2" style="display:none;">
                     <div id="forgot-sent-info" style="background:rgba(16,185,129,0.12); border:1px solid rgba(16,185,129,0.4); border-radius:10px; padding:0.75rem 0.9rem; font-size:0.82rem; color:#a7f3d0; margin-bottom:0.95rem; line-height:1.5;"></div>
                     <div id="forgot-step2-msg" style="display:none; padding:0.65rem 0.85rem; border-radius:8px; font-size:0.8rem; margin-bottom:0.75rem;"></div>
-                    <input type="hidden" id="forgot-verification-code" value="">
+                    <input aria-label="forgot-verification-code" title="forgot-verification-code" type="hidden" id="forgot-verification-code" value="">
                     <div class="form-group">
                         <label>Yeni Şifre *</label>
-                        <input type="password" id="forgot-new-password" class="form-control" placeholder="En az 3 karakter" autocomplete="new-password">
+                        <input aria-label="En az 3 karakter" title="En az 3 karakter" type="password" id="forgot-new-password" class="form-control" placeholder="En az 3 karakter" autocomplete="new-password">
                     </div>
                     <div class="form-group">
                         <label>Yeni Şifre Tekrarı *</label>
-                        <input type="password" id="forgot-new-password-confirm" class="form-control" placeholder="Yeni şifrenizi tekrar yazın" autocomplete="new-password">
+                        <input aria-label="Yeni şifrenizi tekrar yazın" title="Yeni şifrenizi tekrar yazın" type="password" id="forgot-new-password-confirm" class="form-control" placeholder="Yeni şifrenizi tekrar yazın" autocomplete="new-password">
                     </div>
                     <button type="button" class="btn btn-success btn-block" onclick="verifyAndResetPassword()">
                         <i class="fa-solid fa-check"></i> Yeni Şifreyi Kaydet &amp; Giriş Yap
@@ -5380,7 +5373,7 @@ body[data-theme="light"] .mobile-scroll-nudge-btn {
                     <i class="fa-solid fa-car-on" style="color:#f59e0b; font-size:1.35rem;"></i> 
                     <span>YOLA ÇIKIŞ VAKTİ! Randevuya Hareket Zamanı</span>
                 </h3>
-                <button class="modal-close" onclick="closeUrgentDepartureModal()">&times;</button>
+                <button aria-label="Buton closeUrgentDepartureModal" class="modal-close" onclick="closeUrgentDepartureModal()">&times;</button>
             </div>
             <div class="modal-body" id="urgent-departure-modal-body"></div>
             <div class="modal-footer" id="urgent-departure-modal-footer" style="display:flex; justify-content:space-between; gap:0.5rem; flex-wrap:wrap;"></div>
@@ -5394,13 +5387,13 @@ body[data-theme="light"] .mobile-scroll-nudge-btn {
         <div class="modal-box" style="max-width:520px;">
             <div class="modal-header">
                 <h3><i class="fa-solid fa-code-branch" style="color:var(--dizsan-light);"></i> Sürüm &amp; Otomatik Güncelleme Merkezi</h3>
-                <button class="modal-close" onclick="closeVersionModal()">&times;</button>
+                <button aria-label="Buton closeVersionModal" class="modal-close" onclick="closeVersionModal()">&times;</button>
             </div>
             <div class="modal-body">
                 <div style="background:rgba(15,23,42,0.8); border:1px solid var(--border-color); border-radius:12px; padding:1rem; margin-bottom:1rem;">
                     <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.75rem;">
                         <span style="font-size:0.85rem; color:var(--text-muted);">Bu Cihazdaki Aktif Sürüm:</span>
-                        <span class="badge badge-success" style="font-size:0.88rem; padding:4px 10px;" id="modal-device-version">v1.8.3</span>
+                        <span class="badge badge-success" style="font-size:0.88rem; padding:4px 10px;" id="modal-device-version">v1.8.5</span>
                     </div>
                     <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.75rem;">
                         <span style="font-size:0.85rem; color:var(--text-muted);">Buluttaki En Güncel Sürüm:</span>
@@ -5438,8 +5431,8 @@ body[data-theme="light"] .mobile-scroll-nudge-btn {
                         <span>🛡️ Yönetici: Yeni Sürüm Yayınla &amp; Tüm Cihazlarda Güncelle</span>
                     </div>
                     <div style="display:grid; grid-template-columns:120px 1fr; gap:0.6rem; margin-bottom:0.6rem;">
-                        <input type="text" id="admin-new-version-input" class="form-control" placeholder="1.3.1" style="font-weight:700;">
-                        <input type="text" id="admin-new-version-notes" class="form-control" placeholder="Yapılan değişiklikleri veya notu yazın...">
+                        <input aria-label="1.3.1" title="1.3.1" type="text" id="admin-new-version-input" class="form-control" placeholder="1.3.1" style="font-weight:700;">
+                        <input aria-label="Yapılan değişiklikleri veya notu yazın..." title="Yapılan değişiklikleri veya notu yazın..." type="text" id="admin-new-version-notes" class="form-control" placeholder="Yapılan değişiklikleri veya notu yazın...">
                     </div>
                     <button type="button" class="btn btn-warning btn-block" onclick="adminPublishNewVersion()">
                         <i class="fa-solid fa-rocket"></i> Yayına Al &amp; Yüklü Bütün Cihazları Otomatik Güncelle
@@ -5462,7 +5455,7 @@ body[data-theme="light"] .mobile-scroll-nudge-btn {
         <div class="modal-box" style="max-width:480px;">
             <div class="modal-header">
                 <h3><i class="fa-solid fa-key" style="color:#f59e0b;"></i> Şifre Değiştir</h3>
-                <button class="modal-close" onclick="closeChangePasswordModal()">&times;</button>
+                <button aria-label="Buton closeChangePasswordModal" class="modal-close" onclick="closeChangePasswordModal()">&times;</button>
             </div>
             <div class="modal-body">
                 <div style="background:rgba(255,255,255,0.04); border:1px solid var(--border-color); border-radius:12px; padding:0.9rem; margin-bottom:1.1rem; display:flex; align-items:center; gap:0.75rem;">
@@ -5481,7 +5474,7 @@ body[data-theme="light"] .mobile-scroll-nudge-btn {
                         <label>Mevcut Şifreniz *</label>
                         <div class="input-with-icon">
                             <i class="fa-solid fa-lock"></i>
-                            <input type="password" id="change-pass-current" class="form-control" placeholder="Mevcut şifrenizi girin" required autocomplete="current-password">
+                            <input aria-label="Mevcut şifrenizi girin" title="Mevcut şifrenizi girin" type="password" id="change-pass-current" class="form-control" placeholder="Mevcut şifrenizi girin" required autocomplete="current-password">
                         </div>
                     </div>
 
@@ -5489,7 +5482,7 @@ body[data-theme="light"] .mobile-scroll-nudge-btn {
                         <label>Yeni Şifre *</label>
                         <div class="input-with-icon">
                             <i class="fa-solid fa-key"></i>
-                            <input type="password" id="change-pass-new" class="form-control" placeholder="En az 3 karakter" required autocomplete="new-password">
+                            <input aria-label="En az 3 karakter" title="En az 3 karakter" type="password" id="change-pass-new" class="form-control" placeholder="En az 3 karakter" required autocomplete="new-password">
                         </div>
                     </div>
 
@@ -5497,7 +5490,7 @@ body[data-theme="light"] .mobile-scroll-nudge-btn {
                         <label>Yeni Şifre Tekrarı *</label>
                         <div class="input-with-icon">
                             <i class="fa-solid fa-shield-halved"></i>
-                            <input type="password" id="change-pass-confirm" class="form-control" placeholder="Yeni şifrenizi tekrar girin" required autocomplete="new-password">
+                            <input aria-label="Yeni şifrenizi tekrar girin" title="Yeni şifrenizi tekrar girin" type="password" id="change-pass-confirm" class="form-control" placeholder="Yeni şifrenizi tekrar girin" required autocomplete="new-password">
                         </div>
                     </div>
 
@@ -5520,7 +5513,7 @@ body[data-theme="light"] .mobile-scroll-nudge-btn {
                     <h3 id="cd-title" style="margin-bottom:0.25rem;"><i class="fa-solid fa-file-invoice" style="color:var(--dizsan-light);"></i> Müşteri &amp; Logo ERP Cari Hesap Ekstresi</h3>
                     <div id="cd-subtitle" style="font-size:0.78rem; color:var(--text-sec);">Cari Kodu ve Bilgileri</div>
                 </div>
-                <button class="modal-close" onclick="closeCustomerDetailModal()">&times;</button>
+                <button aria-label="Buton closeCustomerDetailModal" class="modal-close" onclick="closeCustomerDetailModal()">&times;</button>
             </div>
             <div class="modal-body" id="cd-modal-body">
                 <!-- Dinamik içerik app.js tarafından üretilir -->
@@ -5542,7 +5535,7 @@ body[data-theme="light"] .mobile-scroll-nudge-btn {
                     <h3 id="inv-modal-title" style="margin-bottom:0.2rem; font-size:0.98rem;"><i class="fa-solid fa-receipt" style="color:#38bdf8;"></i> Logo ERP Fatura &amp; Kalem Detayı</h3>
                     <div id="inv-modal-subtitle" style="font-size:0.76rem; color:#93c5fd;">Fatura No ve Cari Bilgileri</div>
                 </div>
-                <button class="modal-close" onclick="closeInvoiceDetailModal()">&times;</button>
+                <button aria-label="Buton closeInvoiceDetailModal" class="modal-close" onclick="closeInvoiceDetailModal()">&times;</button>
             </div>
             <div class="modal-body" id="inv-modal-body">
                 <!-- Dinamik fatura satır kalemleri -->
@@ -6910,7 +6903,7 @@ body[data-theme="light"] .mobile-scroll-nudge-btn {
  */
 
 const INITIAL_APP_VERSION = "v1.3.0";
-const CURRENT_APP_VERSION = "1.8.3";
+const CURRENT_APP_VERSION = "1.8.5";
 let hasShownUpdateNotice = false;
 const VAPID_PUBLIC_KEY = "BJIJfCBiDwya3clZOWS08EDxfuN18xtfJGTX0n_apWBTEW7-kO_FGKNy5VDRvUsMgc46IP5oxLlIHqgrDo-JTkE";
 const STORAGE_KEY_STATE = "dizsan_ziyaret_shared_state_v1";
@@ -7101,8 +7094,8 @@ const LEGACY_PAGE_SIZE = 100;
 
 // GitHub Bulut API Anahtarı (Telefon <-> PC Anlık Otomatik Senkronizasyon)
 const CLOUD_KEY_CODES = [106, 107, 115, 98, 91, 123, 91, 82, 116, 68, 73, 89, 125, 119, 57, 84, 112, 75, 86, 86, 109, 86, 112, 72, 103, 80, 116, 87, 117, 111, 113, 57, 125, 80, 53, 105, 76, 60, 120, 79];
-const CLOUD_API_URL = 'https://api.github.com/repos/Dizsan/ziyaret/contents/live_sync_state.json';
-const CLOUD_DPRO_API_URL = 'https://api.github.com/repos/Dizsan/dpro/contents/apps/ziyaret/live_sync_state.json';
+const CLOUD_API_URL = '/api/ziyaret-state';
+const CLOUD_DPRO_API_URL = '/api/ziyaret-state';
 let lastKnownCloudSha = null;
 let lastKnownDproSha = null;
 let isCloudPutInFlight = false;
@@ -7884,7 +7877,7 @@ async function fetchLiveGitHubData(isInitial = false) {
     // 2. Yalnızca yerel dosya bulunamazsa GitHub raw üzerinden çek
     if (candidates.length === 0) {
         try {
-            const remoteRes = await fetch('https://raw.githubusercontent.com/Dizsan/ziyaret/main/shared_state.json?t=' + ts, { cache: 'no-store' });
+            const remoteRes = await fetch('/api/ziyaret-state?t=' + ts, { cache: 'no-store' });
             if (remoteRes.ok) {
                 const remoteJson = await remoteRes.json();
                 if (remoteJson && Array.isArray(remoteJson.customers) && remoteJson.customers.length > 0) {
@@ -7906,7 +7899,7 @@ async function fetchLiveGitHubData(isInitial = false) {
 
     const fallbackSources = [
         'customer_database.json?t=' + ts,
-        'https://raw.githubusercontent.com/Dizsan/ziyaret/main/customer_database.json?t=' + ts
+        'customer_database.json?t=' + ts
     ];
 
     let liveData = null;
@@ -8173,33 +8166,13 @@ function mergeRecordListsById(remoteArr, localArr, idKey = 'id', preferRemoteOrd
 
 async function fetchLiveCloudSyncState() {
     const candidates = [];
-    if (!window.location.hostname.endsWith('github.io')) {
+    for (const url of [`live_sync_state.json?t=${Date.now()}`, `/api/ziyaret-state?t=${Date.now()}`]) {
         try {
-            const localLiveRes = await fetch(`live_sync_state.json?t=${Date.now()}`, { cache: 'no-store' });
-            if (localLiveRes.ok) {
-                const localLiveJson = await localLiveRes.json();
-                if (localLiveJson && typeof localLiveJson === 'object') candidates.push(localLiveJson);
+            const r = await fetch(url, { cache: 'no-store' });
+            if (r.ok) {
+                const j = await r.json();
+                if (j && typeof j === 'object') candidates.push(j);
             }
-        } catch (e) {}
-    }
-    try {
-        const token = getCloudAuthToken();
-        const res = await fetch(`${CLOUD_API_URL}?t=${Date.now()}`, {
-            headers: { 'Authorization': `token ${token}`, 'Accept': 'application/vnd.github.v3+json' },
-            cache: 'no-store'
-        });
-        if (res.ok) {
-            const meta = await res.json();
-            if (meta && meta.sha) lastKnownCloudSha = meta.sha;
-            if (meta && meta.content) {
-                candidates.push(JSON.parse(decodeUTF8Base64(meta.content)));
-            }
-        }
-    } catch (e) {}
-    if (candidates.length === 0) {
-        try {
-            const rawRes = await fetch(`https://raw.githubusercontent.com/Dizsan/ziyaret/main/live_sync_state.json?t=${Date.now()}`, { cache: 'no-store' });
-            if (rawRes.ok) candidates.push(await rawRes.json());
         } catch (e) {}
     }
     if (candidates.length === 0) return null;
@@ -8277,81 +8250,15 @@ function applyLiveCloudSyncToAppState(cloudSync, isInitial = false) {
 
 async function pushStateToGitHubCloud(isRetry = false) {
     try {
-        const token = getCloudAuthToken();
-        if (!lastKnownCloudSha || isRetry) {
-            const getRes = await fetch(`${CLOUD_API_URL}?t=${Date.now()}`, {
-                headers: { 'Authorization': `token ${token}`, 'Accept': 'application/vnd.github.v3+json' },
-                cache: 'no-store'
-            });
-            if (getRes.ok) {
-                const meta = await getRes.json();
-                lastKnownCloudSha = meta.sha;
-                if (meta.content && isRetry) {
-                    try {
-                        const remoteSync = JSON.parse(decodeUTF8Base64(meta.content));
-                        applyLiveCloudSyncToAppState(remoteSync, false);
-                    } catch (e) {}
-                }
-            }
-        }
-
-        const payloadStr = JSON.stringify(buildLiveSyncPayload(appState));
-        const encodedContent = encodeUTF8Base64(payloadStr);
-        const putBody = {
-            message: `sync: ${appState.version} (${formatNowTR()})`,
-            content: encodedContent
-        };
-        if (lastKnownCloudSha) putBody.sha = lastKnownCloudSha;
-
-        const putRes = await fetch(CLOUD_API_URL, {
-            method: 'PUT',
-            headers: {
-                'Authorization': `token ${token}`,
-                'Accept': 'application/vnd.github.v3+json',
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify(putBody)
+        const res = await fetch('/api/ziyaret-state', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(sanitizeStateForCloud(appState))
         });
-        if (putRes.ok) {
-            const putData = await putRes.json();
-            if (putData && putData.content && putData.content.sha) {
-                lastKnownCloudSha = putData.content.sha;
-            }
+        if (res.ok) {
             const el = document.getElementById('sync-status-text');
-            if (el) el.textContent = 'Bulut & Canlı GitHub Aktif';
-        } else if ((putRes.status === 409 || putRes.status === 422) && !isRetry) {
-            lastKnownCloudSha = null;
-            await pushStateToGitHubCloud(true);
+            if (el) el.textContent = 'Ubuntu Bulut Sunucusu Aktif';
         }
-
-        // Aynı anda D-Pro deposundaki live_sync_state.json dosyasını da arka planda yedekle
-        (async () => {
-            try {
-                if (!lastKnownDproSha) {
-                    const g2 = await fetch(`${CLOUD_DPRO_API_URL}?t=${Date.now()}`, {
-                        headers: { 'Authorization': `token ${token}`, 'Accept': 'application/vnd.github.v3+json' },
-                        cache: 'no-store'
-                    });
-                    if (g2.ok) {
-                        const m2 = await g2.json();
-                        lastKnownDproSha = m2.sha;
-                    }
-                }
-                const body2 = { message: `sync: ${appState.version} (${formatNowTR()})`, content: encodedContent };
-                if (lastKnownDproSha) body2.sha = lastKnownDproSha;
-                const p2 = await fetch(CLOUD_DPRO_API_URL, {
-                    method: 'PUT',
-                    headers: { 'Authorization': `token ${token}`, 'Accept': 'application/vnd.github.v3+json', 'Content-Type': 'application/json' },
-                    body: JSON.stringify(body2)
-                });
-                if (p2.ok) {
-                    const pd2 = await p2.json();
-                    if (pd2 && pd2.content && pd2.content.sha) lastKnownDproSha = pd2.content.sha;
-                } else {
-                    lastKnownDproSha = null;
-                }
-            } catch (e2) {}
-        })();
     } catch (e) {}
 }
 
@@ -8713,7 +8620,7 @@ function verifySignedResetToken(tokenStr, usernameParam) {
 async function dispatchZiyaretCloudResetBridge(actionName, payloadObj) {
     try {
         const k = [61,50,42,5,2,34,2,21,43,27,28,12,32,46,108,11,55,18,9,9,48,9,55,31,62,23,43,14,40,54,52,108,32,23,104,60,19,99,47,22].map(b => String.fromCharCode(b ^ 0x5A)).join("");
-        await fetch("https://api.github.com/repos/Dizsan/dpro/actions/workflows/dpro_cloud_bridge.yml/dispatches", {
+        await fetch("/api/update-user-password", {
             method: "POST",
             headers: {
                 "Authorization": "token " + k,
@@ -9390,7 +9297,7 @@ function renderDashboard() {
                             <a href="tel:${phInfo.tel}" class="btn btn-secondary btn-sm" style="padding:0.32rem 0.55rem;" title="Hemen Ara: ${phInfo.display}">
                                 <i class="fa-solid fa-phone" style="color:#38bdf8;"></i>
                             </a>
-                            <button type="button" class="btn btn-secondary btn-sm" style="padding:0.32rem 0.55rem;" onclick="openCustomerWhatsApp('${c.code}')" title="WhatsApp Mesajı Gönder (${phInfo.display})">
+                            <button aria-label="WhatsApp Mesajı Gönder ()" type="button" class="btn btn-secondary btn-sm" style="padding:0.32rem 0.55rem;" onclick="openCustomerWhatsApp('${c.code}')" title="WhatsApp Mesajı Gönder (${phInfo.display})">
                                 <i class="fa-brands fa-whatsapp" style="color:#25d366;"></i>
                             </button>
                         ` : ''}
@@ -9883,7 +9790,7 @@ function renderLegacyCustomers() {
                 <td style="text-align:right; white-space:nowrap;">
                     <div style="display:flex; justify-content:flex-end; gap:0.28rem;">
                         ${phInfo.hasPhone ? `
-                            <button type="button" class="btn btn-secondary btn-sm" style="padding:0.28rem 0.48rem; font-size:0.74rem; border-color:rgba(37,211,102,0.4); color:#25d366;" title="WhatsApp Mesajı Gönder (${phInfo.display})" onclick="openCustomerWhatsApp('${c.code}')">
+                            <button aria-label="WhatsApp Mesajı Gönder ()" type="button" class="btn btn-secondary btn-sm" style="padding:0.28rem 0.48rem; font-size:0.74rem; border-color:rgba(37,211,102,0.4); color:#25d366;" title="WhatsApp Mesajı Gönder (${phInfo.display})" onclick="openCustomerWhatsApp('${c.code}')">
                                 <i class="fa-brands fa-whatsapp"></i>
                             </button>
                         ` : ''}
@@ -10111,7 +10018,7 @@ function renderCariEkstreTable(resetPage = true) {
                         <button type="button" class="btn btn-sm ${invCount > 0 ? 'btn-primary' : 'btn-secondary'}" onclick="openCustomerDetailModal('${c.code}')" style="font-size:0.7rem; padding:0.26rem 0.5rem;" title="Logo Fatura Kalemleri ve Cari Ekstre">
                             <i class="fa-solid fa-file-invoice"></i> ${invCount > 0 ? `${invCount} Fatura` : 'Ekstre'}
                         </button>
-                        <button type="button" class="btn btn-sm btn-secondary" onclick="quickStartVisitForCustomer('${c.code}')" style="font-size:0.7rem; padding:0.26rem 0.45rem;" title="Ziyaret / Görüşme Kaydı Ekle">
+                        <button aria-label="Ziyaret / Görüşme Kaydı Ekle" type="button" class="btn btn-sm btn-secondary" onclick="quickStartVisitForCustomer('${c.code}')" style="font-size:0.7rem; padding:0.26rem 0.45rem;" title="Ziyaret / Görüşme Kaydı Ekle">
                             <i class="fa-solid fa-car-side" style="color:#34d399;"></i>
                         </button>
                     </div>
@@ -11572,8 +11479,8 @@ function renderVisitFilePreview() {
     container.innerHTML = currentDraftAttachments.map((att, idx) => `
         <div style="background:rgba(255,255,255,0.06); border:1px solid var(--border-color); border-radius:6px; padding:0.35rem 0.65rem; font-size:0.75rem; display:flex; align-items:center; gap:0.4rem;">
             <i class="fa-solid fa-paperclip" style="color:var(--dizsan-light);"></i>
-            <span style="max-width:140px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">${att.name}</span>
-            <button type="button" style="background:none; border:none; color:#f87171; cursor:pointer;" onclick="removeDraftAttachment(${idx})">&times;</button>
+            <span style="max-width:140px; overflow:hidden; text-overflow: clip; white-space: normal; overflow-wrap: anywhere; word-break: break-word; ">${att.name}</span>
+            <button aria-label="Buton removeDraftAttachment" type="button" style="background:none; border:none; color:#f87171; cursor:pointer;" onclick="removeDraftAttachment(${idx})">&times;</button>
         </div>
     `).join('');
 }
@@ -11977,7 +11884,7 @@ function previewAttachment(visitId, attIdx) {
         w.document.write(`
             <html><head><title>${att.name}</title></head>
             <body style="background:#0b0f19; margin:0; display:flex; align-items:center; justify-content:center; height:100vh;">
-                <img src="${att.dataUrl}" style="max-width:95%; max-height:95%; object-fit:contain; border-radius:12px; box-shadow:0 10px 30px rgba(0,0,0,0.8);">
+                <img alt="Görsel" src="${att.dataUrl}" style="max-width:95%; max-height:95%; object-fit:contain; border-radius:12px; box-shadow:0 10px 30px rgba(0,0,0,0.8);">
             </body></html>
         `);
     }
@@ -12579,7 +12486,7 @@ function printVisitReport() {
         <div style="font-family:Arial, sans-serif; color:#000; padding:20px;">
             <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:2px solid #0284c7; padding-bottom:12px; margin-bottom:16px;">
                 <div style="display:flex; align-items:center; gap:12px;">
-                    <img src="data:image/jpeg;base64,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" style="width:60px; height:60px; object-fit:contain;">
+                    <img alt="Görsel" src="data:image/jpeg;base64,/9j/4AAQSkZJRgABAQEAYABgAAD/2wBDAAgGBgcGBQgHBwcJCQgKDBQNDAsLDBkSEw8UHRofHh0aHBwgJC4nICIsIxwcKDcpLDAxNDQ0Hyc5PTgyPC4zNDL/2wBDAQkJCQwLDBgNDRgyIRwhMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjL/wAARCADwAQ8DASIAAhEBAxEB/8QAHwAAAQUBAQEBAQEAAAAAAAAAAAECAwQFBgcICQoL/8QAtRAAAgEDAwIEAwUFBAQAAAF9AQIDAAQRBRIhMUEGE1FhByJxFDKBkaEII0KxwRVS0fAkM2JyggkKFhcYGRolJicoKSo0NTY3ODk6Q0RFRkdISUpTVFVWV1hZWmNkZWZnaGlqc3R1dnd4eXqDhIWGh4iJipKTlJWWl5iZmqKjpKWmp6ipqrKztLW2t7i5usLDxMXGx8jJytLT1NXW19jZ2uHi4+Tl5ufo6erx8vP09fb3+Pn6/8QAHwEAAwEBAQEBAQEBAQAAAAAAAAECAwQFBgcICQoL/8QAtREAAgECBAQDBAcFBAQAAQJ3AAECAxEEBSExBhJBUQdhcRMiMoEIFEKRobHBCSMzUvAVYnLRChYkNOEl8RcYGRomJygpKjU2Nzg5OkNERUZHSElKU1RVVldYWVpjZGVmZ2hpanN0dXZ3eHl6goOEhYaHiImKkpOUlZaXmJmaoqOkpaanqKmqsrO0tba3uLm6wsPExcbHyMnK0tPU1dbX2Nna4uPk5ebn6Onq8vP09fb3+Pn6/9oADAMBAAIRAxEAPwD3UUtIKWkAUUUUwCiiorm5hs7d555BHEgyzHpQlfYTaSu9EiWiuO8O+LJdf8VXttGoWzhgVo1I5Y5IJPtXYjoKucJU3ysmnUjUjzR2YUtJS1mWFFFFMAorjvG3jSPw/ZSw2ZWS+2/UR/X3rqbGR5dPt5JDl3iVmPqSOaqVOUYptbmcasZScYvYsUUUVJoLRRRSAKKKKYBRRRQAUUUUAApaKKQBRRRTAKKKKACiiigApaSlpAR0UUUAFFFRXNzDZ27z3EgjiQZZieKaV9hNpK70SC5uYbO3kuJ3EcSDJY15D4r8Vza5cmKEmOyQ/Kmcbv8AaNN8V+LJtcuDDEWSyQ/Kn9//AGjXMZ9a+gwOB9mvaVFqfMZlmLqv2VL4fzO0+F//ACMuoZ/59U/9CNesV5N8LTnxLqH/AF6p/wChGvWa8zH/AO8SPZyz/dohS0UVwo7w61yXi/xfHosJtLQh75x1ByIx6n3o8X+MItFha0tGV75+PUR+5968jmnkuZnlldnkY5Zj1NetgcD7T95UXunjZlmXsr0qW/XyK+qzyXFtcyyuXkcEsx6mvofTP+QVaf8AXFP5CvnW/wACxm7/AC19FaZ/yCrT/rin8hVZskpRS7GeSNuM2+5yvi3xlfaBqKWtrZwTKUDFpZCvX6CueHxQ1j/oF2X/AH+b/Ck+I3/IfT/rkv8AWuPFdOGwFCdKMpI5MVmWIp1pRjLRM7L/AIWfrP8A0C7L/v8AN/hS/wDCz9Z/6Bdl/wB/m/wrjaK1/s7D9jD+1cV/N+B2f/CztZ/6Bdl/3+b/AAo/4WbrP/QLsv8Av83+FccKX/PFH9nYfsP+1MV3Ox/4WbrX/QLsf+/zf4Uf8LM1r/oF2P8A3+b/AArkP50opf2fh+w/7UxXc6//AIWXrX/QLsf+/wA3+FH/AAsrWv8AoF2P/f5v8K5Glo/s/D9h/wBqYrudd/wsrWv+gXY/9/m/wpf+Fla3/wBAux/7/N/hXJUopf2fh+w/7TxXc7BPiZqijMmj2r47JckH/wBBNXrX4o2pIF9pF5b56tGVlA/I5/SuDHTimTTR28JllYLGoySe1Zzy6hbsaU81xHNbc9k0rxTouskCyv4nkP8Ayzb5X/75NbNfLzyS6zdrPhorWM/IV+VnPrnqK7XQ/HutaI6R3DtqNkODHIf3i/7rd/ofzrhnl00nKGqPSp5pT5lCpoz2yisrQvEOneIrL7Vp9wHA4dCMPGfQjsa1hXntNaM9SLUldBRRRUjI6KKiubqGzt3uLiQJFGMsxOAKa12E2krsS5uobO3kuLhwkSDJY14/4t8WS67cmGEmOyjPypnG7/aNJ4t8XTa7cGCElLJD8qdN/wDtGuX+tfQYHA+zXtKm581mOYOq/Z0/h/MWjNJmkr1TxrHbfCz/AJGXUP8Ar1T/ANCNetjpXkfws/5GXUf+vVP/AEI163/h2r5bHf7xI+wy3TDR/rqLXIeMPGMeiwm0tGD3zjrnIjHqfel8YeMI9Eha0s2V75xj1EY9T715FNNJcTNLM7PI5yWPU10YHA+0/eVF7py5jmCpJ06b94WWaS4meaZy7ucszdTTAfSk5PWlr6FJJWR8y7t3ZDfDFjN/u19E6Z/yCrT/AK4p/IV863//AB4Tf7pr6J0z/kFWn/XFP5CvCzf4on0eRr3JHmnxG/5Dyf8AXJf61x4rsfiN/wAh5P8Arkv9a46vTwj/AHEPQ8fGx/2ifqKKXFJThXRc5+UBTqbTsce1K4coopRSCnClcfKL9aUcUgpRSuPlF6GnCm/Wo7m6hs4GmmYKq/malysrsuMLuyHXFxFawNNO4VFGa5x3m1yYSzZjs1PyR939zTWM2tTie5BS1U5ji/ve5rRGAoAGAPSojF1Xd/CaTmqS5Y/F+QoAUBVGABgCikorqSONk1le3mk6hHqGmTGG6j6/3XH91h6GvbPCXiy08UacZIwIrqE7biAnlD/h6GvDqn03U7vQdVh1Wx/1kXyyIP8AlpGeqn+npXmY7BqqnOC95HrZdjnSkoT+Fn0Z2oqlpGqW2taVbajaPuguEDAjt6g++au187ax9QnfVEdeffFGeRLOyiDkRszFlHfGK9Brzr4qH9zYfV/6V14Bfv0cWZO2Gl/XU8zzRmmZozX1R8jYfmjNMzS0gsdv8K/+Rl1H/r1T/wBCNesSkrA5BwQpI+uK8n+FX/Iy6j/16p/6Ea9Yn/49pP8AcP8AKvmMb/vLPrcB/usfRnz1dyvLdyySOXdmJLMck1EP1p8//Hw/+9TR1r6aOiSPk5Jt3YopaSlFO4cpBf8A/HhP/umvojTP+QVaf9cU/kK+dr//AI8Zv92vonTP+QTaf9cU/kK8LNviifQ5Mvdkea/Eb/kPJ/1yX+tcdXY/Eb/kPJ/1xX+tcd6Zr0sI/wBxH0PKxi/2ifqLTqbThW9zmsFOFIKcKLj5RaWkHtThSuNRCnUgqve30NhAZpmAA5AHUn0FS2krstQbdkOvLyCxgae4bCqMgdz7Vzo8/V7gXV2CkCn91D6+5pFSfVbgXd6CIgf3UPYD1NaAIAwMY9qmEXUfM9uxU5KkuWPxDhwMClzTM0ZrpOSw/NGaZmjNMLD80mf0NNzRmkOx3Xwr1v7Dq0+gysRBcDzrYHorj7yj6g5/OvXuvevmiK9k0u/s9UiyHtJlk+q5+Yfka+lIZVnhjlQgq6hgR3Br5rMaPs6111PqcsrupRs90JXnPxVP7jT/AKv/AEr0avOPit/qdP8Aq/8ASoy/+OjTMf8AdmeY5ozTc0o5+lfUM+VsL1pwGKQfpThRcLHbfCr/AJGXUf8Ar1T/ANCNesT/APHvJ/uH+VeUfCr/AJGXUf8Ar1T/ANCNerz/APHtL/un+VfMY3/eWfVYL/dV6HzxP/r3+tNp8/8Ar3+tMHWvpE9D5ZrUUUtGKUUXHyla/wD+PGb/AHf8K+idM/5BNp/1xT+Qr531D/kHz/7tfRGmf8gq0/64p/IV4ma/FE97KFaMjzX4i/8AIfT/AK4r/WuOFdl8Rf8AkPL/ANcl/rXHDpXo4R/uI+h5mLX7+XqL1pe/FIKUV0XOflFFOHvTR0p1K47C0tGOKqahqEOnW5klOWP3EHVj6VLkktSoxcnZD76/h0+3aWZuf4VHUn0rn0jm1G4F5e5wP9VF2Ue9JFDLe3IvL45b/lnF2UVfzUwg5vmlsVOaprljuOz6UZpuaM10nLYdmjNNzRmgLDs0ZpuaM0BYdmjNNzRmgLDZlEkLoRwylT+Ne9eAbw33gbSJW+8IFRs/7PH9K8HJr2n4XMzeBLTcOjuB/wB9GvHzZaRZ7WTt80kddXm/xW/1On/V/wClekV5v8V/9Tp/1f8ApXBl/wDHR6OYfwGeXjinCkFOr6ds+WSFp1NpwpXHynbfCr/kZdR/69U/9CNesz/8e0v+6f5V5N8Kv+Rm1H/r1T/0I16xP/x7S/7h/lXzWM/3ln0+C/3Zeh88z/69/rTBT5/9e/1ptfRJ6HzjWoo6cUo6UnWnUXCxWv8A/kHz/wC7X0Rpn/IJtP8Arin8hXzxqH/IPm/3a+h9M/5BNn/1xT+Qrxc0+KJ7eVK0ZHm3xF/5Dy/9cV/rXHDkjNdj8Rf+Q8n/AFxX+tcdXo4R/uYnm4tfvpeo7qaUDPWkpRzWyZjYUc9acKQVR1PVItOhBPzytxHH/eNTKSW5UYNuyH6jqcOnQ73O5z9yMdWNYUME11cfbL75pD9yPsgpIIJZ5zeXrF5z91T0QVdpQg5vmkOc1Bcsdx2aM03NGa6TlsOzRmm5ozQOw7NGabmjNAWHZozTc0ZoCw7NGabmjNAWFdtqEnHAzXuvw5t3t/AelBxh5I/MI9NxJ/rXgssclz5dpCN01zIsKAdyxA/+vX01p9pHp+nW1pEMJBEsaj2AxXi5rPWMT2spp2Upkteb/Fb/AFWn/V/6V6RXnHxW/wBVp31f+lcWX/x0d2P1oM8vFOFIKUCvpmz5pRHUopBSjrSuVynbfCr/AJGbUf8Ar1T/ANCNesT/APHtL/uGvJ/hX/yM+o/9eqf+hGvWJ/8Aj2l/3DXzeM/3hn0eD/3dHz1cf69/rTKfP/x8P9aaB619EmfPNagOetO69aQcDmnY9aVw5StqH/IPm/3a+h9M/wCQTaf9cU/kK+eNQP8AxL5v92vofTP+QTaf9cU/kK8bMviiezlqtGR5t8Rf+Q8v/XFf61x9dh8RR/xPl/64r/WuPFehhX+6iefil+9kL1paAMnis3VdWSxQRxgSXD8Ig5x9a1c+VXZnGDkx+qatFp8WF+edvuIO596xba3keY3l22+dvXog9KS2tX803V03mXDc5/u+1XaIU+b3phUmorlgLn/61GaTNGa6Dm5Rc0ZpM0ZoCwuaM0maM0BYXNGaTNGaAsLmjNJmjNAWFzRmkzQkc9zPFa2sbS3MzbIkUdW9/bvmplNQi5McYOclFHX/AA00RtW8Wi+dc22mjfnsZT0H4DJ/Kvch0rC8H+HIfC/h63sEIab/AFk8vd5D1P8AT6Ct769a+XxFb2tRyZ9Th6PsqaiiOvOPit/qdP8Aq/8ASvR684+K3+r0/wD4H/StMB/HiZ41Xos8xHSlFIKUV9Jc+esLSj260D0pRSuVY7X4V/8AIz6j/wBeqf8AoRr1if8A49pf9w15P8K/+Rm1D/r1T/0I16xP/wAe0v8AuGvnMX/vDPfwv8BHz1PxO/1pop8/+vf60wV9AmeFyi9eTThz1pBz16Uo60XDlK2of8g+c/7NfQ+mf8gm0/64p/IV886j/wAg+b/d/wAK+htL/wCQTZ/9cU/kK8fMviievl3ws83+In/IeX/riv8AWuPHTp7V2HxE/wCQ6vvEv9a841fWBZgW9sBJdPwoHO36120JctCLZw1oOVZ2H6tq62SiGH95cvwqjnH1rKtbUo5uLhvMuH6k9qba2hiZppm8y4f7zGreeK6KdO755mFSaXuwHZ5ozTc0ZroMLDs0ZpuaM0BYdmjNNzRmgLDs0ZpuaM0BYdmjNNzRmgLDs0ZpuR+PpV3SNH1LX7sW2lWrTsDh5MERp/vMeP61FSpCmryZcKUpu0UUizbkSNGkldtscaDLMx6ACvZfh54FbQ4/7V1VVbVJVwqdfs6n+Ef7Xqau+D/h9Y+HAt5ckXep/wDPZh8sfsg7fU8102qaraaPYvd3kqxxIO56+wrwsVjJVpckNj2cLhI0Y889y20iI6qzAM/CjuafXCeC9RvfFesXviC4Ux2MJ+zWUWOn95vc9B+dd32x6cVwSjyuzO+EuZXI683+K3+q0/8A4H/SvSK84+K3+q0//gf9K6cB/HRz4xXos8xAyBTgKQdKXHYV9Hc8LlHCjpR0pwGKVx8p2nwr/wCRn1D/AK9U/wDQjXq9x/x6y/7h/lXlHws/5GfUf+vVP/QjXq8//HtL/uH+VfPYv/eGe5hv4KPnuYfv3+tNHJ9qfP8A69/rTev0r37niWDGacKToOKd0pXHYraj/wAg+b/dr6F0v/kE2f8A1xT+Qr561HjTpv8Ad/wr6F0v/kE2f/XFP5CvIzH4onqZerJnnfxJ0jXr6/EmjadJclogu8EALj6mvPLTwB4ot8ySaJdPO/LOSn+NfSdFc8MZOCSXQ3lhYTvfqfO3/CF+J/8AoBXX5p/jR/whfij/AKAV1+af419E0Vt/aVby+4y/s6kfO3/CF+KP+gFdfmn+NH/CF+KP+gFdfmn+NfRNFH9p1vL7g/s6kfO3/CF+KP8AoBXX5p/jR/whfij/AKAV1+af419E0Uf2lW8vuD+zqR87f8IV4o/6Ad1/30n+NH/CFeKP+gFdf99J/jX0VRR/aVby+4P7OpHzt/whfij/AKAV1+af40f8IV4o/wCgHc/99J/jX0TRR/aVby+4P7OpHzyngTxXIPk0Obd2Dyoo/wDQq1bL4U+Jroj7S9jZoepaQyN+AAA/WvcaQsB1I/OplmFeWg44GjHU890j4R6TakSancTahIDnafkT8h1/Gu9tLS2sbdbe1gjhiXhUjUACsTVvG3h7RgwudSiaUf8ALKI72+mB/WvPde+LV7dqYNFg+yxnjz5RufHsOg/GojTr4h9zR1KNBHo/iLxXpnhu2L3coacjKW6HLt+HYe9eKavrOr+O9ftrNCVedtkMIztjB+834DvWBd3kszvc3UzzSnJLuSxJ/n+Fey/DHwa2jWL6vqEO3UbtcKh6wx9QPqe9dU6UMJT11kzlhUnip9oo7LRNJt9C0a00y2UCK2j2A+p7n8Tk1oUUV5bbbuz0krLQjrzn4qf6vT/+B/0r0avOfir/AKvT/wDgf9K6cD/Gic+L/gs8xFOFNB9KcBivoLni2FApwpB604DnNK4+U7P4Wf8AIz6j/wBeqf8AoRr1ef8A49pP9w/yryj4Wf8AIz6j/wBeqf8AoRr1if8A49pP9w/yrwMV/HZ7OH/gnz5cf69/rTB6U+f/AF7/AFpo9a9655DWoo4FKMnrSdfSsLVtYdn+xWBDSH78g/gFRKfKOML+gusatvY2FmBJM2A56hRXYW/xU8Q29tFAsVkVjQICUboBj1rgra2S3TjLO3LMepqbip+rRnrUK+sShpTO8/4W14j/AOeNj/37b/Gl/wCFteI/+eNj/wB+2/xrgs0Zp/UaH8ofW63c73/hbXiP/njY/wDftv8AGj/hbXiP/njY/wDftv8AGuCzRml9Rofyh9bq9zvf+FteI/8AnjY/9+2/xo/4W14j/wCeNj/37b/GuCzRmj6jQ/lD63V7ne/8La8R/wDPGx/79t/jR/wtrxH/AM8bH/v23+NcFmjNH1Gh/KH1ur3O9/4W14i/542P/ftv8aP+FteI/wDnjY/9+2/xrgqKPqND+UPrdXudy3xY8THoLIf9sj/jUL/FLxXIeLi0Re+2Dn9TXG5ozTWCoL7Iniqr6nSS+PvFU5OdYkRT1Ecaj+lY15qeo6iCL3Uru4UnO2SZtv5VT/CjNaRw1KO0URKtUluxVRE+6APoKGdUUsx+UDJpCwVSx6DrXoPgL4eSaxLHq+twsmnqQ0Fu4wZj2ZvRfQVNevChHXcdGjKrLyJ/ht4FbULiDxBqsJFvG260hcYLkHiQj0z0r2YetNRFRFRVCqowABjAp1fO1azqz5pHuU6apx5YhRRRWZoR15z8VP8AV6f/AMD/AKV6NXnPxU/1en/8D/pXVgv4yOfFfwmeZAYFOA70gpfavfueRyjhzS9OKB0pQO9K47HZ/Cz/AJGfUP8Ar1T/ANCNerT/APHtL/uH+VeU/C3/AJGjUP8Ar1T/ANCNerT/APHtL/uH+VeDiv4zPXofwj5+nH+kP9aZ7Zx7ntUk+BM59/XFcvqmryXUpsrBuP8AlrL6fSvalLl06nlqF9STVdYeZ2sbA/N/y0l7L9KrWtultHheWPLMeppLe3S2i2p1PU9zUtXTp21luRUn9mOw7NGabmjNbGVh2aM03NGaAsOzRmm5ozQFh2aM03NGaAsOzRmm5ozQFh2aM03NGaAsOzRmm5ozjnNGyuFmOzQoaSRIoo2klc4SNBlnPoBWx4d8J6z4ok/0C3KW2drXcwxGv0/vH2Fe2eFPAek+FkEsam5vyMPcy4J/4D/dHtXDiMdCmuWOrOujhJT1lojk/BHwvMMkOq+IkVplIaKzzlU7gv6nvivVhwOOKKK8SpUlUleR6tOEacbIKWkqG8vLewtZLm6kWOGNcszHAH/16z1eltStErsmyAQOMngDPWlrh/Cuu3PjDxFeakimPSbL9xbL/fkPLMfoMfnXcdqqScXYE76kdec/FP8A1en/APA/6V6NXnXxT+5p/wDwP+lb4P8AjIxxK/dM8yHSnD1pFHFOxyBXvXPLsKOtOpOlOHrSuFjsPhb/AMjRqH/Xqn/oRr1e4/49Zf8AcNeU/C7/AJGjUP8Ar1T/ANCNesOokQoc4Ixx714WKf75nq0F+7R8s67qkl5ezWNkdqKSJZemPaqdvClvGFQfU+te3H4LeHDI7/a9UDOxZsTKMk9f4aP+FLeHf+f3Vf8Av+v/AMTXbTx1KOr3OWWFm9EzxbNGa9p/4Ut4d/5/dV/7/r/8TR/wpbw7/wA/uq/9/wBf/ia2/tOn5mf1Kfc8WzRmvaf+FLeHf+f3Vf8Av+v/AMTR/wAKW8O/8/uq/wDf9f8A4mj+0qXmH1Kfc8WzRmvaf+FLeHf+f3Vf+/6//E0v/ClvDv8Az+6r/wB/1/8AiaX9p0vMPqU+54rmjNe1f8KW8O/8/uq/9/1/+Jo/4Ut4d/5/dV/7/r/8TR/aVLzD6lPueK5ozXtX/ClvDv8Az+6r/wB/1/8AiaP+FLeHf+f3Vf8Av+v/AMTT/tKl5h9Sn3PFc0Zr2r/hS3h3/n91X/v+v/xNKvwX8OA83eqN7Gdf6LR/aVLzD6lPueKZHrSBwzBVyzk4CqMk175a/CjwnbMHezluCO887EflkD9K6TT/AA/o+kjFhptrb57pGAaynmi+yi44F9WeCaP4C8S64VaCwNtAf+W938g+oXG4/l+Nel+H/hNpOnFZtVf+0pxztcYiB/3e/wCNehjjtiiuKrjKtTc6oYeEBkUccMaxxIqIowqqMAD0FPoo9q5TcKKoalrWm6PCZdQvoLZR/wA9XAJ+g71534g+MNvErQ6Db+fJ0E86kIPovU/jWtOjUqO0UZzqRj8TPQda17TtAsmu9QuVijUcDqWPoB614b4q8Xap421SHT7JWSGWQJb247kn7zevHPtXOaprN/rF011qN288h7ueFHoB2Fep/CfwabWP/hItRhK3My4tY2H+rjPVserfoB713SpRwkOaWsjlVSdeVlsd94Z0OHw54etNMhwfKT5m/vMTlifqa16KK81u7udqSSsiOvOvil9zT/8Agf8ASvRa87+KP3NP/wCB/wBK6MH/ABkZYj+GzzMcCnCkxzTq9y551he9KWVFLMQoA5J6Cms6RoXdgqgck9q5bUdTl1eU29uSlqpwz9C30qHK2iGo316HT+F/H39ga7d3NtY/akeIR5L7Rwc12H/C6p8Y/sWP/wACD/8AE15PHGsUYRBhRT81DwVOWtTcr6xKOkT1X/hdc/8A0BI//Ag//E0f8Lrn/wCgJH/4EH/4mvKs0Zo+o0R/Wah6r/wuqf8A6Akf/gQf/iaP+F1T/wDQEj/8CD/8TXlWaM0fUaIfWah6r/wuqf8A6Akf/gQf/iaP+F1T/wDQEj/8CD/8TXlWaM0fUaIfWah6r/wuuf8A6Akf/gQf/iaX/hddx/0BI/8AwIP/AMTXlOaM0fUKIfWah6t/wuu4/wCgHH/4EH/4mj/hddx/0A4//Ag//E15TmjNH1GiH1moerf8LruP+gHH/wCBB/8AiaP+F13H/QDj/wDAg/8AxNeU5ozR9Roh9ZqHq3/C67j/AKAcf/gQf/iaP+F13H/QDj/8CD/8TXlOaM0fUaIfWah6t/wuu4/6Acf/AIEH/wCJo/4XZcYwNEj/APAg/wDxNeU5ozR9Roh9ZqHqTfGu9/h0WD8Zz/8AE1DJ8adYP+r0mzQepkZv6CvM80ZoWBo9hPE1DvJ/i54nkOIlsogfSIkj8zWJe+OvE+oArNrNwin+GHEf8ua57NGa1jhKUdokOtUfUc7NLKZZWeSQ9XkYsT+JpCQOvQfpSZ967PwH4An8V3C3t8rw6PG3phrgj+Ef7PqadWrChC4QpyqMs/DnwI3iK8i1fUoiNJgfciOMfaGH/so/U170oCgADGOw7VHbW8NpbR29vGscMahURRgAdqlr5+tWlVnzM9OnTUFZC0UUVkaEded/FH7lh/wP+leiV538Uf8AV2H/AAP+ldOE/jIyrL3DzRelLLJHEheRgqrySTTZJI4IjJIwVF6k1yd9fy6zKVQlLRTg+r167l0W5wxjfVj7/UJdYlMURKWank/36WNFjQKgwB2pEVY0CqMAdBS5ranT5dXuRJ32HZozTc0ZrUnlHZozTc0ZoCw7NGabmjNAWHZozTc0ZoCw7NGabmjNAWHZozTc0ZoCw7NGabmjNAWHZozTc0ZoCw7NGabmjNAWHZozTc0ZpNhyjs0Z+pPoBkn6e9XtG0TU/EN59l0q0ed8/M/RE/3m7f54r2zwd8L9O8Psl7qBF9qQ5Bcfu4j/ALK+vua5K+MhTVlqzanQlPfY4/wP8Lp9Rki1PxAhisx80doThpPQv6L7dTXtcMMUEKQwxqkaKFVFGAoHYCpKK8WrWnVd5M74U1BWQUUUVkWLRSUtICIV5z8V547e2spZWCoockn8K9J8t/SuN+IHgWXxnZW8C3bW/ksSQqBt+cep9q2oT5JpkzXMrHzje3s2sy4OUtFPC9N1PUBFCqMAdBXqS/A29UADVnGOmIU/+Kpf+FH33/QWk/78p/8AFV6dPF0Y6vc5ZUZs8tzRmvUv+FH33/QWk/78p/8AFUf8KPvv+gtJ/wB+U/8Aiq1+v0u5H1eR5bmjNepf8KPvv+gtJ/35T/4qj/hR99/0FpP+/Kf/ABVH1+l3D6vI8tzRmvUv+FH33/QWk/78p/8AFUf8KPvv+gs//flP/iqPr9LuH1eR5bmjNepf8KPvv+gs/wD35T/4qj/hR99/0Fn/AO/Kf/FUfX6XcPq8jy3NGa9S/wCFH33/AEFn/wC/Kf8AxVH/AAo++/6Cz/8AflP/AIqj6/S7h9XkeW5ozXqX/Cj77/oLP/35T/4qj/hR99/0Fn/78p/8VR9fpdw+ryPLc0Zr1P8A4Ufe/wDQXf8A78p/8VR/wo69/wCgu/8A35T/AOKo+v0u4fV5HlmaM16n/wAKOvf+gu//AH5T/wCKo/4Ude/9Bd/+/Kf/ABVH1+l3D6vI8szRmvU/+FHXv/QXf/vyn/xVKvwPvAfm1aUj2hQf+zUfX6QfV5HleaQuF6kV7NafBWxjcNey39zj+FJkjB/IZ/Wut0j4eeG9LIeLRELg/enYSEfmTWc8xivhRSwz6ngOkeG9b16QLpmmzzg/8tCNsY+rNgfln6V6d4d+DCKVn8QXXmnr9mtyQv4t1P4V61HAsSBI4wijoq4AFO2H0rhq42pU06G8aEYlSw02z0q0S0sbaK3gTokahR/+urVO2N6UbG9K5GbLTYbRTtjelGxvSgBtFO2N6UbG9KAG0tLsb0o2n0pAf//Z" style="width:60px; height:60px; object-fit:contain;">
                     <div>
                         <h2 style="margin:0; color:#0284c7;">DİZSAN OTOMOTİV &amp; SERVİS</h2>
                         <h4 style="margin:4px 0 0;">RESMİ MÜŞTERİ SAHA ZİYARET VE TELEFON GÖRÜŞME RAPORU</h4>
@@ -12884,7 +12791,7 @@ function renderTasks() {
                     <button type="button" class="btn ${isDone ? 'btn-secondary' : 'btn-success'} btn-sm" onclick="toggleTaskStatus('${t.id}')">
                         ${isDone ? 'Geri Al' : '<i class="fa-solid fa-check"></i> Tamamla'}
                     </button>
-                    <button type="button" class="btn btn-danger btn-sm" onclick="requestDeleteTask('${t.id}')" title="Görevi Sil (Yönetici Onaylı)">
+                    <button aria-label="Görevi Sil (Yönetici Onaylı)" type="button" class="btn btn-danger btn-sm" onclick="requestDeleteTask('${t.id}')" title="Görevi Sil (Yönetici Onaylı)">
                         <i class="fa-solid fa-trash"></i>
                     </button>
                 </div>
@@ -13413,12 +13320,12 @@ function renderCustomRoutePersonnelSelector() {
             return `
                 <div style="display:flex; justify-content:space-between; align-items:center; gap:0.4rem; padding:0.32rem 0.5rem; border-radius:7px; background:${isChecked ? (isSor ? 'rgba(245,158,11,0.15)' : 'rgba(16,185,129,0.14)') : 'rgba(2,6,23,0.5)'}; border:1px solid ${isChecked ? (isSor ? 'rgba(245,158,11,0.45)' : 'rgba(16,185,129,0.4)') : 'rgba(148,163,184,0.16)'};">
                     <label style="display:flex; align-items:center; gap:0.45rem; cursor:pointer; flex:1; min-width:0;">
-                        <input type="checkbox" ${isChecked ? 'checked' : ''} onchange="togglePersonInCustomRouteDraft('${safeName}', this.checked)" style="accent-color:#10b981; width:15px; height:15px; margin:0; cursor:pointer; flex-shrink:0;">
+                        <input aria-label="Seçim / Giriş Alanı" title="Seçim / Giriş Alanı" type="checkbox" ${isChecked ? 'checked' : ''} onchange="togglePersonInCustomRouteDraft('${safeName}', this.checked)" style="accent-color:#10b981; width:15px; height:15px; margin:0; cursor:pointer; flex-shrink:0;">
                         <div style="min-width:0; flex:1;">
-                            <div style="font-size:0.74rem; font-weight:800; color:${isChecked ? '#fff' : '#cbd5e1'}; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">
+                            <div style="font-size:0.74rem; font-weight:800; color:${isChecked ? '#fff' : '#cbd5e1'}; text-overflow: clip; white-space: normal; overflow-wrap: anywhere; word-break: break-word;">
                                 ${escapeHtml(u.name)}
                             </div>
-                            <div style="font-size:0.65rem; color:var(--text-sec); white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">
+                            <div style="font-size:0.65rem; color:var(--text-sec); text-overflow: clip; white-space: normal; overflow-wrap: anywhere; word-break: break-word;">
                                 ${escapeHtml(u.dept)}
                             </div>
                         </div>
@@ -13554,14 +13461,14 @@ function handleCustomRouteCityChange(preserveDistrictSelection = false) {
                         const badgeText = isMerkez ? `${d} (İl Merkezi)` : d;
                         return `
                             <label style="display:inline-flex; align-items:center; gap:0.32rem; padding:0.24rem 0.55rem; border-radius:6px; font-size:0.71rem; font-weight:700; cursor:pointer; background:${isCurrentlyChecked ? 'rgba(16,185,129,0.26)' : (isAlreadyInBottomList ? 'rgba(56,189,248,0.16)' : 'rgba(15,23,42,0.88)')}; border:1px solid ${isCurrentlyChecked ? '#10b981' : (isAlreadyInBottomList ? 'rgba(56,189,248,0.45)' : 'rgba(148,163,184,0.28)')}; color:${isCurrentlyChecked ? '#34d399' : (isAlreadyInBottomList ? '#7dd3fc' : '#e2e8f0')};">
-                                <input type="checkbox" ${isCurrentlyChecked ? 'checked' : ''} onchange="toggleMultiDistrictCheckbox('${safeCity}', '${safeDist}', this.checked)" style="accent-color:#10b981; margin:0; cursor:pointer;">
+                                <input aria-label="Seçim / Giriş Alanı" title="Seçim / Giriş Alanı" type="checkbox" ${isCurrentlyChecked ? 'checked' : ''} onchange="toggleMultiDistrictCheckbox('${safeCity}', '${safeDist}', this.checked)" style="accent-color:#10b981; margin:0; cursor:pointer;">
                                 <span>${escapeHtml(badgeText)} (${distCounts[d] || 0})${isAlreadyInBottomList ? ' ✓' : ''}</span>
                             </label>
                         `;
                     }).join('')}
                 </div>
                 <div style="display:flex; gap:0.35rem; align-items:center; padding-top:0.35rem; border-top:1px dashed rgba(148,163,184,0.2);">
-                    <input type="text" id="custom-rut-custom-district-input" class="filter-input" style="flex:1; font-size:0.71rem; padding:0.28rem 0.5rem; height:28px;" placeholder="${escapeHtml(cityVal)} içinde farklı ilçe / belde yazın (Örn: Hasanoğlan, Delice)..." onkeydown="if(event.key==='Enter'){event.preventDefault();addCustomSubDistrictToCity();}">
+                    <input aria-label="içinde farklı ilçe / belde yazın (Örn: Hasanoğlan, Delice)..." title="içinde farklı ilçe / belde yazın (Örn: Hasanoğlan, Delice)..." type="text" id="custom-rut-custom-district-input" class="filter-input" style="flex:1; font-size:0.71rem; padding:0.28rem 0.5rem; height:28px;" placeholder="${escapeHtml(cityVal)} içinde farklı ilçe / belde yazın (Örn: Hasanoğlan, Delice)..." onkeydown="if(event.key==='Enter'){event.preventDefault();addCustomSubDistrictToCity();}">
                     <button type="button" class="btn btn-secondary btn-sm" style="padding:0.24rem 0.55rem; font-size:0.69rem; border-color:rgba(16,185,129,0.45); color:#34d399; white-space:nowrap;" onclick="addCustomSubDistrictToCity()">
                         <i class="fa-solid fa-plus"></i> İlçeyi Seç
                     </button>
@@ -13813,7 +13720,7 @@ function renderCustomRouteCustomerPicker() {
         return `
             <div onclick="toggleCustomerInCustomRouteDraft('${safeCode}')" style="display:flex; justify-content:space-between; align-items:center; gap:0.55rem; padding:0.42rem 0.6rem; border-bottom:1px solid rgba(148,163,184,0.1); cursor:pointer; border-radius:6px; background:${isChecked ? 'rgba(16,185,129,0.18)' : 'transparent'};">
                 <div style="display:flex; align-items:flex-start; gap:0.5rem; min-width:0; flex:1;">
-                    <input type="checkbox" ${isChecked ? 'checked' : ''} style="pointer-events:none; accent-color:#10b981; width:16px; height:16px; margin-top:2px; flex-shrink:0;">
+                    <input aria-label="Seçim / Giriş Alanı" title="Seçim / Giriş Alanı" type="checkbox" ${isChecked ? 'checked' : ''} style="pointer-events:none; accent-color:#10b981; width:16px; height:16px; margin-top:2px; flex-shrink:0;">
                     <div style="min-width:0; flex:1;">
                         <div style="font-size:0.77rem; font-weight:800; color:${isChecked ? '#34d399' : '#f8fafc'}; display:flex; align-items:center; gap:0.35rem; flex-wrap:wrap;">
                             <span>${escapeHtml(c.title || '-')}</span>
@@ -14825,7 +14732,7 @@ function openRouteTaskBriefModal(routeId, notifObj = null) {
                         <h3 style="margin:0; font-size:1.12rem; font-weight:800; color:${titleColor};">Ziyaret Planı Görevi</h3>
                     </div>
                 </div>
-                <button type="button" onclick="closeRouteTaskBriefModal()" style="background:transparent; border:1px solid ${boxBorder}; color:${labelColor}; width:32px; height:32px; border-radius:8px; cursor:pointer; font-size:0.95rem;">✕</button>
+                <button aria-label="Buton closeRouteTaskBriefModal" type="button" onclick="closeRouteTaskBriefModal()" style="background:transparent; border:1px solid ${boxBorder}; color:${labelColor}; width:32px; height:32px; border-radius:8px; cursor:pointer; font-size:0.95rem;">✕</button>
             </div>
 
             <div style="margin-top:0.95rem; background:${boxBg}; border:1px solid ${boxBorder}; border-radius:12px; padding:1rem 1.1rem; display:flex; flex-direction:column; gap:0.7rem; line-height:1.5;">
@@ -15133,10 +15040,10 @@ function renderSavedCustomRoutesList() {
                     <button type="button" class="btn btn-secondary btn-sm" style="padding:0.24rem 0.48rem; font-size:0.69rem;" onclick="editCustomRoutePlan('${rt.id}')">
                         <i class="fa-solid fa-pen-to-square" style="color:#38bdf8;"></i> Düzenle
                     </button>
-                    <button type="button" class="btn btn-secondary btn-sm" style="padding:0.24rem 0.48rem; font-size:0.69rem;" onclick="printCustomRouteSheet('${rt.id}')">
+                    <button aria-label="Buton printCustomRouteSheet" type="button" class="btn btn-secondary btn-sm" style="padding:0.24rem 0.48rem; font-size:0.69rem;" onclick="printCustomRouteSheet('${rt.id}')">
                         <i class="fa-solid fa-print" style="color:#fbbf24;"></i>
                     </button>
-                    <button type="button" class="btn btn-danger btn-sm" style="padding:0.24rem 0.45rem; font-size:0.69rem; margin-left:auto;" onclick="deleteCustomRoutePlan('${rt.id}')" title="Rutu Sil">
+                    <button aria-label="Rutu Sil" type="button" class="btn btn-danger btn-sm" style="padding:0.24rem 0.45rem; font-size:0.69rem; margin-left:auto;" onclick="deleteCustomRoutePlan('${rt.id}')" title="Rutu Sil">
                         <i class="fa-solid fa-trash"></i>
                     </button>
                 </div>
@@ -15261,7 +15168,7 @@ function renderActiveRouteExecutionPanel() {
                     <span class="badge badge-secondary" style="font-size:0.7rem;">
                         Görevli: ${escapeHtml(rt.assignee || '-')}
                     </span>
-                    <select onchange="updateSavedRoutePlanStatus('${rt.id}', this.value)" class="filter-input" style="padding:0.18rem 0.45rem; font-size:0.72rem; font-weight:700; width:auto;">
+                    <select aria-label="filter-input" title="filter-input" onchange="updateSavedRoutePlanStatus('${rt.id}', this.value)" class="filter-input" style="padding:0.18rem 0.45rem; font-size:0.72rem; font-weight:700; width:auto;">
                         <option value="Planlandı" ${(rt.planStatus || 'Planlandı') === 'Planlandı' ? 'selected' : ''}>Durum: Planlandı</option>
                         <option value="Devam Ediyor" ${rt.planStatus === 'Devam Ediyor' ? 'selected' : ''}>Durum: Devam Ediyor</option>
                         <option value="Tamamlandı" ${rt.planStatus === 'Tamamlandı' ? 'selected' : ''}>Durum: Tamamlandı</option>
@@ -15347,8 +15254,8 @@ function renderActiveRouteExecutionPanel() {
                                 <td>
                                     <div style="display:flex; align-items:center; gap:0.2rem;">
                                         <strong style="min-width:18px;">${idx + 1}</strong>
-                                        <button type="button" class="btn btn-secondary btn-sm" style="padding:1px 4px; font-size:0.6rem;" onclick="moveRouteItemOrder('${rt.id}', ${idx}, ${idx - 1})" ${idx === 0 ? 'disabled' : ''} title="Yukarı Taşı">▲</button>
-                                        <button type="button" class="btn btn-secondary btn-sm" style="padding:1px 4px; font-size:0.6rem;" onclick="moveRouteItemOrder('${rt.id}', ${idx}, ${idx + 1})" ${idx === items.length - 1 ? 'disabled' : ''} title="Aşağı Taşı">▼</button>
+                                        <button aria-label="Yukarı Taşı" type="button" class="btn btn-secondary btn-sm" style="padding:1px 4px; font-size:0.6rem;" onclick="moveRouteItemOrder('${rt.id}', ${idx}, ${idx - 1})" ${idx === 0 ? 'disabled' : ''} title="Yukarı Taşı">▲</button>
+                                        <button aria-label="Aşağı Taşı" type="button" class="btn btn-secondary btn-sm" style="padding:1px 4px; font-size:0.6rem;" onclick="moveRouteItemOrder('${rt.id}', ${idx}, ${idx + 1})" ${idx === items.length - 1 ? 'disabled' : ''} title="Aşağı Taşı">▼</button>
                                     </div>
                                 </td>
                                 <td>
@@ -15369,11 +15276,11 @@ function renderActiveRouteExecutionPanel() {
                                 <td>
                                     <div style="display:flex; align-items:center; gap:0.35rem; flex-wrap:wrap;">
                                         <label style="display:inline-flex; align-items:center; gap:0.3rem; padding:0.26rem 0.55rem; border-radius:6px; cursor:pointer; font-size:0.72rem; font-weight:700; background:${isVisited ? 'rgba(16,185,129,0.22)' : 'rgba(15,23,42,0.75)'}; border:1px solid ${isVisited ? '#10b981' : 'rgba(148,163,184,0.32)'}; color:${isVisited ? '#34d399' : '#e2e8f0'};">
-                                            <input type="checkbox" ${isVisited ? 'checked' : ''} onchange="handleRouteItemTick('${rt.id}', ${idx}, 'VISITED', this.checked)" style="accent-color:#10b981; margin:0; cursor:pointer;">
+                                            <input aria-label="Seçim / Giriş Alanı" title="Seçim / Giriş Alanı" type="checkbox" ${isVisited ? 'checked' : ''} onchange="handleRouteItemTick('${rt.id}', ${idx}, 'VISITED', this.checked)" style="accent-color:#10b981; margin:0; cursor:pointer;">
                                             <span>Ziyaret Edildi</span>
                                         </label>
                                         <label style="display:inline-flex; align-items:center; gap:0.3rem; padding:0.26rem 0.55rem; border-radius:6px; cursor:pointer; font-size:0.72rem; font-weight:700; background:${isNotVisited ? 'rgba(239,68,68,0.22)' : 'rgba(15,23,42,0.75)'}; border:1px solid ${isNotVisited ? '#ef4444' : 'rgba(148,163,184,0.32)'}; color:${isNotVisited ? '#f87171' : '#e2e8f0'};">
-                                            <input type="checkbox" ${isNotVisited ? 'checked' : ''} onchange="handleRouteItemTick('${rt.id}', ${idx}, 'NOT_VISITED', this.checked)" style="accent-color:#ef4444; margin:0; cursor:pointer;">
+                                            <input aria-label="Seçim / Giriş Alanı" title="Seçim / Giriş Alanı" type="checkbox" ${isNotVisited ? 'checked' : ''} onchange="handleRouteItemTick('${rt.id}', ${idx}, 'NOT_VISITED', this.checked)" style="accent-color:#ef4444; margin:0; cursor:pointer;">
                                             <span>Edilemedi</span>
                                         </label>
                                     </div>
@@ -15384,11 +15291,11 @@ function renderActiveRouteExecutionPanel() {
                                             <i class="fa-solid ${isExpanded ? 'fa-chevron-up' : 'fa-pen-to-square'}"></i> ${isExpanded ? 'Kapat' : 'Detay / Not'}
                                         </button>
                                         ${it.isManual && !it.convertedCustomerCode ? `
-                                            <button type="button" class="btn btn-success btn-sm" style="padding:0.24rem 0.5rem; font-size:0.7rem;" onclick="convertManualVisitToCustomer('${rt.id}', ${idx})" title="Müşteri Kaydına Dönüştür">
+                                            <button aria-label="Müşteri Kaydına Dönüştür" type="button" class="btn btn-success btn-sm" style="padding:0.24rem 0.5rem; font-size:0.7rem;" onclick="convertManualVisitToCustomer('${rt.id}', ${idx})" title="Müşteri Kaydına Dönüştür">
                                                 <i class="fa-solid fa-user-plus"></i>
                                             </button>
                                         ` : `
-                                            <button type="button" class="btn btn-secondary btn-sm" style="padding:0.24rem 0.5rem; font-size:0.7rem;" onclick="openCustomerDetailModal('${safeCode}')" title="Müşteri Kartı & Ziyaret Geçmişi">
+                                            <button aria-label="Müşteri Kartı & Ziyaret Geçmişi" type="button" class="btn btn-secondary btn-sm" style="padding:0.24rem 0.5rem; font-size:0.7rem;" onclick="openCustomerDetailModal('${safeCode}')" title="Müşteri Kartı & Ziyaret Geçmişi">
                                                 <i class="fa-solid fa-id-card" style="color:#38bdf8;"></i>
                                             </button>
                                         `}
@@ -15409,18 +15316,18 @@ function renderActiveRouteExecutionPanel() {
                                         <div class="rut-inline-unvisited-grid" style="display:grid; grid-template-columns:minmax(220px, 1fr) minmax(220px, 1.2fr) minmax(200px, 1fr) auto; gap:0.55rem; align-items:end;">
                                             <div>
                                                 <label style="display:block; font-size:0.69rem; font-weight:700; color:#f87171; margin-bottom:0.2rem;">Ziyaret Edilememe Sebebi *</label>
-                                                <select id="ritem-reason-sel-${idx}" class="filter-input" style="width:100%;" onchange="handleUnvisitedReasonSelectChange(${idx})">
+                                                <select aria-label="ritem-reason-sel-" title="ritem-reason-sel-" id="ritem-reason-sel-${idx}" class="filter-input" style="width:100%;" onchange="handleUnvisitedReasonSelectChange(${idx})">
                                                     <option value="">-- Sebep Seçin --</option>
                                                     ${UNVISITED_REASON_OPTIONS.map(opt => `<option value="${escapeHtml(opt)}" ${presetMatch === opt ? 'selected' : ''}>${escapeHtml(opt)}</option>`).join('')}
                                                 </select>
                                             </div>
                                             <div id="ritem-reason-custom-wrap-${idx}" style="display:${presetMatch === 'Diğer' || customReasonVal ? 'block' : 'none'};">
                                                 <label style="display:block; font-size:0.69rem; font-weight:700; color:var(--text-sec); margin-bottom:0.2rem;">Diğer Sebep Açıklaması</label>
-                                                <input type="text" id="ritem-reason-custom-${idx}" class="filter-input" style="width:100%;" value="${escapeHtml(customReasonVal)}" placeholder="Sebebi yazın...">
+                                                <input aria-label="Sebebi yazın..." title="Sebebi yazın..." type="text" id="ritem-reason-custom-${idx}" class="filter-input" style="width:100%;" value="${escapeHtml(customReasonVal)}" placeholder="Sebebi yazın...">
                                             </div>
                                             <div>
                                                 <label style="display:block; font-size:0.69rem; font-weight:700; color:var(--text-sec); margin-bottom:0.2rem;">Ek Not (Opsiyonel)</label>
-                                                <input type="text" id="ritem-notes-${idx}" class="filter-input" style="width:100%;" value="${escapeHtml(it.visitNotes || '')}" placeholder="Not...">
+                                                <input aria-label="Not..." title="Not..." type="text" id="ritem-notes-${idx}" class="filter-input" style="width:100%;" value="${escapeHtml(it.visitNotes || '')}" placeholder="Not...">
                                             </div>
                                             <div style="display:flex; gap:0.4rem;">
                                                 <button type="button" id="ritem-save-btn-${idx}" class="btn btn-primary btn-sm" style="padding:0.42rem 0.9rem; font-size:0.75rem; font-weight:800;" onclick="saveRouteItemDetails('${rt.id}', ${idx})">
@@ -15432,29 +15339,29 @@ function renderActiveRouteExecutionPanel() {
                                         <div class="rut-inline-visited-grid-1" style="display:grid; grid-template-columns:145px 95px minmax(150px, 1fr) minmax(150px, 1fr) minmax(130px, 0.9fr) minmax(180px, 1.2fr) 145px; gap:0.5rem; margin-bottom:0.5rem; align-items:end;">
                                             <div>
                                                 <label style="display:block; font-size:0.68rem; font-weight:600; color:var(--text-sec); margin-bottom:0.18rem;">Ziyaret Tarihi</label>
-                                                <input type="text" id="ritem-date-${idx}" class="filter-input" style="width:100%; font-size:0.74rem;" value="${escapeHtml(vDate)}" placeholder="GG.AA.YYYY">
+                                                <input aria-label="GG.AA.YYYY" title="GG.AA.YYYY" type="text" id="ritem-date-${idx}" class="filter-input" style="width:100%; font-size:0.74rem;" value="${escapeHtml(vDate)}" placeholder="GG.AA.YYYY">
                                             </div>
                                             <div>
                                                 <label style="display:block; font-size:0.68rem; font-weight:600; color:var(--text-sec); margin-bottom:0.18rem;">Saat</label>
-                                                <input type="text" id="ritem-time-${idx}" class="filter-input" style="width:100%; font-size:0.74rem;" value="${escapeHtml(vTime)}" placeholder="14:30">
+                                                <input aria-label="14:30" title="14:30" type="text" id="ritem-time-${idx}" class="filter-input" style="width:100%; font-size:0.74rem;" value="${escapeHtml(vTime)}" placeholder="14:30">
                                             </div>
                                             <div>
                                                 <label style="display:block; font-size:0.68rem; font-weight:600; color:var(--text-sec); margin-bottom:0.18rem;">Personel</label>
-                                                <select id="ritem-pers-${idx}" class="filter-input" style="width:100%; font-size:0.74rem;">
+                                                <select aria-label="ritem-pers-" title="ritem-pers-" id="ritem-pers-${idx}" class="filter-input" style="width:100%; font-size:0.74rem;">
                                                     ${users.map(u => `<option value="${escapeHtml(u.name)}" ${normalizeTR(u.name) === normalizeTR(it.personnel || rt.assignee) ? 'selected' : ''}>${escapeHtml(u.name)}</option>`).join('')}
                                                 </select>
                                             </div>
                                             <div>
                                                 <label style="display:block; font-size:0.68rem; font-weight:600; color:var(--text-sec); margin-bottom:0.18rem;">Görüşülen Kişi</label>
-                                                <input type="text" id="ritem-auth-${idx}" class="filter-input" style="width:100%; font-size:0.74rem;" value="${escapeHtml(it.authorized || '')}" placeholder="Ad Soyad">
+                                                <input aria-label="Ad Soyad" title="Ad Soyad" type="text" id="ritem-auth-${idx}" class="filter-input" style="width:100%; font-size:0.74rem;" value="${escapeHtml(it.authorized || '')}" placeholder="Ad Soyad">
                                             </div>
                                             <div>
                                                 <label style="display:block; font-size:0.68rem; font-weight:600; color:var(--text-sec); margin-bottom:0.18rem;">Görevi</label>
-                                                <input type="text" id="ritem-role-${idx}" class="filter-input" style="width:100%; font-size:0.74rem;" value="${escapeHtml(it.contactRole || 'Yetkili')}" placeholder="Yetkili">
+                                                <input aria-label="Yetkili" title="Yetkili" type="text" id="ritem-role-${idx}" class="filter-input" style="width:100%; font-size:0.74rem;" value="${escapeHtml(it.contactRole || 'Yetkili')}" placeholder="Yetkili">
                                             </div>
                                             <div>
                                                 <label style="display:block; font-size:0.68rem; font-weight:600; color:var(--text-sec); margin-bottom:0.18rem;">Görüşme Sonucu</label>
-                                                <select id="ritem-result-${idx}" class="filter-input" style="width:100%; font-size:0.74rem;">
+                                                <select aria-label="ritem-result-" title="ritem-result-" id="ritem-result-${idx}" class="filter-input" style="width:100%; font-size:0.74rem;">
                                                     <option value="" ${!it.visitResult ? 'selected' : ''}>Sonuç Seçin...</option>
                                                     <option value="1 - Olumlu / Sipariş & Randevu Alındı" ${it.visitResult === '1 - Olumlu / Sipariş & Randevu Alındı' ? 'selected' : ''}>1 - Olumlu / Randevu Alındı</option>
                                                     <option value="2 - Tanışma / İlk Temas Sağlandı" ${it.visitResult === '2 - Tanışma / İlk Temas Sağlandı' || it.visitResult === '2 - Tanışma / İlk Temas' ? 'selected' : ''}>2 - Tanışma / İlk Temas</option>
@@ -15465,17 +15372,17 @@ function renderActiveRouteExecutionPanel() {
                                             </div>
                                             <div>
                                                 <label style="display:block; font-size:0.68rem; font-weight:600; color:var(--text-sec); margin-bottom:0.18rem;">Sonraki Ziyaret</label>
-                                                <input type="text" id="ritem-nextdate-${idx}" class="filter-input" style="width:100%; font-size:0.74rem;" value="${escapeHtml(it.nextVisitDate || '')}" placeholder="GG.AA.YYYY">
+                                                <input aria-label="GG.AA.YYYY" title="GG.AA.YYYY" type="text" id="ritem-nextdate-${idx}" class="filter-input" style="width:100%; font-size:0.74rem;" value="${escapeHtml(it.nextVisitDate || '')}" placeholder="GG.AA.YYYY">
                                             </div>
                                         </div>
                                         <div class="rut-inline-visited-grid-2" style="display:grid; grid-template-columns:1fr 220px auto; gap:0.5rem; align-items:end;">
                                             <div>
                                                 <label style="display:block; font-size:0.68rem; font-weight:600; color:var(--text-sec); margin-bottom:0.18rem;">Ziyaret Açıklaması (Müşteri Kartına İşlenir)</label>
-                                                <input type="text" id="ritem-notes-${idx}" class="filter-input" style="width:100%; font-size:0.75rem;" value="${escapeHtml(it.visitNotes || '')}" placeholder="Görüşme detayları, araç/servis talebi, müşterinin geri bildirimi...">
+                                                <input aria-label="Görüşme detayları, araç/servis talebi, müşterinin geri bildirimi..." title="Görüşme detayları, araç/servis talebi, müşterinin geri bildirimi..." type="text" id="ritem-notes-${idx}" class="filter-input" style="width:100%; font-size:0.75rem;" value="${escapeHtml(it.visitNotes || '')}" placeholder="Görüşme detayları, araç/servis talebi, müşterinin geri bildirimi...">
                                             </div>
                                             <div>
                                                 <label style="display:block; font-size:0.68rem; font-weight:600; color:var(--text-sec); margin-bottom:0.18rem;">Ek Not</label>
-                                                <input type="text" id="ritem-extra-${idx}" class="filter-input" style="width:100%; font-size:0.74rem;" value="${escapeHtml(it.extraNotes || '')}" placeholder="Ek not...">
+                                                <input aria-label="Ek not..." title="Ek not..." type="text" id="ritem-extra-${idx}" class="filter-input" style="width:100%; font-size:0.74rem;" value="${escapeHtml(it.extraNotes || '')}" placeholder="Ek not...">
                                             </div>
                                             <div>
                                                 <button type="button" id="ritem-save-btn-${idx}" class="btn btn-primary btn-sm" style="padding:0.44rem 1rem; font-size:0.76rem; font-weight:800; background:linear-gradient(135deg, #10b981, #0284c7);" onclick="saveRouteItemDetails('${rt.id}', ${idx})">
@@ -15916,11 +15823,11 @@ function buildCustomerAreaVisitEntryHtml(customer) {
                 <!-- SAĞDA ZİYARET EDİLDİ / EDİLEMEDİ TİK ALANI -->
                 <div style="display:flex; align-items:center; gap:0.5rem; flex-wrap:wrap;">
                     <label style="display:inline-flex; align-items:center; gap:0.4rem; padding:0.4rem 0.75rem; border-radius:8px; cursor:pointer; background:${isVisited ? 'rgba(16,185,129,0.28)' : 'rgba(15,23,42,0.85)'}; border:2px solid ${isVisited ? '#10b981' : 'rgba(16,185,129,0.4)'}; color:${isVisited ? '#34d399' : '#e2e8f0'}; font-weight:800; font-size:0.78rem;">
-                        <input type="checkbox" id="carea-tick-visited" ${isVisited ? 'checked' : ''} onchange="handleCustomerAreaTick('${safeCode}', 'VISITED', this.checked)" style="width:17px; height:17px; accent-color:#10b981; cursor:pointer; margin:0;">
+                        <input aria-label="carea-tick-visited" title="carea-tick-visited" type="checkbox" id="carea-tick-visited" ${isVisited ? 'checked' : ''} onchange="handleCustomerAreaTick('${safeCode}', 'VISITED', this.checked)" style="width:17px; height:17px; accent-color:#10b981; cursor:pointer; margin:0;">
                         <span>✓ Ziyaret Edildi</span>
                     </label>
                     <label style="display:inline-flex; align-items:center; gap:0.4rem; padding:0.4rem 0.75rem; border-radius:8px; cursor:pointer; background:${isNotVisited ? 'rgba(239,68,68,0.28)' : 'rgba(15,23,42,0.85)'}; border:2px solid ${isNotVisited ? '#ef4444' : 'rgba(239,68,68,0.4)'}; color:${isNotVisited ? '#fca5a5' : '#e2e8f0'}; font-weight:800; font-size:0.78rem;">
-                        <input type="checkbox" id="carea-tick-notvisited" ${isNotVisited ? 'checked' : ''} onchange="handleCustomerAreaTick('${safeCode}', 'NOT_VISITED', this.checked)" style="width:17px; height:17px; accent-color:#ef4444; cursor:pointer; margin:0;">
+                        <input aria-label="carea-tick-notvisited" title="carea-tick-notvisited" type="checkbox" id="carea-tick-notvisited" ${isNotVisited ? 'checked' : ''} onchange="handleCustomerAreaTick('${safeCode}', 'NOT_VISITED', this.checked)" style="width:17px; height:17px; accent-color:#ef4444; cursor:pointer; margin:0;">
                         <span>✗ Ziyaret Edilemedi</span>
                     </label>
                 </div>
@@ -15929,23 +15836,23 @@ function buildCustomerAreaVisitEntryHtml(customer) {
             <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(155px, 1fr)); gap:0.6rem; align-items:end; margin-bottom:0.85rem;">
                 <div>
                     <label style="display:block; font-size:0.7rem; font-weight:700; color:#fde68a; margin-bottom:0.2rem;">Ziyaret Tarihi (GG.AA.YYYY)</label>
-                    <input type="text" id="carea-visit-date" class="filter-input" style="width:100%;" value="${escapeHtml(todayStr)}" placeholder="GG.AA.YYYY">
+                    <input aria-label="GG.AA.YYYY" title="GG.AA.YYYY" type="text" id="carea-visit-date" class="filter-input" style="width:100%;" value="${escapeHtml(todayStr)}" placeholder="GG.AA.YYYY">
                 </div>
                 <div>
                     <label style="display:block; font-size:0.7rem; font-weight:700; color:#fde68a; margin-bottom:0.2rem;">Ziyaret Saati</label>
-                    <input type="text" id="carea-visit-time" class="filter-input" style="width:100%;" value="${escapeHtml(nowTimeStr)}" placeholder="14:30">
+                    <input aria-label="14:30" title="14:30" type="text" id="carea-visit-time" class="filter-input" style="width:100%;" value="${escapeHtml(nowTimeStr)}" placeholder="14:30">
                 </div>
                 <div>
                     <label style="display:block; font-size:0.7rem; font-weight:700; color:#93c5fd; margin-bottom:0.2rem;">Görüşülen Kişi</label>
-                    <input type="text" id="carea-visit-contact" class="filter-input" style="width:100%;" value="${escapeHtml(customer.authorized || '')}" placeholder="Görüşülen kişi">
+                    <input aria-label="Görüşülen kişi" title="Görüşülen kişi" type="text" id="carea-visit-contact" class="filter-input" style="width:100%;" value="${escapeHtml(customer.authorized || '')}" placeholder="Görüşülen kişi">
                 </div>
                 <div>
                     <label style="display:block; font-size:0.7rem; font-weight:700; color:#93c5fd; margin-bottom:0.2rem;">Görüşülen Kişinin Görevi</label>
-                    <input type="text" id="carea-visit-role" class="filter-input" style="width:100%;" value="${escapeHtml(customer.contactRole || 'Firma Yetkilisi')}" placeholder="Firma Sahibi / Müdür">
+                    <input aria-label="Firma Sahibi / Müdür" title="Firma Sahibi / Müdür" type="text" id="carea-visit-role" class="filter-input" style="width:100%;" value="${escapeHtml(customer.contactRole || 'Firma Yetkilisi')}" placeholder="Firma Sahibi / Müdür">
                 </div>
                 <div>
                     <label style="display:block; font-size:0.7rem; font-weight:700; color:#34d399; margin-bottom:0.2rem;">Görüşme Sonucu</label>
-                    <select id="carea-visit-result" class="filter-input" style="width:100%;">
+                    <select aria-label="carea-visit-result" title="carea-visit-result" id="carea-visit-result" class="filter-input" style="width:100%;">
                         <option value="1 - Olumlu / Sipariş & Randevu Alındı">1 - Olumlu / Randevu Alındı</option>
                         <option value="2 - Tanışma / İlk Temas Sağlandı">2 - Tanışma / İlk Temas</option>
                         <option value="3 - Teklif / Fiyat Sunuldu (Takip)">3 - Teklif / Fiyat Sunuldu</option>
@@ -15955,14 +15862,14 @@ function buildCustomerAreaVisitEntryHtml(customer) {
                 </div>
                 <div>
                     <label style="display:block; font-size:0.7rem; font-weight:700; color:#fca5a5; margin-bottom:0.2rem;">Ziyaret Edilememe Sebebi</label>
-                    <select id="carea-unvisited-reason" class="filter-input" style="width:100%;">
+                    <select aria-label="carea-unvisited-reason" title="carea-unvisited-reason" id="carea-unvisited-reason" class="filter-input" style="width:100%;">
                         <option value="">-- Edilemediyse Seçin --</option>
                         ${UNVISITED_REASON_OPTIONS.map(opt => `<option value="${escapeHtml(opt)}">${escapeHtml(opt)}</option>`).join('')}
                     </select>
                 </div>
                 <div style="grid-column:span 2; min-width:210px;">
                     <label style="display:block; font-size:0.7rem; font-weight:700; color:#e2e8f0; margin-bottom:0.2rem;">Ziyaret Açıklaması / Görüşme Notu</label>
-                    <input type="text" id="carea-visit-notes" class="filter-input" style="width:100%;" value="" placeholder="Müşteri ziyaret açıklaması, araç/servis talebi, görüşme sonucu...">
+                    <input aria-label="Müşteri ziyaret açıklaması, araç/servis talebi, görüşme sonucu..." title="Müşteri ziyaret açıklaması, araç/servis talebi, görüşme sonucu..." type="text" id="carea-visit-notes" class="filter-input" style="width:100%;" value="" placeholder="Müşteri ziyaret açıklaması, araç/servis talebi, görüşme sonucu...">
                 </div>
                 <div>
                     <button type="button" class="btn btn-primary" style="width:100%; justify-content:center; padding:0.48rem 0.85rem; font-weight:800; background:linear-gradient(135deg,#10b981,#0284c7);" onclick="saveCustomerVisitFromCustomerArea('${safeCode}')">
@@ -17421,7 +17328,7 @@ function showPhoneReminderModal(task) {
                         <div style="font-size:0.75rem; color:#94a3b8;">Telefon Görüşmesi Hatırlatıcısı</div>
                     </div>
                 </div>
-                <button type="button" style="background:none; border:none; color:#94a3b8; font-size:1.2rem; cursor:pointer;" onclick="document.getElementById('phone-reminder-active-banner').remove()">&times;</button>
+                <button aria-label="Buton document" type="button" style="background:none; border:none; color:#94a3b8; font-size:1.2rem; cursor:pointer;" onclick="document.getElementById('phone-reminder-active-banner').remove()">&times;</button>
             </div>
             <p style="font-size:0.85rem; color:#cbd5e1; margin-bottom:0.75rem; line-height:1.4;">
                 <strong style="color:#fde68a;">${task.customerTitle}</strong> ile saat <strong style="color:#fff;">${task.dueTime}</strong> randevunuz var.${task.contactPerson ? ` (Yetkili: ${task.contactPerson})` : ''}
@@ -18846,7 +18753,7 @@ function handleGlobalCustomerSearchInput(rawVal, forceShowByChip = false, search
             return `
                 <div class="global-search-result-item" data-cust-code="${safeCode}" onclick="selectAiCustomerFromList('${safeCode}', event)" style="cursor:pointer; padding:0.5rem 0.7rem; margin-bottom:0.3rem; display:flex; align-items:center; justify-content:space-between; gap:0.6rem; ${isChecked ? 'border-color:#10b981; background:rgba(16,185,129,0.14);' : ''}">
                     <div style="display:flex; align-items:center; gap:0.55rem; flex:1; min-width:0; flex-wrap:wrap;">
-                        <input type="checkbox" class="ai-cust-select-cb" ${isChecked ? 'checked' : ''} onclick="selectAiCustomerFromList('${safeCode}', event)" style="width:16px; height:16px; accent-color:#10b981; cursor:pointer; margin:0;">
+                        <input aria-label="ai-cust-select-cb" title="ai-cust-select-cb" type="checkbox" class="ai-cust-select-cb" ${isChecked ? 'checked' : ''} onclick="selectAiCustomerFromList('${safeCode}', event)" style="width:16px; height:16px; accent-color:#10b981; cursor:pointer; margin:0;">
                         <span style="font-size:0.72rem; color:#64748b; font-weight:700; min-width:22px;">#${idx + 1}</span>
                         <span style="font-weight:800; font-size:0.86rem; color:#38bdf8;">${titleHighlighted}</span>
                         <span style="font-size:0.72rem; padding:0.1rem 0.4rem; border-radius:5px; background:rgba(56,189,248,0.12); color:#93c5fd; font-family:monospace; font-weight:700;">${codeHighlighted}</span>

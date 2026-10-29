@@ -414,9 +414,7 @@ html, body {
     font-size: 0.78rem;
     font-weight: 700;
     color: var(--text-primary);
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
+    text-overflow: clip; white-space: normal; overflow-wrap: anywhere; word-break: break-word;
 }
 
 .user-mini-role {
@@ -490,17 +488,13 @@ html, body {
     display: flex;
     align-items: center;
     gap: 6px;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
+    text-overflow: clip; white-space: normal; overflow-wrap: anywhere; word-break: break-word;
 }
 
 .page-title-block p {
     font-size: 0.68rem;
     color: var(--text-muted);
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
+    text-overflow: clip; white-space: normal; overflow-wrap: anywhere; word-break: break-word;
 }
 
 .header-right {
@@ -699,9 +693,7 @@ html, body {
 }
 
 .kpi-card-top span {
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
+    text-overflow: clip; white-space: normal; overflow-wrap: anywhere; word-break: break-word;
 }
 
 .kpi-card-top i {
@@ -715,9 +707,7 @@ html, body {
     font-weight: 800;
     color: var(--text-primary);
     line-height: 1.15;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
+    text-overflow: clip; white-space: normal; overflow-wrap: anywhere; word-break: break-word;
 }
 
 .kpi-card-sub {
@@ -974,9 +964,7 @@ html, body {
     font-size: 0.61rem;
     padding: 1px 4px;
     border-radius: 4px;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
+    text-overflow: clip; white-space: normal; overflow-wrap: anywhere; word-break: break-word;
     font-weight: 600;
     max-width: 100%;
     display: block;
@@ -1567,3 +1555,35 @@ body.force-mobile-mode .form-grid-3 {
     gap: 8px;
 }
 
+/* === DIZSAN 100% RESPONSIVE & ANTI-TRUNCATION MEDIA QUERIES === */
+@media (max-width: 1024px) {
+  html, body {
+    max-width: 100% !important;
+    overflow-x: hidden !important;
+  }
+  .container, .main-container, .app-container, .content-wrapper, .page-container, .dashboard-container {
+    max-width: 100% !important;
+    box-sizing: border-box !important;
+  }
+  h1, h2, h3, h4, h5, h6, p, span, td, th, label, a, div {
+    text-overflow: clip !important;
+    overflow-wrap: anywhere !important;
+    word-break: break-word !important;
+  }
+}
+
+@media (max-width: 767px) {
+  html, body {
+    max-width: 100% !important;
+    overflow-x: hidden !important;
+  }
+  .container, .main-container, .app-container, .content-wrapper, .page-container, .dashboard-container, .card, .modal-content, .panel {
+    max-width: 100% !important;
+    box-sizing: border-box !important;
+  }
+  .table-responsive, .table-container, .table-wrapper {
+    width: 100% !important;
+    overflow-x: auto !important;
+    -webkit-overflow-scrolling: touch !important;
+  }
+}

@@ -1,7 +1,7 @@
 {
-  "version": "1.8.4",
-  "build": 184,
-  "releasedAt": "2026-10-29 03:14:26",
-  "releaseNotes": "Kredi Ödemeleri Takip Mobil PWA ve Canlı GitHub Senkronizasyonu (v1.8.4)",
+  "version": "1.8.5",
+  "build": 185,
+  "releasedAt": "2026-10-29 21:15:00",
+  "releaseNotes": "Kredi Ödemeleri Takip Mobil PWA ve Canlı GitHub Senkronizasyonu (v1.8.5) - Mobil Sıfır Kesilme & Tam Okunabilir Kartlar",
   "author": "Ömer Eren & DİZSAN"
 }

@@ -5,13 +5,14 @@
     <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
     <meta http-equiv="Pragma" content="no-cache">
     <meta http-equiv="Expires" content="0">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <meta name="theme-color" content="#0284c7">
     <meta name="mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="DiKas">
     <title>DiKas | Dizsan Finans – Nakit Akışı ve Ödeme Takip Sistemi v1.0.0</title>
+    <meta name="description" content="Dizsan Otomotiv Kurumsal Yönetim, ERP, Finans, Saha ve Servis Platformu — PC, Tablet ve Mobil Uyumlu Gerçek Zamanlı Sistem.">
 
     <link rel="manifest" href="manifest.json">
     <link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon.png">
@@ -24,7 +25,9 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Outfit:wght@600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
 
-    <link rel="stylesheet" href="style.css?v=1.0.6">
+    <link rel="stylesheet" href="style.css?v=1.0.7">
+    <link rel="stylesheet" href="dizsan-realtime-responsive.css?v=20261029">
+    <script defer src="dizsan-realtime-socket.js?v=20261029"></script>
 </head>
 <body>
 
@@ -47,7 +50,7 @@
                     <label for="login-username">Kullanıcı Adı veya Kurumsal E-Posta</label>
                     <div class="login-input-wrap">
                         <i class="fa-solid fa-user-shield"></i>
-                        <input type="text" id="login-username" class="login-input" placeholder="Örn: ömer, gokhan.ozbulut, rafet.canbek" required autocomplete="username">
+                        <input aria-label="Örn: ömer, gokhan.ozbulut, rafet.canbek" title="Örn: ömer, gokhan.ozbulut, rafet.canbek" type="text" id="login-username" class="login-input" placeholder="Örn: ömer, gokhan.ozbulut, rafet.canbek" required autocomplete="username">
                     </div>
                 </div>
 
@@ -55,13 +58,13 @@
                     <label for="login-password">Şifre</label>
                     <div class="login-input-wrap">
                         <i class="fa-solid fa-lock"></i>
-                        <input type="password" id="login-password" class="login-input" placeholder="••••••" required autocomplete="current-password">
+                        <input aria-label="••••••" title="••••••" type="password" id="login-password" class="login-input" placeholder="••••••" required autocomplete="current-password">
                     </div>
                 </div>
 
                 <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:12px; font-size:0.76rem;">
                     <label style="display:flex; align-items:center; gap:6px; color:#cbd5e1; cursor:pointer;">
-                        <input type="checkbox" id="login-remember-me" checked style="width:15px; height:15px; accent-color:#38bdf8;">
+                        <input aria-label="login-remember-me" title="login-remember-me" type="checkbox" id="login-remember-me" checked style="width:15px; height:15px; accent-color:#38bdf8;">
                         <span>Beni Hatırla</span>
                     </label>
                     <a href="javascript:void(0)" onclick="openForgotPasswordModal()" style="color:#38bdf8; text-decoration:none; font-weight:600;">
@@ -114,7 +117,7 @@
             <!-- ÇOKLU ŞİRKET & KONSOLİDE SEÇİCİ -->
             <div class="sidebar-company-box">
                 <label for="global-company-select"><i class="fa-solid fa-building"></i> Aktif Şirket / Konsolide</label>
-                <select id="global-company-select" class="form-control" onchange="handleCompanyFilterChange(this.value)" style="font-weight:700;">
+                <select aria-label="global-company-select" title="global-company-select" id="global-company-select" class="form-control" onchange="handleCompanyFilterChange(this.value)" style="font-weight:700;">
                     <option value="ALL">Tüm Şirketler (Konsolide)</option>
                 </select>
             </div>
@@ -175,10 +178,10 @@
                         <div class="user-mini-role" id="sidebar-user-role">Yönetici</div>
                     </div>
                     <div style="display:flex; gap:4px;">
-                        <button class="btn btn-sm" onclick="openChangePasswordModal()" title="Şifre Değiştir">
+                        <button aria-label="Şifre Değiştir" class="btn btn-sm" onclick="openChangePasswordModal()" title="Şifre Değiştir">
                             <i class="fa-solid fa-key"></i>
                         </button>
-                        <button class="btn btn-sm" onclick="handleLogout()" title="Güvenli Çıkış">
+                        <button aria-label="Güvenli Çıkış" class="btn btn-sm" onclick="handleLogout()" title="Güvenli Çıkış">
                             <i class="fa-solid fa-power-off" style="color:var(--rose-danger);"></i>
                         </button>
                     </div>
@@ -196,7 +199,7 @@
             <!-- ÜST ARAÇ ÇUBUĞU (TOP HEADER) -->
             <header class="top-header">
                 <div class="header-left">
-                    <button class="mobile-menu-trigger" onclick="toggleMobileSidebar()" title="Menüyü Aç/Kapat">
+                    <button aria-label="Menüyü Aç/Kapat" class="mobile-menu-trigger" onclick="toggleMobileSidebar()" title="Menüyü Aç/Kapat">
                         <i class="fa-solid fa-bars"></i>
                     </button>
                     <div class="page-title-block">
@@ -231,7 +234,7 @@
                     <button class="btn btn-sm" onclick="clearAllDemoDataToZero()" title="Örnek (Demo) Kayıtları Temizle ve 0,00 TL ile Sıfırdan Başla">
                         <i class="fa-solid fa-broom" style="color:var(--rose-danger);"></i> <span>Örnekleri Sil</span>
                     </button>
-                    <select id="theme-mode-select" class="form-control" style="width:auto; padding:4px 7px; font-size:0.72rem;" onchange="setThemeMode(this.value)" title="Tema Seçimi: Koyu / Açık / Sistem">
+                    <select aria-label="Tema Seçimi: Koyu / Açık / Sistem" id="theme-mode-select" class="form-control" style="width:auto; padding:4px 7px; font-size:0.72rem;" onchange="setThemeMode(this.value)" title="Tema Seçimi: Koyu / Açık / Sistem">
                         <option value="dark">Koyu</option>
                         <option value="light">Açık</option>
                         <option value="system">Sistem</option>
@@ -239,7 +242,7 @@
                     <button class="btn btn-sm" onclick="toggleMobileViewportPreview()" id="btn-mobile-preview" title="Mobil / Web Görünümü Değiştir">
                         <i class="fa-solid fa-mobile-screen"></i> <span id="lbl-mobile-preview">Mobil</span>
                     </button>
-                    <button class="btn btn-sm" onclick="openAlertsDrawer()" title="Gecikmiş İşlemler ve Nakit Uyarıları">
+                    <button aria-label="Gecikmiş İşlemler ve Nakit Uyarıları" class="btn btn-sm" onclick="openAlertsDrawer()" title="Gecikmiş İşlemler ve Nakit Uyarıları">
                         <i class="fa-solid fa-bell" style="color:var(--amber-warn);"></i>
                         <span class="badge badge-danger" id="header-alert-count">0</span>
                     </button>
@@ -277,9 +280,9 @@
                             <button class="period-pill" data-period="year" onclick="setDashboardPeriod('year')">Tüm Yıl</button>
                         </div>
                         <div style="display:flex; align-items:center; gap:6px; flex-wrap:wrap;">
-                            <input type="text" id="dash-start-date" class="form-control" style="width:118px;" placeholder="GG.AA.YYYY" onchange="applyCustomDashboardDates()">
+                            <input aria-label="GG.AA.YYYY" title="GG.AA.YYYY" type="text" id="dash-start-date" class="form-control" style="width:118px;" placeholder="GG.AA.YYYY" onchange="applyCustomDashboardDates()">
                             <span style="color:var(--text-muted);">-</span>
-                            <input type="text" id="dash-end-date" class="form-control" style="width:118px;" placeholder="GG.AA.YYYY" onchange="applyCustomDashboardDates()">
+                            <input aria-label="GG.AA.YYYY" title="GG.AA.YYYY" type="text" id="dash-end-date" class="form-control" style="width:118px;" placeholder="GG.AA.YYYY" onchange="applyCustomDashboardDates()">
                             <button class="btn btn-sm btn-primary" onclick="applyCustomDashboardDates()">Uygula</button>
                         </div>
                     </div>
@@ -485,16 +488,16 @@
                             </div>
                         </div>
                         <form class="undated-quick-form" onsubmit="handleQuickAddUndatedNote(event, 'dash')">
-                            <select id="dash-undated-company" class="form-control"></select>
-                            <input type="text" id="dash-undated-title" class="form-control" placeholder="Ödeme konusu / Not başlığı (Örn: TDR.Scania Parça, Vergi yapılandırma...)" required>
-                            <input type="text" id="dash-undated-creditor" class="form-control" placeholder="Alacaklı firma / kişi *" required>
-                            <input type="number" step="0.01" min="0" id="dash-undated-amount" class="form-control" placeholder="Tahmini Tutar (Opsiyonel)">
-                            <select id="dash-undated-currency" class="form-control">
+                            <select aria-label="dash-undated-company" title="dash-undated-company" id="dash-undated-company" class="form-control"></select>
+                            <input aria-label="Ödeme konusu / Not başlığı (Örn: TDR.Scania Parça, Vergi yapılandırma...)" title="Ödeme konusu / Not başlığı (Örn: TDR.Scania Parça, Vergi yapılandırma...)" type="text" id="dash-undated-title" class="form-control" placeholder="Ödeme konusu / Not başlığı (Örn: TDR.Scania Parça, Vergi yapılandırma...)" required>
+                            <input aria-label="Alacaklı firma / kişi *" title="Alacaklı firma / kişi *" type="text" id="dash-undated-creditor" class="form-control" placeholder="Alacaklı firma / kişi *" required>
+                            <input aria-label="Tahmini Tutar (Opsiyonel)" title="Tahmini Tutar (Opsiyonel)" type="number" step="0.01" min="0" id="dash-undated-amount" class="form-control" placeholder="Tahmini Tutar (Opsiyonel)">
+                            <select aria-label="dash-undated-currency" title="dash-undated-currency" id="dash-undated-currency" class="form-control">
                                 <option value="TRY">TRY (₺)</option>
                                 <option value="EUR">EUR (€)</option>
                                 <option value="USD">USD ($)</option>
                             </select>
-                            <input type="text" id="dash-undated-note" class="form-control" placeholder="Kenar notu / Neden tarihi belirsiz? (Örn: Fatura kesilince ödenecek)">
+                            <input aria-label="Kenar notu / Neden tarihi belirsiz? (Örn: Fatura kesilince ödenecek)" title="Kenar notu / Neden tarihi belirsiz? (Örn: Fatura kesilince ödenecek)" type="text" id="dash-undated-note" class="form-control" placeholder="Kenar notu / Neden tarihi belirsiz? (Örn: Fatura kesilince ödenecek)">
                             <button type="submit" class="btn btn-warning btn-sm">
                                 <i class="fa-solid fa-thumbtack"></i> + Kenara Not Ekle
                             </button>
@@ -510,9 +513,9 @@
                     <div class="panel-card">
                         <div class="panel-header">
                             <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap;">
-                                <button class="btn btn-sm" onclick="navigateCalendar(-1)"><i class="fa-solid fa-chevron-left"></i></button>
+                                <button aria-label="Buton navigateCalendar" class="btn btn-sm" onclick="navigateCalendar(-1)"><i class="fa-solid fa-chevron-left"></i></button>
                                 <h3 id="calendar-period-title" style="min-width:170px; text-align:center;">Ekim 2026</h3>
-                                <button class="btn btn-sm" onclick="navigateCalendar(1)"><i class="fa-solid fa-chevron-right"></i></button>
+                                <button aria-label="Buton navigateCalendar" class="btn btn-sm" onclick="navigateCalendar(1)"><i class="fa-solid fa-chevron-right"></i></button>
                                 <button class="btn btn-sm" onclick="navigateCalendar(0)">Bugün</button>
                             </div>
 
@@ -527,19 +530,19 @@
 
                         <!-- Takvim Filtre Çubuğu -->
                         <div class="filter-bar">
-                            <input type="text" id="cal-search-input" class="form-control" placeholder="Takvimde başlık, firma/müşteri veya açıklama ara..." oninput="renderCalendarSection()">
-                            <select id="cal-filter-type" class="form-control" onchange="renderCalendarSection()">
+                            <input aria-label="Takvimde başlık, firma/müşteri veya açıklama ara..." title="Takvimde başlık, firma/müşteri veya açıklama ara..." type="text" id="cal-search-input" class="form-control" placeholder="Takvimde başlık, firma/müşteri veya açıklama ara..." oninput="renderCalendarSection()">
+                            <select aria-label="cal-filter-type" title="cal-filter-type" id="cal-filter-type" class="form-control" onchange="renderCalendarSection()">
                                 <option value="ALL">Tüm İşlemler (Ödeme + Tahsilat)</option>
                                 <option value="PAYMENT">Yalnızca Ödemeler</option>
                                 <option value="COLLECTION">Yalnızca Tahsilatlar</option>
                             </select>
-                            <select id="cal-filter-account" class="form-control" onchange="renderCalendarSection()">
+                            <select aria-label="cal-filter-account" title="cal-filter-account" id="cal-filter-account" class="form-control" onchange="renderCalendarSection()">
                                 <option value="ALL">Tüm Kasa &amp; Banka Hesapları</option>
                             </select>
-                            <select id="cal-filter-category" class="form-control" onchange="renderCalendarSection()">
+                            <select aria-label="cal-filter-category" title="cal-filter-category" id="cal-filter-category" class="form-control" onchange="renderCalendarSection()">
                                 <option value="ALL">Tüm Kategoriler</option>
                             </select>
-                            <select id="cal-filter-status" class="form-control" onchange="renderCalendarSection()">
+                            <select aria-label="cal-filter-status" title="cal-filter-status" id="cal-filter-status" class="form-control" onchange="renderCalendarSection()">
                                 <option value="ALL">Tüm Durumlar</option>
                                 <option value="ACTIVE">Bekleyen / Planlanan / Kısmi</option>
                                 <option value="OVERDUE">Sadece Gecikmişler</option>
@@ -582,22 +585,22 @@
                             <div style="display:flex; align-items:center; gap:10px; flex-wrap:wrap;">
                                 <span style="font-size:0.76rem; font-weight:700; color:var(--text-secondary);">Tahsilat Senaryosu:</span>
                                 <label style="display:flex; align-items:center; gap:5px; cursor:pointer; font-size:0.78rem;">
-                                    <input type="radio" name="forecastScenario" value="CAUTIOUS" onchange="setForecastScenario('CAUTIOUS')">
+                                    <input aria-label="forecastScenario" title="forecastScenario" type="radio" name="forecastScenario" value="CAUTIOUS" onchange="setForecastScenario('CAUTIOUS')">
                                     <span><strong>Temkinli Senaryo</strong> (Sadece Kesin Tahsilatlar)</span>
                                 </label>
                                 <label style="display:flex; align-items:center; gap:5px; cursor:pointer; font-size:0.78rem;">
-                                    <input type="radio" name="forecastScenario" value="BALANCED" checked onchange="setForecastScenario('BALANCED')">
+                                    <input aria-label="forecastScenario" title="forecastScenario" type="radio" name="forecastScenario" value="BALANCED" checked onchange="setForecastScenario('BALANCED')">
                                     <span><strong>Dengeli Senaryo</strong> (Kesin + Muhtemel)</span>
                                 </label>
                                 <label style="display:flex; align-items:center; gap:5px; cursor:pointer; font-size:0.78rem;">
-                                    <input type="radio" name="forecastScenario" value="OPTIMISTIC" onchange="setForecastScenario('OPTIMISTIC')">
+                                    <input aria-label="forecastScenario" title="forecastScenario" type="radio" name="forecastScenario" value="OPTIMISTIC" onchange="setForecastScenario('OPTIMISTIC')">
                                     <span><strong>İyimser Senaryo</strong> (Kesin + Muhtemel + Belirsiz)</span>
                                 </label>
                             </div>
 
                             <div style="display:flex; align-items:center; gap:6px;">
                                 <span style="font-size:0.74rem; color:var(--text-muted);">Özel Bitiş:</span>
-                                <input type="text" id="forecast-custom-end" class="form-control" style="width:120px;" placeholder="GG.AA.YYYY" onchange="setForecastCustomEndDate(this.value)">
+                                <input aria-label="GG.AA.YYYY" title="GG.AA.YYYY" type="text" id="forecast-custom-end" class="form-control" style="width:120px;" placeholder="GG.AA.YYYY" onchange="setForecastCustomEndDate(this.value)">
                             </div>
                         </div>
 
@@ -656,24 +659,24 @@
                         </div>
 
                         <div class="filter-bar" style="grid-template-columns: 2fr 1fr 1fr 1fr auto;">
-                            <input type="text" id="acc-search-input" class="form-control" placeholder="Hesap adı, banka adı, şirket veya açıklama ara..." oninput="renderAccountsSection()">
-                            <select id="acc-filter-type" class="form-control" onchange="renderAccountsSection()">
+                            <input aria-label="Hesap adı, banka adı, şirket veya açıklama ara..." title="Hesap adı, banka adı, şirket veya açıklama ara..." type="text" id="acc-search-input" class="form-control" placeholder="Hesap adı, banka adı, şirket veya açıklama ara..." oninput="renderAccountsSection()">
+                            <select aria-label="acc-filter-type" title="acc-filter-type" id="acc-filter-type" class="form-control" onchange="renderAccountsSection()">
                                 <option value="ALL">Tüm Türler (Kasa + Banka)</option>
                                 <option value="CASH">Nakit Kasalar</option>
                                 <option value="BANK">Banka Hesapları</option>
                             </select>
-                            <select id="acc-filter-currency" class="form-control" onchange="renderAccountsSection()">
+                            <select aria-label="acc-filter-currency" title="acc-filter-currency" id="acc-filter-currency" class="form-control" onchange="renderAccountsSection()">
                                 <option value="ALL">Tüm Para Birimleri</option>
                                 <option value="TRY">TRY (₺)</option>
                                 <option value="EUR">EUR (€)</option>
                                 <option value="USD">USD ($)</option>
                             </select>
-                            <select id="acc-filter-status" class="form-control" onchange="renderAccountsSection()">
+                            <select aria-label="acc-filter-status" title="acc-filter-status" id="acc-filter-status" class="form-control" onchange="renderAccountsSection()">
                                 <option value="ACTIVE">Aktif Hesaplar</option>
                                 <option value="ALL">Tümü (Aktif + Pasif)</option>
                                 <option value="PASSIVE">Pasif Hesaplar</option>
                             </select>
-                            <button class="btn btn-sm" onclick="resetAccountFilters()"><i class="fa-solid fa-rotate-left"></i></button>
+                            <button aria-label="Buton resetAccountFilters" class="btn btn-sm" onclick="resetAccountFilters()"><i class="fa-solid fa-rotate-left"></i></button>
                         </div>
 
                         <div class="table-responsive">
@@ -766,11 +769,11 @@
                         </div>
 
                         <div class="filter-bar">
-                            <input type="text" id="pay-search-input" class="form-control" placeholder="Ödeme başlığı, alacaklı firma/kişi, açıklama veya TDR kodu ara..." oninput="renderPaymentsSection()">
-                            <select id="pay-filter-category" class="form-control" onchange="renderPaymentsSection()">
+                            <input aria-label="Ödeme başlığı, alacaklı firma/kişi, açıklama veya TDR kodu ara..." title="Ödeme başlığı, alacaklı firma/kişi, açıklama veya TDR kodu ara..." type="text" id="pay-search-input" class="form-control" placeholder="Ödeme başlığı, alacaklı firma/kişi, açıklama veya TDR kodu ara..." oninput="renderPaymentsSection()">
+                            <select aria-label="pay-filter-category" title="pay-filter-category" id="pay-filter-category" class="form-control" onchange="renderPaymentsSection()">
                                 <option value="ALL">Tüm Kategoriler</option>
                             </select>
-                            <select id="pay-filter-status" class="form-control" onchange="renderPaymentsSection()">
+                            <select aria-label="pay-filter-status" title="pay-filter-status" id="pay-filter-status" class="form-control" onchange="renderPaymentsSection()">
                                 <option value="ALL">Tüm Durumlar</option>
                                 <option value="UNPAID_ALL">Bekleyen (Planlandı + Kısmi + Gecikti)</option>
                                 <option value="Planlandı">Planlandı</option>
@@ -780,16 +783,16 @@
                                 <option value="Ödendi">Ödendi</option>
                                 <option value="İptal edildi">İptal Edildi</option>
                             </select>
-                            <select id="pay-filter-account" class="form-control" onchange="renderPaymentsSection()">
+                            <select aria-label="pay-filter-account" title="pay-filter-account" id="pay-filter-account" class="form-control" onchange="renderPaymentsSection()">
                                 <option value="ALL">Tüm Hesaplar</option>
                             </select>
-                            <select id="pay-sort-by" class="form-control" onchange="renderPaymentsSection()">
+                            <select aria-label="pay-sort-by" title="pay-sort-by" id="pay-sort-by" class="form-control" onchange="renderPaymentsSection()">
                                 <option value="dueDateAsc">Vade Tarihi (Yakından Uzağa)</option>
                                 <option value="dueDateDesc">Vade Tarihi (Uzaktan Yakına)</option>
                                 <option value="amountDesc">Tutar (Büyükten Küçüğe)</option>
                                 <option value="remainingDesc">Kalan Borç (Büyükten Küçüğe)</option>
                             </select>
-                            <button class="btn btn-sm" onclick="resetPaymentFilters()"><i class="fa-solid fa-rotate-left"></i></button>
+                            <button aria-label="Buton resetPaymentFilters" class="btn btn-sm" onclick="resetPaymentFilters()"><i class="fa-solid fa-rotate-left"></i></button>
                         </div>
 
                         <div class="table-responsive">
@@ -829,16 +832,16 @@
                         </div>
 
                         <form class="undated-quick-form" onsubmit="handleQuickAddUndatedNote(event, 'pay')">
-                            <select id="pay-undated-company" class="form-control"></select>
-                            <input type="text" id="pay-undated-title" class="form-control" placeholder="Ödeme konusu / Not başlığı (TDR ile başlarsa Tedarikçi olur) *" required>
-                            <input type="text" id="pay-undated-creditor" class="form-control" placeholder="Alacaklı firma / kişi *" required>
-                            <input type="number" step="0.01" min="0" id="pay-undated-amount" class="form-control" placeholder="Tahmini Tutar (Opsiyonel)">
-                            <select id="pay-undated-currency" class="form-control">
+                            <select aria-label="pay-undated-company" title="pay-undated-company" id="pay-undated-company" class="form-control"></select>
+                            <input aria-label="Ödeme konusu / Not başlığı (TDR ile başlarsa Tedarikçi olur) *" title="Ödeme konusu / Not başlığı (TDR ile başlarsa Tedarikçi olur) *" type="text" id="pay-undated-title" class="form-control" placeholder="Ödeme konusu / Not başlığı (TDR ile başlarsa Tedarikçi olur) *" required>
+                            <input aria-label="Alacaklı firma / kişi *" title="Alacaklı firma / kişi *" type="text" id="pay-undated-creditor" class="form-control" placeholder="Alacaklı firma / kişi *" required>
+                            <input aria-label="Tahmini Tutar (Opsiyonel)" title="Tahmini Tutar (Opsiyonel)" type="number" step="0.01" min="0" id="pay-undated-amount" class="form-control" placeholder="Tahmini Tutar (Opsiyonel)">
+                            <select aria-label="pay-undated-currency" title="pay-undated-currency" id="pay-undated-currency" class="form-control">
                                 <option value="TRY">TRY (₺)</option>
                                 <option value="EUR">EUR (€)</option>
                                 <option value="USD">USD ($)</option>
                             </select>
-                            <input type="text" id="pay-undated-note" class="form-control" placeholder="Kenar notu / Açıklama (Örn: Parça tesliminde vade belli olacak)">
+                            <input aria-label="Kenar notu / Açıklama (Örn: Parça tesliminde vade belli olacak)" title="Kenar notu / Açıklama (Örn: Parça tesliminde vade belli olacak)" type="text" id="pay-undated-note" class="form-control" placeholder="Kenar notu / Açıklama (Örn: Parça tesliminde vade belli olacak)">
                             <button type="submit" class="btn btn-warning btn-sm">
                                 <i class="fa-solid fa-thumbtack"></i> + Kenara Not Ekle
                             </button>
@@ -869,14 +872,14 @@
                         </div>
 
                         <div class="filter-bar">
-                            <input type="text" id="col-search-input" class="form-control" placeholder="Müşteri/kaynak, tahsilat başlığı veya açıklama ara..." oninput="renderCollectionsSection()">
-                            <select id="col-filter-certainty" class="form-control" onchange="renderCollectionsSection()">
+                            <input aria-label="Müşteri/kaynak, tahsilat başlığı veya açıklama ara..." title="Müşteri/kaynak, tahsilat başlığı veya açıklama ara..." type="text" id="col-search-input" class="form-control" placeholder="Müşteri/kaynak, tahsilat başlığı veya açıklama ara..." oninput="renderCollectionsSection()">
+                            <select aria-label="col-filter-certainty" title="col-filter-certainty" id="col-filter-certainty" class="form-control" onchange="renderCollectionsSection()">
                                 <option value="ALL">Tüm Kesinlik Dereceleri</option>
                                 <option value="Kesin">Kesin</option>
                                 <option value="Muhtemel">Muhtemel</option>
                                 <option value="Belirsiz">Belirsiz</option>
                             </select>
-                            <select id="col-filter-status" class="form-control" onchange="renderCollectionsSection()">
+                            <select aria-label="col-filter-status" title="col-filter-status" id="col-filter-status" class="form-control" onchange="renderCollectionsSection()">
                                 <option value="ALL">Tüm Durumlar</option>
                                 <option value="PENDING_ALL">Bekleyen (Bekleniyor + Kısmi + Gecikti)</option>
                                 <option value="Bekleniyor">Bekleniyor</option>
@@ -885,15 +888,15 @@
                                 <option value="Tahsil edildi">Tahsil Edildi</option>
                                 <option value="İptal edildi">İptal Edildi</option>
                             </select>
-                            <select id="col-filter-account" class="form-control" onchange="renderCollectionsSection()">
+                            <select aria-label="col-filter-account" title="col-filter-account" id="col-filter-account" class="form-control" onchange="renderCollectionsSection()">
                                 <option value="ALL">Tüm Hesaplar</option>
                             </select>
-                            <select id="col-sort-by" class="form-control" onchange="renderCollectionsSection()">
+                            <select aria-label="col-sort-by" title="col-sort-by" id="col-sort-by" class="form-control" onchange="renderCollectionsSection()">
                                 <option value="dateAsc">Beklenen Tarih (Yakından Uzağa)</option>
                                 <option value="dateDesc">Beklenen Tarih (Uzaktan Yakına)</option>
                                 <option value="amountDesc">Tutar (Büyükten Küçüğe)</option>
                             </select>
-                            <button class="btn btn-sm" onclick="resetCollectionFilters()"><i class="fa-solid fa-rotate-left"></i></button>
+                            <button aria-label="Buton resetCollectionFilters" class="btn btn-sm" onclick="resetCollectionFilters()"><i class="fa-solid fa-rotate-left"></i></button>
                         </div>
 
                         <div class="table-responsive">
@@ -1093,7 +1096,7 @@
                                 <h3><i class="fa-solid fa-tags" style="color:var(--amber-warn);"></i> Ödeme ve Gider Kategorileri Yönetimi</h3>
                             </div>
                             <form onsubmit="handleAddCategory(event)" style="display:flex; gap:8px; margin-bottom:12px;">
-                                <input type="text" id="new-category-name" class="form-control" placeholder="Yeni kategori adı (Örn: Sigorta / Kasko, Danışmanlık...)" required>
+                                <input aria-label="Yeni kategori adı (Örn: Sigorta / Kasko, Danışmanlık...)" title="Yeni kategori adı (Örn: Sigorta / Kasko, Danışmanlık...)" type="text" id="new-category-name" class="form-control" placeholder="Yeni kategori adı (Örn: Sigorta / Kasko, Danışmanlık...)" required>
                                 <button type="submit" class="btn btn-primary btn-sm"><i class="fa-solid fa-plus"></i> Ekle</button>
                             </form>
                             <div id="categories-chip-container" style="display:flex; flex-wrap:wrap; gap:8px;"></div>
@@ -1122,7 +1125,7 @@
                         </div>
 
                         <div class="filter-bar" style="grid-template-columns: 1.6fr 1fr 1fr 1fr 1fr auto;">
-                            <select id="rep-type-select" class="form-control" onchange="renderReportsSection()">
+                            <select aria-label="rep-type-select" title="rep-type-select" id="rep-type-select" class="form-control" onchange="renderReportsSection()">
                                 <option value="SUMMARY_ALL">1. Kapsamlı Yönetici Finans Özeti (Kasa + Banka + Ödeme + Tahsilat)</option>
                                 <option value="PAYMENTS_LIST">2. Detaylı Ödeme ve Borç Listesi Raporu</option>
                                 <option value="COLLECTIONS_LIST">3. Detaylı Tahsilat ve Alacak Raporu</option>
@@ -1131,9 +1134,9 @@
                                 <option value="CATEGORY_BREAKDOWN">6. Kategori ve Şirket Bazlı Gider Dağılım Raporu</option>
                                 <option value="INSTRUMENTS_REPORT">7. Kredi Kartı, Kredi Taksitleri ve Çek/Senet Raporu</option>
                             </select>
-                            <input type="text" id="rep-start-date" class="form-control" placeholder="Başlangıç (GG.AA.YYYY)" onchange="renderReportsSection()">
-                            <input type="text" id="rep-end-date" class="form-control" placeholder="Bitiş (GG.AA.YYYY)" onchange="renderReportsSection()">
-                            <select id="rep-page-orientation" class="form-control" onchange="updatePrintOrientation(this.value)">
+                            <input aria-label="Başlangıç (GG.AA.YYYY)" title="Başlangıç (GG.AA.YYYY)" type="text" id="rep-start-date" class="form-control" placeholder="Başlangıç (GG.AA.YYYY)" onchange="renderReportsSection()">
+                            <input aria-label="Bitiş (GG.AA.YYYY)" title="Bitiş (GG.AA.YYYY)" type="text" id="rep-end-date" class="form-control" placeholder="Bitiş (GG.AA.YYYY)" onchange="renderReportsSection()">
+                            <select aria-label="rep-page-orientation" title="rep-page-orientation" id="rep-page-orientation" class="form-control" onchange="updatePrintOrientation(this.value)">
                                 <option value="portrait">A4 Dikey (Portrait)</option>
                                 <option value="landscape">A4 Yatay (Landscape)</option>
                             </select>
@@ -1191,7 +1194,7 @@
                                         </button>
                                         <label class="btn btn-sm" style="cursor:pointer;">
                                             <i class="fa-solid fa-upload" style="color:var(--amber-warn);"></i> JSON Yedek Geri Yükle
-                                            <input type="file" accept=".json" style="display:none;" onchange="importFullBackupJSON(event)">
+                                            <input aria-label="Seçim / Giriş Alanı" title="Seçim / Giriş Alanı" type="file" accept=".json" style="display:none;" onchange="importFullBackupJSON(event)">
                                         </label>
                                         <button class="btn btn-sm btn-danger" onclick="clearAllDemoDataToZero()">
                                             <i class="fa-solid fa-broom"></i> Örnekleri Sil &amp; Sıfırdan Başla (0,00 ₺)
@@ -1304,19 +1307,19 @@
         <div class="modal-dialog">
             <div class="modal-header">
                 <h3 id="modal-account-title"><i class="fa-solid fa-vault" style="color:var(--dizsan-cyan);"></i> Kasa / Banka Hesabı Tanımla</h3>
-                <button class="btn btn-sm" onclick="closeModal('modal-account')"><i class="fa-solid fa-xmark"></i></button>
+                <button aria-label="Buton closeModal" class="btn btn-sm" onclick="closeModal('modal-account')"><i class="fa-solid fa-xmark"></i></button>
             </div>
             <form id="form-account" onsubmit="handleSaveAccount(event)">
                 <div class="modal-body">
-                    <input type="hidden" id="acc-id">
+                    <input aria-label="acc-id" title="acc-id" type="hidden" id="acc-id">
                     <div class="form-grid-2">
                         <div>
                             <label class="field-label">Şirket *</label>
-                            <select id="acc-company" class="form-control" required></select>
+                            <select aria-label="acc-company" title="acc-company" id="acc-company" class="form-control" required></select>
                         </div>
                         <div>
                             <label class="field-label">Hesap Türü *</label>
-                            <select id="acc-type" class="form-control" required onchange="toggleAccountBankField()">
+                            <select aria-label="acc-type" title="acc-type" id="acc-type" class="form-control" required onchange="toggleAccountBankField()">
                                 <option value="BANK">Banka Hesabı</option>
                                 <option value="CASH">Nakit Kasa</option>
                             </select>
@@ -1325,17 +1328,17 @@
                     <div class="form-grid-2">
                         <div>
                             <label class="field-label">Hesap Adı *</label>
-                            <input type="text" id="acc-name" class="form-control" placeholder="Örn: Garanti BBVA Ticari TL / Merkez Kasa" required>
+                            <input aria-label="Örn: Garanti BBVA Ticari TL / Merkez Kasa" title="Örn: Garanti BBVA Ticari TL / Merkez Kasa" type="text" id="acc-name" class="form-control" placeholder="Örn: Garanti BBVA Ticari TL / Merkez Kasa" required>
                         </div>
                         <div>
                             <label class="field-label" id="acc-bank-label">Banka Adı veya Kasa Türü *</label>
-                            <input type="text" id="acc-bank-name" class="form-control" placeholder="Örn: Garanti BBVA, İş Bankası, Merkez Nakit Kasa" required>
+                            <input aria-label="Örn: Garanti BBVA, İş Bankası, Merkez Nakit Kasa" title="Örn: Garanti BBVA, İş Bankası, Merkez Nakit Kasa" type="text" id="acc-bank-name" class="form-control" placeholder="Örn: Garanti BBVA, İş Bankası, Merkez Nakit Kasa" required>
                         </div>
                     </div>
                     <div class="form-grid-3">
                         <div>
                             <label class="field-label">Para Birimi *</label>
-                            <select id="acc-currency" class="form-control" required>
+                            <select aria-label="acc-currency" title="acc-currency" id="acc-currency" class="form-control" required>
                                 <option value="TRY">TRY (₺)</option>
                                 <option value="EUR">EUR (€)</option>
                                 <option value="USD">USD ($)</option>
@@ -1344,11 +1347,11 @@
                         </div>
                         <div>
                             <label class="field-label">Açılış Bakiyesi (Manuel) *</label>
-                            <input type="number" step="0.01" id="acc-opening-balance" class="form-control" placeholder="0.00" required>
+                            <input aria-label="0.00" title="0.00" type="number" step="0.01" id="acc-opening-balance" class="form-control" placeholder="0.00" required>
                         </div>
                         <div>
                             <label class="field-label">Durum</label>
-                            <select id="acc-status" class="form-control">
+                            <select aria-label="acc-status" title="acc-status" id="acc-status" class="form-control">
                                 <option value="Aktif">Aktif</option>
                                 <option value="Pasif">Pasif</option>
                             </select>
@@ -1356,7 +1359,7 @@
                     </div>
                     <div>
                         <label class="field-label">Açıklama / IBAN Bilgisi</label>
-                        <input type="text" id="acc-desc" class="form-control" placeholder="IBAN veya hesap açıklaması...">
+                        <input aria-label="IBAN veya hesap açıklaması..." title="IBAN veya hesap açıklaması..." type="text" id="acc-desc" class="form-control" placeholder="IBAN veya hesap açıklaması...">
                     </div>
                 </div>
                 <div class="modal-footer">
@@ -1372,7 +1375,7 @@
         <div class="modal-dialog">
             <div class="modal-header">
                 <h3><i class="fa-solid fa-right-left" style="color:var(--dizsan-cyan);"></i> Hesaplar / Şirketler Arası Para Transferi (Virman)</h3>
-                <button class="btn btn-sm" onclick="closeModal('modal-transfer')"><i class="fa-solid fa-xmark"></i></button>
+                <button aria-label="Buton closeModal" class="btn btn-sm" onclick="closeModal('modal-transfer')"><i class="fa-solid fa-xmark"></i></button>
             </div>
             <form id="form-transfer" onsubmit="handleSaveTransfer(event)">
                 <div class="modal-body">
@@ -1382,26 +1385,26 @@
                     <div class="form-grid-2">
                         <div>
                             <label class="field-label">Kaynak Hesap (Çıkış) *</label>
-                            <select id="trf-from-account" class="form-control" required></select>
+                            <select aria-label="trf-from-account" title="trf-from-account" id="trf-from-account" class="form-control" required></select>
                         </div>
                         <div>
                             <label class="field-label">Hedef Hesap (Giriş) *</label>
-                            <select id="trf-to-account" class="form-control" required></select>
+                            <select aria-label="trf-to-account" title="trf-to-account" id="trf-to-account" class="form-control" required></select>
                         </div>
                     </div>
                     <div class="form-grid-2">
                         <div>
                             <label class="field-label">Transfer Tutarı *</label>
-                            <input type="number" step="0.01" min="0.01" id="trf-amount" class="form-control" placeholder="0.00" required>
+                            <input aria-label="0.00" title="0.00" type="number" step="0.01" min="0.01" id="trf-amount" class="form-control" placeholder="0.00" required>
                         </div>
                         <div>
                             <label class="field-label">İşlem Tarihi (GG.AA.YYYY) *</label>
-                            <input type="text" id="trf-date" class="form-control" placeholder="GG.AA.YYYY" required>
+                            <input aria-label="GG.AA.YYYY" title="GG.AA.YYYY" type="text" id="trf-date" class="form-control" placeholder="GG.AA.YYYY" required>
                         </div>
                     </div>
                     <div>
                         <label class="field-label">Açıklama *</label>
-                        <input type="text" id="trf-desc" class="form-control" placeholder="Örn: Kasa nakit yatırma / Şirketler arası virman..." required>
+                        <input aria-label="Örn: Kasa nakit yatırma / Şirketler arası virman..." title="Örn: Kasa nakit yatırma / Şirketler arası virman..." type="text" id="trf-desc" class="form-control" placeholder="Örn: Kasa nakit yatırma / Şirketler arası virman..." required>
                     </div>
                 </div>
                 <div class="modal-footer">
@@ -1417,33 +1420,33 @@
         <div class="modal-dialog">
             <div class="modal-header">
                 <h3><i class="fa-solid fa-sliders" style="color:var(--amber-warn);"></i> Kasa / Banka Manuel Bakiye Düzeltme</h3>
-                <button class="btn btn-sm" onclick="closeModal('modal-balance-adjust')"><i class="fa-solid fa-xmark"></i></button>
+                <button aria-label="Buton closeModal" class="btn btn-sm" onclick="closeModal('modal-balance-adjust')"><i class="fa-solid fa-xmark"></i></button>
             </div>
             <form id="form-balance-adjust" onsubmit="handleSaveBalanceAdjustment(event)">
                 <div class="modal-body">
                     <div class="form-grid-2">
                         <div>
                             <label class="field-label">Düzeltilecek Hesap *</label>
-                            <select id="adj-account" class="form-control" required onchange="handleAdjustAccountSelect(this.value)"></select>
+                            <select aria-label="adj-account" title="adj-account" id="adj-account" class="form-control" required onchange="handleAdjustAccountSelect(this.value)"></select>
                         </div>
                         <div>
                             <label class="field-label">Mevcut Sistem Bakiyesi</label>
-                            <input type="text" id="adj-current-balance" class="form-control" readonly>
+                            <input aria-label="adj-current-balance" title="adj-current-balance" type="text" id="adj-current-balance" class="form-control" readonly>
                         </div>
                     </div>
                     <div class="form-grid-2">
                         <div>
                             <label class="field-label">Yeni Gerçek Bakiye *</label>
-                            <input type="number" step="0.01" id="adj-new-balance" class="form-control" placeholder="0.00" required>
+                            <input aria-label="0.00" title="0.00" type="number" step="0.01" id="adj-new-balance" class="form-control" placeholder="0.00" required>
                         </div>
                         <div>
                             <label class="field-label">Düzeltme Tarihi *</label>
-                            <input type="text" id="adj-date" class="form-control" placeholder="GG.AA.YYYY" required>
+                            <input aria-label="GG.AA.YYYY" title="GG.AA.YYYY" type="text" id="adj-date" class="form-control" placeholder="GG.AA.YYYY" required>
                         </div>
                     </div>
                     <div>
                         <label class="field-label">Düzeltme Gerekçesi (Zorunlu - Loglanır) *</label>
-                        <input type="text" id="adj-reason" class="form-control" placeholder="Örn: Banka masraf/faiz kesintisi mutabakatı, fiili kasa sayım farkı..." required>
+                        <input aria-label="Örn: Banka masraf/faiz kesintisi mutabakatı, fiili kasa sayım farkı..." title="Örn: Banka masraf/faiz kesintisi mutabakatı, fiili kasa sayım farkı..." type="text" id="adj-reason" class="form-control" placeholder="Örn: Banka masraf/faiz kesintisi mutabakatı, fiili kasa sayım farkı..." required>
                     </div>
                 </div>
                 <div class="modal-footer">
@@ -1459,29 +1462,29 @@
         <div class="modal-dialog">
             <div class="modal-header">
                 <h3 id="modal-payment-title"><i class="fa-solid fa-arrow-trend-down" style="color:var(--rose-danger);"></i> Ödeme Kaydı</h3>
-                <button class="btn btn-sm" onclick="closeModal('modal-payment')"><i class="fa-solid fa-xmark"></i></button>
+                <button aria-label="Buton closeModal" class="btn btn-sm" onclick="closeModal('modal-payment')"><i class="fa-solid fa-xmark"></i></button>
             </div>
             <form id="form-payment" onsubmit="handleSavePayment(event)">
                 <div class="modal-body">
-                    <input type="hidden" id="pay-id">
+                    <input aria-label="pay-id" title="pay-id" type="hidden" id="pay-id">
                     <div class="form-grid-2">
                         <div>
                             <label class="field-label">Şirket *</label>
-                            <select id="pay-company" class="form-control" required onchange="populateAccountSelectsForModal()"></select>
+                            <select aria-label="pay-company" title="pay-company" id="pay-company" class="form-control" required onchange="populateAccountSelectsForModal()"></select>
                         </div>
                         <div>
                             <label class="field-label">Ödeme Kategorisi *</label>
-                            <select id="pay-category" class="form-control" required onchange="handlePayCategoryChange(this.value)"></select>
+                            <select aria-label="pay-category" title="pay-category" id="pay-category" class="form-control" required onchange="handlePayCategoryChange(this.value)"></select>
                         </div>
                     </div>
                     <div class="form-grid-2">
                         <div>
                             <label class="field-label">Ödeme Başlığı / Kod (TDR -> Tedarikçi, Maaş -> Personel Maaşı) *</label>
-                            <input type="text" id="pay-title" class="form-control" placeholder="Örn: Ekim Ayı Maaşlar / TDR-Scania Yedek Parça" required oninput="checkTdrAutoCategory(this.value)">
+                            <input aria-label="Örn: Ekim Ayı Maaşlar / TDR-Scania Yedek Parça" title="Örn: Ekim Ayı Maaşlar / TDR-Scania Yedek Parça" type="text" id="pay-title" class="form-control" placeholder="Örn: Ekim Ayı Maaşlar / TDR-Scania Yedek Parça" required oninput="checkTdrAutoCategory(this.value)">
                         </div>
                         <div>
                             <label class="field-label">Alacaklı Kişi veya Firma *</label>
-                            <input type="text" id="pay-creditor" class="form-control" placeholder="Örn: Dizsan Personel Bordrosu / Doğuş Otomotiv" required>
+                            <input aria-label="Örn: Dizsan Personel Bordrosu / Doğuş Otomotiv" title="Örn: Dizsan Personel Bordrosu / Doğuş Otomotiv" type="text" id="pay-creditor" class="form-control" placeholder="Örn: Dizsan Personel Bordrosu / Doğuş Otomotiv" required>
                         </div>
                     </div>
 
@@ -1509,11 +1512,11 @@
                     <div class="form-grid-3">
                         <div>
                             <label class="field-label">Toplam / Tahmini Tutar</label>
-                            <input type="number" step="0.01" min="0" id="pay-amount" class="form-control" placeholder="0.00 (Opsiyonel)">
+                            <input aria-label="0.00 (Opsiyonel)" title="0.00 (Opsiyonel)" type="number" step="0.01" min="0" id="pay-amount" class="form-control" placeholder="0.00 (Opsiyonel)">
                         </div>
                         <div>
                             <label class="field-label">Para Birimi *</label>
-                            <select id="pay-currency" class="form-control" required>
+                            <select aria-label="pay-currency" title="pay-currency" id="pay-currency" class="form-control" required>
                                 <option value="TRY">TRY (₺)</option>
                                 <option value="EUR">EUR (€)</option>
                                 <option value="USD">USD ($)</option>
@@ -1523,21 +1526,21 @@
                             <label class="field-label" style="display:flex; align-items:center; justify-content:space-between; gap:4px;">
                                 <span>Vade Tarihi (GG.AA.YYYY)</span>
                                 <label style="display:inline-flex; align-items:center; gap:4px; font-size:0.68rem; color:var(--amber-warn); cursor:pointer;">
-                                    <input type="checkbox" id="pay-is-undated" onchange="togglePayUndatedMode(this.checked)">
+                                    <input aria-label="pay-is-undated" title="pay-is-undated" type="checkbox" id="pay-is-undated" onchange="togglePayUndatedMode(this.checked)">
                                     <span>Tarihi Belli Değil (Not)</span>
                                 </label>
                             </label>
-                            <input type="text" id="pay-due-date" class="form-control" placeholder="GG.AA.YYYY">
+                            <input aria-label="GG.AA.YYYY" title="GG.AA.YYYY" type="text" id="pay-due-date" class="form-control" placeholder="GG.AA.YYYY">
                         </div>
                     </div>
                     <div class="form-grid-2">
                         <div>
                             <label class="field-label">Ödeme Yapılacak Hesap</label>
-                            <select id="pay-account" class="form-control"></select>
+                            <select aria-label="pay-account" title="pay-account" id="pay-account" class="form-control"></select>
                         </div>
                         <div>
                             <label class="field-label">İşlem Durumu</label>
-                            <select id="pay-status" class="form-control">
+                            <select aria-label="pay-status" title="pay-status" id="pay-status" class="form-control">
                                 <option value="Planlandı">Planlandı</option>
                                 <option value="Tarihi Belirsiz">Tarihi Belirsiz (Kenar Notu)</option>
                                 <option value="Kısmen ödendi">Kısmen ödendi</option>
@@ -1550,7 +1553,7 @@
                     <div class="form-grid-2">
                         <div>
                             <label class="field-label">Tekrarlama Bilgisi</label>
-                            <select id="pay-recurrence" class="form-control" onchange="togglePayRecurrenceFields(this.value)">
+                            <select aria-label="pay-recurrence" title="pay-recurrence" id="pay-recurrence" class="form-control" onchange="togglePayRecurrenceFields(this.value)">
                                 <option value="NONE">Tek Seferlik (Tekrarlama Yok)</option>
                                 <option value="WEEKLY">Haftalık</option>
                                 <option value="MONTHLY">Aylık</option>
@@ -1562,22 +1565,22 @@
                         </div>
                         <div id="pay-recurrence-end-wrap" style="display:none;">
                             <label class="field-label">Tekrarlama Bitiş Tarihi (GG.AA.YYYY)</label>
-                            <input type="text" id="pay-recurrence-end" class="form-control" placeholder="GG.AA.YYYY">
+                            <input aria-label="GG.AA.YYYY" title="GG.AA.YYYY" type="text" id="pay-recurrence-end" class="form-control" placeholder="GG.AA.YYYY">
                         </div>
                     </div>
                     <div class="form-grid-2">
                         <div>
                             <label class="field-label">Açıklama / Fatura No</label>
-                            <input type="text" id="pay-desc" class="form-control" placeholder="Fatura no, açıklama veya not...">
+                            <input aria-label="Fatura no, açıklama veya not..." title="Fatura no, açıklama veya not..." type="text" id="pay-desc" class="form-control" placeholder="Fatura no, açıklama veya not...">
                         </div>
                         <div>
                             <label class="field-label">Belge veya Dosya Eki (Dekont / Fatura)</label>
-                            <input type="file" id="pay-attachment" class="form-control" accept=".pdf,.png,.jpg,.jpeg,.xlsx,.xls,.doc,.docx">
+                            <input aria-label="pay-attachment" title="pay-attachment" type="file" id="pay-attachment" class="form-control" accept=".pdf,.png,.jpg,.jpeg,.xlsx,.xls,.doc,.docx">
                         </div>
                     </div>
                     <div id="pay-series-update-scope" style="display:none; margin-top:8px; padding:8px 10px; border-radius:8px; background:var(--amber-bg); border:1px solid var(--amber-warn); font-size:0.76rem;">
                         <label style="display:flex; align-items:center; gap:6px; cursor:pointer;">
-                            <input type="checkbox" id="pay-update-all-series">
+                            <input aria-label="pay-update-all-series" title="pay-update-all-series" type="checkbox" id="pay-update-all-series">
                             <span>Bu değişikliği gelecekteki <strong>tüm bekleyen taksitlere</strong> de uygula (İşaretlenmezse yalnızca bu taksit güncellenir)</span>
                         </label>
                     </div>
@@ -1595,10 +1598,10 @@
         <div class="modal-dialog">
             <div class="modal-header">
                 <h3><i class="fa-solid fa-money-bill-transfer" style="color:var(--emerald-ok);"></i> Ödeme Gerçekleştir / Kısmi Ödeme Hareketleri</h3>
-                <button class="btn btn-sm" onclick="closeModal('modal-payment-exec')"><i class="fa-solid fa-xmark"></i></button>
+                <button aria-label="Buton closeModal" class="btn btn-sm" onclick="closeModal('modal-payment-exec')"><i class="fa-solid fa-xmark"></i></button>
             </div>
             <div class="modal-body">
-                <input type="hidden" id="exec-pay-id">
+                <input aria-label="exec-pay-id" title="exec-pay-id" type="hidden" id="exec-pay-id">
                 <div id="exec-pay-summary" style="padding:12px; border-radius:10px; background:var(--bg-elevated); border:1px solid var(--border-subtle); margin-bottom:12px;"></div>
 
                 <form id="form-payment-exec" onsubmit="handleExecutePaymentTransaction(event)" style="padding:12px; border-radius:10px; border:1px solid var(--border-strong); margin-bottom:14px;">
@@ -1608,28 +1611,28 @@
 
                     <div id="exec-pay-person-wrap" style="display:none; margin-bottom:10px; padding:8px 10px; border-radius:8px; background:rgba(56,189,248,0.08); border:1px solid rgba(56,189,248,0.3);">
                         <label class="field-label" style="color:var(--dizsan-cyan);"><i class="fa-solid fa-user-tie"></i> Ödeme Yapılacak Personel (Kişi Bazlı Kısmi Maaş / Avans)</label>
-                        <select id="exec-pay-person" class="form-control" onchange="handleExecPersonSelectChange(this.value)"></select>
+                        <select aria-label="exec-pay-person" title="exec-pay-person" id="exec-pay-person" class="form-control" onchange="handleExecPersonSelectChange(this.value)"></select>
                         <div id="exec-pay-person-info" style="font-size:0.72rem; color:var(--text-secondary); margin-top:5px;"></div>
                     </div>
 
                     <div class="form-grid-3">
                         <div>
                             <label class="field-label">Ödenen Tutar *</label>
-                            <input type="number" step="0.01" min="0.01" id="exec-pay-amount" class="form-control" required>
+                            <input aria-label="exec-pay-amount" title="exec-pay-amount" type="number" step="0.01" min="0.01" id="exec-pay-amount" class="form-control" required>
                         </div>
                         <div>
                             <label class="field-label">Gerçekleşme Tarihi *</label>
-                            <input type="text" id="exec-pay-date" class="form-control" placeholder="GG.AA.YYYY" required>
+                            <input aria-label="GG.AA.YYYY" title="GG.AA.YYYY" type="text" id="exec-pay-date" class="form-control" placeholder="GG.AA.YYYY" required>
                         </div>
                         <div>
                             <label class="field-label">Ödeme Yapılan Hesap *</label>
-                            <select id="exec-pay-account" class="form-control" required></select>
+                            <select aria-label="exec-pay-account" title="exec-pay-account" id="exec-pay-account" class="form-control" required></select>
                         </div>
                     </div>
                     <div style="display:flex; gap:8px; align-items:flex-end;">
                         <div style="flex:1;">
                             <label class="field-label">Dekont / İşlem Notu</label>
-                            <input type="text" id="exec-pay-note" class="form-control" placeholder="Örn: Maaş avansı / 1. kısmi maaş ödemesi...">
+                            <input aria-label="Örn: Maaş avansı / 1. kısmi maaş ödemesi..." title="Örn: Maaş avansı / 1. kısmi maaş ödemesi..." type="text" id="exec-pay-note" class="form-control" placeholder="Örn: Maaş avansı / 1. kısmi maaş ödemesi...">
                         </div>
                         <button type="submit" class="btn btn-success"><i class="fa-solid fa-check"></i> Ödemeyi İşle ve Hesaptan Düş</button>
                     </div>
@@ -1646,19 +1649,19 @@
         <div class="modal-dialog">
             <div class="modal-header">
                 <h3 id="modal-collection-title"><i class="fa-solid fa-arrow-trend-up" style="color:var(--emerald-ok);"></i> Tahsilat Kaydı</h3>
-                <button class="btn btn-sm" onclick="closeModal('modal-collection')"><i class="fa-solid fa-xmark"></i></button>
+                <button aria-label="Buton closeModal" class="btn btn-sm" onclick="closeModal('modal-collection')"><i class="fa-solid fa-xmark"></i></button>
             </div>
             <form id="form-collection" onsubmit="handleSaveCollection(event)">
                 <div class="modal-body">
-                    <input type="hidden" id="col-id">
+                    <input aria-label="col-id" title="col-id" type="hidden" id="col-id">
                     <div class="form-grid-2">
                         <div>
                             <label class="field-label">Şirket *</label>
-                            <select id="col-company" class="form-control" required onchange="populateAccountSelectsForModal()"></select>
+                            <select aria-label="col-company" title="col-company" id="col-company" class="form-control" required onchange="populateAccountSelectsForModal()"></select>
                         </div>
                         <div>
                             <label class="field-label">Kesinlik Derecesi *</label>
-                            <select id="col-certainty" class="form-control" required>
+                            <select aria-label="col-certainty" title="col-certainty" id="col-certainty" class="form-control" required>
                                 <option value="Kesin">Kesin (Temkinli Senaryoya Dahil)</option>
                                 <option value="Muhtemel">Muhtemel (Dengeli Senaryoya Dahil)</option>
                                 <option value="Belirsiz">Belirsiz (Sadece İyimser Senaryoya Dahil)</option>
@@ -1668,21 +1671,21 @@
                     <div class="form-grid-2">
                         <div>
                             <label class="field-label">Müşteri veya Kaynak *</label>
-                            <input type="text" id="col-customer" class="form-control" placeholder="Örn: Çorum Nakliyat A.Ş. / Hakediş Ödemesi" required>
+                            <input aria-label="Örn: Çorum Nakliyat A.Ş. / Hakediş Ödemesi" title="Örn: Çorum Nakliyat A.Ş. / Hakediş Ödemesi" type="text" id="col-customer" class="form-control" placeholder="Örn: Çorum Nakliyat A.Ş. / Hakediş Ödemesi" required>
                         </div>
                         <div>
                             <label class="field-label">Tahsilat Başlığı *</label>
-                            <input type="text" id="col-title" class="form-control" placeholder="Örn: Servis Bakım Faturası / GES Hakediş" required>
+                            <input aria-label="Örn: Servis Bakım Faturası / GES Hakediş" title="Örn: Servis Bakım Faturası / GES Hakediş" type="text" id="col-title" class="form-control" placeholder="Örn: Servis Bakım Faturası / GES Hakediş" required>
                         </div>
                     </div>
                     <div class="form-grid-3">
                         <div>
                             <label class="field-label">Toplam Tutar *</label>
-                            <input type="number" step="0.01" min="0.01" id="col-amount" class="form-control" placeholder="0.00" required>
+                            <input aria-label="0.00" title="0.00" type="number" step="0.01" min="0.01" id="col-amount" class="form-control" placeholder="0.00" required>
                         </div>
                         <div>
                             <label class="field-label">Para Birimi *</label>
-                            <select id="col-currency" class="form-control" required>
+                            <select aria-label="col-currency" title="col-currency" id="col-currency" class="form-control" required>
                                 <option value="TRY">TRY (₺)</option>
                                 <option value="EUR">EUR (€)</option>
                                 <option value="USD">USD ($)</option>
@@ -1690,17 +1693,17 @@
                         </div>
                         <div>
                             <label class="field-label">Beklenen Tarih (GG.AA.YYYY) *</label>
-                            <input type="text" id="col-expected-date" class="form-control" placeholder="GG.AA.YYYY" required>
+                            <input aria-label="GG.AA.YYYY" title="GG.AA.YYYY" type="text" id="col-expected-date" class="form-control" placeholder="GG.AA.YYYY" required>
                         </div>
                     </div>
                     <div class="form-grid-2">
                         <div>
                             <label class="field-label">Tahsil Edilecek Hesap</label>
-                            <select id="col-account" class="form-control"></select>
+                            <select aria-label="col-account" title="col-account" id="col-account" class="form-control"></select>
                         </div>
                         <div>
                             <label class="field-label">Durum</label>
-                            <select id="col-status" class="form-control">
+                            <select aria-label="col-status" title="col-status" id="col-status" class="form-control">
                                 <option value="Bekleniyor">Bekleniyor</option>
                                 <option value="Kısmen tahsil edildi">Kısmen tahsil edildi</option>
                                 <option value="Tahsil edildi">Tahsil edildi</option>
@@ -1711,7 +1714,7 @@
                     </div>
                     <div>
                         <label class="field-label">Açıklama</label>
-                        <input type="text" id="col-desc" class="form-control" placeholder="Tahsilat detayı, fatura veya sözleşme notu...">
+                        <input aria-label="Tahsilat detayı, fatura veya sözleşme notu..." title="Tahsilat detayı, fatura veya sözleşme notu..." type="text" id="col-desc" class="form-control" placeholder="Tahsilat detayı, fatura veya sözleşme notu...">
                     </div>
                 </div>
                 <div class="modal-footer">
@@ -1727,10 +1730,10 @@
         <div class="modal-dialog">
             <div class="modal-header">
                 <h3><i class="fa-solid fa-hand-holding-dollar" style="color:var(--emerald-ok);"></i> Tahsilat Gerçekleştir / Kısmi Tahsilat Hareketleri</h3>
-                <button class="btn btn-sm" onclick="closeModal('modal-collection-exec')"><i class="fa-solid fa-xmark"></i></button>
+                <button aria-label="Buton closeModal" class="btn btn-sm" onclick="closeModal('modal-collection-exec')"><i class="fa-solid fa-xmark"></i></button>
             </div>
             <div class="modal-body">
-                <input type="hidden" id="exec-col-id">
+                <input aria-label="exec-col-id" title="exec-col-id" type="hidden" id="exec-col-id">
                 <div id="exec-col-summary" style="padding:12px; border-radius:10px; background:var(--bg-elevated); border:1px solid var(--border-subtle); margin-bottom:12px;"></div>
 
                 <form id="form-collection-exec" onsubmit="handleExecuteCollectionTransaction(event)" style="padding:12px; border-radius:10px; border:1px solid var(--border-strong); margin-bottom:14px;">
@@ -1740,21 +1743,21 @@
                     <div class="form-grid-3">
                         <div>
                             <label class="field-label">Tahsil Edilen Tutar *</label>
-                            <input type="number" step="0.01" min="0.01" id="exec-col-amount" class="form-control" required>
+                            <input aria-label="exec-col-amount" title="exec-col-amount" type="number" step="0.01" min="0.01" id="exec-col-amount" class="form-control" required>
                         </div>
                         <div>
                             <label class="field-label">Gerçekleşme Tarihi *</label>
-                            <input type="text" id="exec-col-date" class="form-control" placeholder="GG.AA.YYYY" required>
+                            <input aria-label="GG.AA.YYYY" title="GG.AA.YYYY" type="text" id="exec-col-date" class="form-control" placeholder="GG.AA.YYYY" required>
                         </div>
                         <div>
                             <label class="field-label">Giriş Yapılan Hesap *</label>
-                            <select id="exec-col-account" class="form-control" required></select>
+                            <select aria-label="exec-col-account" title="exec-col-account" id="exec-col-account" class="form-control" required></select>
                         </div>
                     </div>
                     <div style="display:flex; gap:8px; align-items:flex-end;">
                         <div style="flex:1;">
                             <label class="field-label">Açıklama / Dekont Notu</label>
-                            <input type="text" id="exec-col-note" class="form-control" placeholder="Örn: Banka EFT girişi...">
+                            <input aria-label="Örn: Banka EFT girişi..." title="Örn: Banka EFT girişi..." type="text" id="exec-col-note" class="form-control" placeholder="Örn: Banka EFT girişi...">
                         </div>
                         <button type="submit" class="btn btn-success"><i class="fa-solid fa-check"></i> Tahsilatı Hesaba İşle</button>
                     </div>
@@ -1771,7 +1774,7 @@
         <div class="modal-dialog">
             <div class="modal-header">
                 <h3 id="modal-cal-day-title"><i class="fa-solid fa-calendar-day" style="color:var(--dizsan-cyan);"></i> Günlük İşlem Detayı</h3>
-                <button class="btn btn-sm" onclick="closeModal('modal-calendar-day')"><i class="fa-solid fa-xmark"></i></button>
+                <button aria-label="Buton closeModal" class="btn btn-sm" onclick="closeModal('modal-calendar-day')"><i class="fa-solid fa-xmark"></i></button>
             </div>
             <div class="modal-body">
                 <div style="display:flex; gap:8px; margin-bottom:12px;">
@@ -1792,49 +1795,49 @@
         <div class="modal-dialog">
             <div class="modal-header">
                 <h3><i class="fa-solid fa-credit-card" style="color:#a855f7;"></i> Kredi Kartı ve Dönem Borcu Yönetimi</h3>
-                <button class="btn btn-sm" onclick="closeModal('modal-credit-card')"><i class="fa-solid fa-xmark"></i></button>
+                <button aria-label="Buton closeModal" class="btn btn-sm" onclick="closeModal('modal-credit-card')"><i class="fa-solid fa-xmark"></i></button>
             </div>
             <form id="form-credit-card" onsubmit="handleSaveCreditCard(event)">
                 <div class="modal-body">
-                    <input type="hidden" id="cc-id">
+                    <input aria-label="cc-id" title="cc-id" type="hidden" id="cc-id">
                     <div class="form-grid-2">
                         <div>
                             <label class="field-label">Şirket *</label>
-                            <select id="cc-company" class="form-control" required></select>
+                            <select aria-label="cc-company" title="cc-company" id="cc-company" class="form-control" required></select>
                         </div>
                         <div>
                             <label class="field-label">Banka *</label>
-                            <input type="text" id="cc-bank" class="form-control" placeholder="Örn: Garanti BBVA, İş Bankası, Akbank" required>
+                            <input aria-label="Örn: Garanti BBVA, İş Bankası, Akbank" title="Örn: Garanti BBVA, İş Bankası, Akbank" type="text" id="cc-bank" class="form-control" placeholder="Örn: Garanti BBVA, İş Bankası, Akbank" required>
                         </div>
                     </div>
                     <div class="form-grid-2">
                         <div>
                             <label class="field-label">Kart Adı &amp; Son 4 Hane *</label>
-                            <input type="text" id="cc-name" class="form-control" placeholder="Örn: Corporate *4360 / Bonus *6010" required>
+                            <input aria-label="Örn: Corporate *4360 / Bonus *6010" title="Örn: Corporate *4360 / Bonus *6010" type="text" id="cc-name" class="form-control" placeholder="Örn: Corporate *4360 / Bonus *6010" required>
                         </div>
                         <div>
                             <label class="field-label">Ödeme Yapılacak Banka Hesabı</label>
-                            <select id="cc-account" class="form-control"></select>
+                            <select aria-label="cc-account" title="cc-account" id="cc-account" class="form-control"></select>
                         </div>
                     </div>
                     <div class="form-grid-2">
                         <div>
                             <label class="field-label">Hesap Kesim Tarihi (GG.AA.YYYY) *</label>
-                            <input type="text" id="cc-cutoff-date" class="form-control" placeholder="GG.AA.YYYY" required>
+                            <input aria-label="GG.AA.YYYY" title="GG.AA.YYYY" type="text" id="cc-cutoff-date" class="form-control" placeholder="GG.AA.YYYY" required>
                         </div>
                         <div>
                             <label class="field-label">Son Ödeme Tarihi (GG.AA.YYYY) *</label>
-                            <input type="text" id="cc-due-date" class="form-control" placeholder="GG.AA.YYYY" required>
+                            <input aria-label="GG.AA.YYYY" title="GG.AA.YYYY" type="text" id="cc-due-date" class="form-control" placeholder="GG.AA.YYYY" required>
                         </div>
                     </div>
                     <div class="form-grid-2">
                         <div>
                             <label class="field-label">Manuel Girilen Dönem Borcu (TL) *</label>
-                            <input type="number" step="0.01" min="0" id="cc-debt" class="form-control" placeholder="0.00" required>
+                            <input aria-label="0.00" title="0.00" type="number" step="0.01" min="0" id="cc-debt" class="form-control" placeholder="0.00" required>
                         </div>
                         <div>
                             <label class="field-label">Ödenen Tutar (TL)</label>
-                            <input type="number" step="0.01" min="0" id="cc-paid" class="form-control" placeholder="0.00" value="0">
+                            <input aria-label="0.00" title="0.00" type="number" step="0.01" min="0" id="cc-paid" class="form-control" placeholder="0.00" value="0">
                         </div>
                     </div>
                 </div>
@@ -1851,28 +1854,28 @@
         <div class="modal-dialog">
             <div class="modal-header">
                 <h3><i class="fa-solid fa-landmark" style="color:var(--amber-warn);"></i> Kredi / Leasing Taksit Planı Oluştur</h3>
-                <button class="btn btn-sm" onclick="closeModal('modal-loan-plan')"><i class="fa-solid fa-xmark"></i></button>
+                <button aria-label="Buton closeModal" class="btn btn-sm" onclick="closeModal('modal-loan-plan')"><i class="fa-solid fa-xmark"></i></button>
             </div>
             <form id="form-loan-plan" onsubmit="handleSaveLoanPlan(event)">
                 <div class="modal-body">
                     <div class="form-grid-2">
                         <div>
                             <label class="field-label">Şirket *</label>
-                            <select id="loan-company" class="form-control" required></select>
+                            <select aria-label="loan-company" title="loan-company" id="loan-company" class="form-control" required></select>
                         </div>
                         <div>
                             <label class="field-label">Banka / Leasing Kurumu *</label>
-                            <input type="text" id="loan-bank" class="form-control" placeholder="Örn: İş Bankası, Ziraat Bankası, Vakıfbank, VDF" required>
+                            <input aria-label="Örn: İş Bankası, Ziraat Bankası, Vakıfbank, VDF" title="Örn: İş Bankası, Ziraat Bankası, Vakıfbank, VDF" type="text" id="loan-bank" class="form-control" placeholder="Örn: İş Bankası, Ziraat Bankası, Vakıfbank, VDF" required>
                         </div>
                     </div>
                     <div class="form-grid-2">
                         <div>
                             <label class="field-label">Kredi / Leasing Başlığı *</label>
-                            <input type="text" id="loan-title" class="form-control" placeholder="Örn: Ticari Araç Kredisi / GES Yatırım Leasing" required>
+                            <input aria-label="Örn: Ticari Araç Kredisi / GES Yatırım Leasing" title="Örn: Ticari Araç Kredisi / GES Yatırım Leasing" type="text" id="loan-title" class="form-control" placeholder="Örn: Ticari Araç Kredisi / GES Yatırım Leasing" required>
                         </div>
                         <div>
                             <label class="field-label">Tür</label>
-                            <select id="loan-type" class="form-control">
+                            <select aria-label="loan-type" title="loan-type" id="loan-type" class="form-control">
                                 <option value="Kredi taksiti">Ticari Kredi</option>
                                 <option value="Leasing">Finansal Kiralama (Leasing)</option>
                             </select>
@@ -1881,20 +1884,20 @@
                     <div class="form-grid-3">
                         <div>
                             <label class="field-label">Aylık Taksit Tutarı (TL) *</label>
-                            <input type="number" step="0.01" min="1" id="loan-installment-amount" class="form-control" placeholder="0.00" required>
+                            <input aria-label="0.00" title="0.00" type="number" step="0.01" min="1" id="loan-installment-amount" class="form-control" placeholder="0.00" required>
                         </div>
                         <div>
                             <label class="field-label">Taksit Sayısı (Ay) *</label>
-                            <input type="number" min="1" max="120" id="loan-installment-count" class="form-control" value="12" required>
+                            <input aria-label="loan-installment-count" title="loan-installment-count" type="number" min="1" max="120" id="loan-installment-count" class="form-control" value="12" required>
                         </div>
                         <div>
                             <label class="field-label">İlk Taksit Vadesi (GG.AA.YYYY) *</label>
-                            <input type="text" id="loan-first-due" class="form-control" placeholder="GG.AA.YYYY" required>
+                            <input aria-label="GG.AA.YYYY" title="GG.AA.YYYY" type="text" id="loan-first-due" class="form-control" placeholder="GG.AA.YYYY" required>
                         </div>
                     </div>
                     <div>
                         <label class="field-label">Ödeme Yapılacak Hesap</label>
-                        <select id="loan-account" class="form-control"></select>
+                        <select aria-label="loan-account" title="loan-account" id="loan-account" class="form-control"></select>
                     </div>
                 </div>
                 <div class="modal-footer">
@@ -1910,19 +1913,19 @@
         <div class="modal-dialog">
             <div class="modal-header">
                 <h3><i class="fa-solid fa-money-check-dollar" style="color:var(--emerald-ok);"></i> Çek ve Senet Kaydı</h3>
-                <button class="btn btn-sm" onclick="closeModal('modal-check-note')"><i class="fa-solid fa-xmark"></i></button>
+                <button aria-label="Buton closeModal" class="btn btn-sm" onclick="closeModal('modal-check-note')"><i class="fa-solid fa-xmark"></i></button>
             </div>
             <form id="form-check-note" onsubmit="handleSaveCheckNote(event)">
                 <div class="modal-body">
-                    <input type="hidden" id="chk-id">
+                    <input aria-label="chk-id" title="chk-id" type="hidden" id="chk-id">
                     <div class="form-grid-2">
                         <div>
                             <label class="field-label">Şirket *</label>
-                            <select id="chk-company" class="form-control" required></select>
+                            <select aria-label="chk-company" title="chk-company" id="chk-company" class="form-control" required></select>
                         </div>
                         <div>
                             <label class="field-label">Evrak Yönü ve Türü *</label>
-                            <select id="chk-direction" class="form-control" required>
+                            <select aria-label="chk-direction" title="chk-direction" id="chk-direction" class="form-control" required>
                                 <option value="OUT_CHECK">Verilen Çek (Ödeme Yükümlülüğü)</option>
                                 <option value="OUT_NOTE">Verilen Senet (Ödeme Yükümlülüğü)</option>
                                 <option value="IN_CHECK">Alınan Müşteri Çeki (Tahsilat Beklentisi)</option>
@@ -1933,25 +1936,25 @@
                     <div class="form-grid-2">
                         <div>
                             <label class="field-label">İlgili Taraf (Alacaklı veya Keşideci) *</label>
-                            <input type="text" id="chk-party" class="form-control" placeholder="Firma veya kişi adı..." required>
+                            <input aria-label="Firma veya kişi adı..." title="Firma veya kişi adı..." type="text" id="chk-party" class="form-control" placeholder="Firma veya kişi adı..." required>
                         </div>
                         <div>
                             <label class="field-label">Çek / Senet No &amp; Banka *</label>
-                            <input type="text" id="chk-bank-no" class="form-control" placeholder="Örn: Garanti #784512" required>
+                            <input aria-label="Örn: Garanti #784512" title="Örn: Garanti #784512" type="text" id="chk-bank-no" class="form-control" placeholder="Örn: Garanti #784512" required>
                         </div>
                     </div>
                     <div class="form-grid-3">
                         <div>
                             <label class="field-label">Tutar (TL) *</label>
-                            <input type="number" step="0.01" min="0.01" id="chk-amount" class="form-control" required>
+                            <input aria-label="chk-amount" title="chk-amount" type="number" step="0.01" min="0.01" id="chk-amount" class="form-control" required>
                         </div>
                         <div>
                             <label class="field-label">Vade Tarihi (GG.AA.YYYY) *</label>
-                            <input type="text" id="chk-due-date" class="form-control" placeholder="GG.AA.YYYY" required>
+                            <input aria-label="GG.AA.YYYY" title="GG.AA.YYYY" type="text" id="chk-due-date" class="form-control" placeholder="GG.AA.YYYY" required>
                         </div>
                         <div>
                             <label class="field-label">İlgili Kasa/Banka Hesabı</label>
-                            <select id="chk-account" class="form-control"></select>
+                            <select aria-label="chk-account" title="chk-account" id="chk-account" class="form-control"></select>
                         </div>
                     </div>
                 </div>
@@ -1968,23 +1971,23 @@
         <div class="modal-dialog" style="max-width:500px;">
             <div class="modal-header">
                 <h3><i class="fa-solid fa-building" style="color:var(--dizsan-cyan);"></i> Şirket Tanımla / Düzenle</h3>
-                <button class="btn btn-sm" onclick="closeModal('modal-company')"><i class="fa-solid fa-xmark"></i></button>
+                <button aria-label="Buton closeModal" class="btn btn-sm" onclick="closeModal('modal-company')"><i class="fa-solid fa-xmark"></i></button>
             </div>
             <form id="form-company" onsubmit="handleSaveCompany(event)">
                 <div class="modal-body">
-                    <input type="hidden" id="comp-id">
+                    <input aria-label="comp-id" title="comp-id" type="hidden" id="comp-id">
                     <div style="margin-bottom:10px;">
                         <label class="field-label">Şirket Resmi / Kısa Adı *</label>
-                        <input type="text" id="comp-name" class="form-control" placeholder="Örn: Dizsan Otomotiv, KM Solar..." required>
+                        <input aria-label="Örn: Dizsan Otomotiv, KM Solar..." title="Örn: Dizsan Otomotiv, KM Solar..." type="text" id="comp-name" class="form-control" placeholder="Örn: Dizsan Otomotiv, KM Solar..." required>
                     </div>
                     <div class="form-grid-2">
                         <div>
                             <label class="field-label">Vergi Dairesi / VKN</label>
-                            <input type="text" id="comp-tax" class="form-control" placeholder="Çorum VD...">
+                            <input aria-label="Çorum VD..." title="Çorum VD..." type="text" id="comp-tax" class="form-control" placeholder="Çorum VD...">
                         </div>
                         <div>
                             <label class="field-label">Durum</label>
-                            <select id="comp-status" class="form-control">
+                            <select aria-label="comp-status" title="comp-status" id="comp-status" class="form-control">
                                 <option value="Aktif">Aktif</option>
                                 <option value="Pasif">Pasif</option>
                             </select>
@@ -2004,10 +2007,10 @@
         <div class="modal-dialog" style="max-width:540px;">
             <div class="modal-header">
                 <h3><i class="fa-solid fa-file-import" style="color:var(--emerald-ok);"></i> Excel / CSV Veri İçe Aktarma</h3>
-                <button class="btn btn-sm" onclick="closeModal('modal-excel-import')"><i class="fa-solid fa-xmark"></i></button>
+                <button aria-label="Buton closeModal" class="btn btn-sm" onclick="closeModal('modal-excel-import')"><i class="fa-solid fa-xmark"></i></button>
             </div>
             <div class="modal-body">
-                <input type="hidden" id="import-target-type" value="PAYMENT">
+                <input aria-label="import-target-type" title="import-target-type" type="hidden" id="import-target-type" value="PAYMENT">
                 <p style="font-size:0.78rem; color:var(--text-secondary); margin-bottom:10px;">
                     Noktalı virgül (<code>;</code>) veya virgül (<code>,</code>) ayrılmış Excel CSV dosyanızı seçerek toplu ödeme veya tahsilat kaydı yükleyebilirsiniz.
                 </p>
@@ -2018,7 +2021,7 @@
                 </div>
                 <div>
                     <label class="field-label">Excel CSV Dosyası Seçin *</label>
-                    <input type="file" id="excel-import-file" class="form-control" accept=".csv,.txt">
+                    <input aria-label="excel-import-file" title="excel-import-file" type="file" id="excel-import-file" class="form-control" accept=".csv,.txt">
                 </div>
             </div>
             <div class="modal-footer">
@@ -2033,17 +2036,17 @@
         <div class="modal-dialog" style="max-width:450px;">
             <div class="modal-header">
                 <h3><i class="fa-solid fa-key" style="color:var(--dizsan-cyan);"></i> Şifremi Unuttum</h3>
-                <button class="btn btn-sm" onclick="closeModal('modal-forgot-password')"><i class="fa-solid fa-xmark"></i></button>
+                <button aria-label="Buton closeModal" class="btn btn-sm" onclick="closeModal('modal-forgot-password')"><i class="fa-solid fa-xmark"></i></button>
             </div>
             <div class="modal-body">
                 <div id="forgot-step-1">
                     <div style="margin-bottom:10px;">
                         <label class="field-label">Kullanıcı Adı veya Ad Soyad *</label>
-                        <input type="text" id="forgot-username" class="form-control" placeholder="Örn: ömer">
+                        <input aria-label="Örn: ömer" title="Örn: ömer" type="text" id="forgot-username" class="form-control" placeholder="Örn: ömer">
                     </div>
                     <div style="margin-bottom:10px;">
                         <label class="field-label">Kurumsal E-Posta Adresi *</label>
-                        <input type="email" id="forgot-email" class="form-control" placeholder="oeren@dizsan.com.tr">
+                        <input aria-label="oeren@dizsan.com.tr" title="oeren@dizsan.com.tr" type="email" id="forgot-email" class="form-control" placeholder="oeren@dizsan.com.tr">
                     </div>
                     <button type="button" class="btn btn-primary" style="width:100%;" onclick="sendPasswordResetCode()">Doğrulama Kodu Gönder</button>
                 </div>
@@ -2051,11 +2054,11 @@
                     <div id="forgot-code-display" style="padding:10px; border-radius:8px; background:rgba(16,185,129,0.14); color:#6ee7b7; font-size:0.78rem; margin-bottom:10px;"></div>
                     <div style="margin-bottom:8px;">
                         <label class="field-label">6 Haneli Doğrulama Kodu *</label>
-                        <input type="text" id="forgot-code-input" class="form-control" placeholder="123456">
+                        <input aria-label="123456" title="123456" type="text" id="forgot-code-input" class="form-control" placeholder="123456">
                     </div>
                     <div style="margin-bottom:10px;">
                         <label class="field-label">Yeni Şifre *</label>
-                        <input type="password" id="forgot-new-pass" class="form-control" placeholder="Yeni şifreniz">
+                        <input aria-label="Yeni şifreniz" title="Yeni şifreniz" type="password" id="forgot-new-pass" class="form-control" placeholder="Yeni şifreniz">
                     </div>
                     <button type="button" class="btn btn-success" style="width:100%;" onclick="verifyAndResetPassword()">Şifreyi Güncelle</button>
                 </div>
@@ -2068,21 +2071,21 @@
         <div class="modal-dialog" style="max-width:440px;">
             <div class="modal-header">
                 <h3><i class="fa-solid fa-lock" style="color:var(--emerald-ok);"></i> Şifre Değiştir</h3>
-                <button class="btn btn-sm" onclick="closeModal('modal-change-password')"><i class="fa-solid fa-xmark"></i></button>
+                <button aria-label="Buton closeModal" class="btn btn-sm" onclick="closeModal('modal-change-password')"><i class="fa-solid fa-xmark"></i></button>
             </div>
             <form onsubmit="handleChangePasswordSubmit(event)">
                 <div class="modal-body">
                     <div style="margin-bottom:10px;">
                         <label class="field-label">Mevcut Şifreniz *</label>
-                        <input type="password" id="chg-old-pass" class="form-control" required>
+                        <input aria-label="chg-old-pass" title="chg-old-pass" type="password" id="chg-old-pass" class="form-control" required>
                     </div>
                     <div style="margin-bottom:10px;">
                         <label class="field-label">Yeni Şifreniz *</label>
-                        <input type="password" id="chg-new-pass" class="form-control" required>
+                        <input aria-label="chg-new-pass" title="chg-new-pass" type="password" id="chg-new-pass" class="form-control" required>
                     </div>
                     <div>
                         <label class="field-label">Yeni Şifre (Tekrar) *</label>
-                        <input type="password" id="chg-confirm-pass" class="form-control" required>
+                        <input aria-label="chg-confirm-pass" title="chg-confirm-pass" type="password" id="chg-confirm-pass" class="form-control" required>
                     </div>
                 </div>
                 <div class="modal-footer">
@@ -2098,25 +2101,25 @@
         <div class="modal-dialog" style="max-width:500px;">
             <div class="modal-header">
                 <h3><i class="fa-solid fa-user-shield" style="color:var(--dizsan-cyan);"></i> Kullanıcı ve Şirket Yetkisi</h3>
-                <button class="btn btn-sm" onclick="closeModal('modal-user-admin')"><i class="fa-solid fa-xmark"></i></button>
+                <button aria-label="Buton closeModal" class="btn btn-sm" onclick="closeModal('modal-user-admin')"><i class="fa-solid fa-xmark"></i></button>
             </div>
             <form onsubmit="handleSaveUserAdmin(event)">
                 <div class="modal-body">
-                    <input type="hidden" id="usr-edit-username">
+                    <input aria-label="usr-edit-username" title="usr-edit-username" type="hidden" id="usr-edit-username">
                     <div class="form-grid-2">
                         <div>
                             <label class="field-label">Ad Soyad *</label>
-                            <input type="text" id="usr-name" class="form-control" required>
+                            <input aria-label="usr-name" title="usr-name" type="text" id="usr-name" class="form-control" required>
                         </div>
                         <div>
                             <label class="field-label">Kullanıcı Adı *</label>
-                            <input type="text" id="usr-username" class="form-control" required>
+                            <input aria-label="usr-username" title="usr-username" type="text" id="usr-username" class="form-control" required>
                         </div>
                     </div>
                     <div class="form-grid-2">
                         <div>
                             <label class="field-label">Rol *</label>
-                            <select id="usr-role" class="form-control">
+                            <select aria-label="usr-role" title="usr-role" id="usr-role" class="form-control">
                                 <option value="Yönetici">Yönetici (Tam Yetki)</option>
                                 <option value="Finans Sorumlusu">Finans Sorumlusu</option>
                                 <option value="Personel">Personel (Görüntüleme / Kayıt)</option>
@@ -2124,12 +2127,12 @@
                         </div>
                         <div>
                             <label class="field-label">Departman</label>
-                            <input type="text" id="usr-dept" class="form-control" placeholder="Muhasebe & Finans">
+                            <input aria-label="Muhasebe & Finans" title="Muhasebe & Finans" type="text" id="usr-dept" class="form-control" placeholder="Muhasebe & Finans">
                         </div>
                     </div>
                     <div>
                         <label class="field-label">Şifre (Boş bırakılırsa mevcut şifre korunur)</label>
-                        <input type="password" id="usr-pass" class="form-control" placeholder="Yeni şifre belirle...">
+                        <input aria-label="Yeni şifre belirle..." title="Yeni şifre belirle..." type="password" id="usr-pass" class="form-control" placeholder="Yeni şifre belirle...">
                     </div>
                 </div>
                 <div class="modal-footer">
@@ -2145,7 +2148,7 @@
         <div class="modal-dialog" style="max-width:480px;">
             <div class="modal-header">
                 <h3><i class="fa-solid fa-mobile-screen-button" style="color:var(--dizsan-cyan);"></i> DiKas Mobil ve Masaüstü Kurulum</h3>
-                <button class="btn btn-sm" onclick="closeModal('modal-install-guide')"><i class="fa-solid fa-xmark"></i></button>
+                <button aria-label="Buton closeModal" class="btn btn-sm" onclick="closeModal('modal-install-guide')"><i class="fa-solid fa-xmark"></i></button>
             </div>
             <div class="modal-body" style="font-size:0.8rem; color:var(--text-secondary); display:flex; flex-direction:column; gap:10px;">
                 <div style="padding:10px; border-radius:8px; background:var(--bg-elevated);">
@@ -2177,7 +2180,7 @@
                 <h3><i class="fa-solid fa-note-sticky" style="color:var(--amber-warn);"></i> Tarihi Belli Olmayan Ödemeler</h3>
                 <p>Vadesi henüz netleşmemiş borçlar ve kenar notları</p>
             </div>
-            <button class="btn btn-sm" onclick="toggleUndatedNotesDrawer()" title="Kapat">
+            <button aria-label="Kapat" class="btn btn-sm" onclick="toggleUndatedNotesDrawer()" title="Kapat">
                 <i class="fa-solid fa-xmark"></i>
             </button>
         </div>
@@ -2198,19 +2201,19 @@
                 <i class="fa-solid fa-plus-circle"></i> Hızlı Vadesiz Ödeme / Not Ekle
             </div>
             <div class="form-grid-2" style="margin-bottom:6px; gap:6px;">
-                <select id="drawer-undated-company" class="form-control"></select>
-                <input type="text" id="drawer-undated-creditor" class="form-control" placeholder="Alacaklı Firma / Kişi *" required>
+                <select aria-label="drawer-undated-company" title="drawer-undated-company" id="drawer-undated-company" class="form-control"></select>
+                <input aria-label="Alacaklı Firma / Kişi *" title="Alacaklı Firma / Kişi *" type="text" id="drawer-undated-creditor" class="form-control" placeholder="Alacaklı Firma / Kişi *" required>
             </div>
-            <input type="text" id="drawer-undated-title" class="form-control" style="margin-bottom:6px;" placeholder="Ödeme konusu / Not başlığı (Örn: TDR.Parça, Vergi...) *" required>
+            <input aria-label="Ödeme konusu / Not başlığı (Örn: TDR.Parça, Vergi...) *" title="Ödeme konusu / Not başlığı (Örn: TDR.Parça, Vergi...) *" type="text" id="drawer-undated-title" class="form-control" style="margin-bottom:6px;" placeholder="Ödeme konusu / Not başlığı (Örn: TDR.Parça, Vergi...) *" required>
             <div class="form-grid-2" style="margin-bottom:6px; gap:6px;">
-                <input type="number" step="0.01" min="0" id="drawer-undated-amount" class="form-control" placeholder="Tahmini Tutar (Opsiyonel)">
-                <select id="drawer-undated-currency" class="form-control">
+                <input aria-label="Tahmini Tutar (Opsiyonel)" title="Tahmini Tutar (Opsiyonel)" type="number" step="0.01" min="0" id="drawer-undated-amount" class="form-control" placeholder="Tahmini Tutar (Opsiyonel)">
+                <select aria-label="drawer-undated-currency" title="drawer-undated-currency" id="drawer-undated-currency" class="form-control">
                     <option value="TRY">TRY (₺)</option>
                     <option value="EUR">EUR (€)</option>
                     <option value="USD">USD ($)</option>
                 </select>
             </div>
-            <input type="text" id="drawer-undated-note" class="form-control" style="margin-bottom:8px;" placeholder="Açıklama / Neden tarihi belirsiz? (Örn: Fatura bekleniyor)">
+            <input aria-label="Açıklama / Neden tarihi belirsiz? (Örn: Fatura bekleniyor)" title="Açıklama / Neden tarihi belirsiz? (Örn: Fatura bekleniyor)" type="text" id="drawer-undated-note" class="form-control" style="margin-bottom:8px;" placeholder="Açıklama / Neden tarihi belirsiz? (Örn: Fatura bekleniyor)">
             <button type="submit" class="btn btn-warning btn-sm" style="width:100%;">
                 <i class="fa-solid fa-thumbtack"></i> Kenara Not Olarak Kaydet
             </button>
@@ -2222,7 +2225,7 @@
     <!-- ORTAK DİZSAN KÜTÜPHANELERİ -->
     <script src="auto-date-helper.js"></script>
     <script src="dizsan-back-navigation.js"></script>
-    <script src="dizsan-auto-updater.js" data-app-id="dikas-finans" data-app-name="DiKas – Dizsan Finans" data-version="1.0.6"></script>
-    <script src="app.js?v=1.0.6"></script>
+    <script src="dizsan-auto-updater.js" data-app-id="dikas-finans" data-app-name="DiKas – Dizsan Finans" data-version="1.0.7"></script>
+    <script src="app.js?v=1.0.7"></script>
 </body>
 </html>
